@@ -106,7 +106,7 @@ export function AppSidebar() {
                   {item.items.length > 0 ? (
                     <Collapsible defaultOpen={item.isActive}>
                       <CollapsibleTrigger asChild>
-                        <SidebarMenuButton className="text-slate-300 hover:text-white hover:bg-slate-700">
+                        <SidebarMenuButton className="text-black hover:text-blue-700 hover:bg-slate-100">
                           <item.icon className="w-4 h-4" />
                           <span>{item.title}</span>
                           <ChevronDown className="ml-auto w-4 h-4 transition-transform group-data-[state=open]:rotate-180" />
@@ -119,7 +119,7 @@ export function AppSidebar() {
                               <SidebarMenuSubButton
                                 asChild
                                 isActive={subItem.isActive}
-                                className="text-slate-400 hover:text-white"
+                                className="text-black hover:text-blue-700 hover:bg-slate-100"
                               >
                                 <a href={subItem.href}>{subItem.title}</a>
                               </SidebarMenuSubButton>
@@ -129,7 +129,7 @@ export function AppSidebar() {
                       </CollapsibleContent>
                     </Collapsible>
                   ) : (
-                    <SidebarMenuButton asChild className="text-slate-300 hover:text-white hover:bg-slate-700">
+                    <SidebarMenuButton asChild className="text-black hover:text-blue-700 hover:bg-slate-100">
                       <a href={item.href || "#"}>
                         <item.icon className="w-4 h-4" />
                         <span>{item.title}</span>
