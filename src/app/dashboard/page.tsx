@@ -6,7 +6,7 @@ import { DashboardCard } from "@/components/dashboard-card"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { Usb, HardDrive, Disc, Camera, Monitor, Printer, Zap, Cable, Glasses, Mouse, Laptop } from "lucide-react"
 import { Plus } from "lucide-react"
-
+//cambiar en backend
 const storageData = [
   { count: 0, title: "Pendrive Activos", icon: <Usb />, color: "green" as const },
   { count: 0, title: "Pendrive Disponible", icon: <Usb />, color: "orange" as const },
