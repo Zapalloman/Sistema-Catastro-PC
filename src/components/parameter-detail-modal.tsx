@@ -15,7 +15,7 @@ interface ParameterDetailModalProps {
   parameter: Parameter | null
   isOpen: boolean
   onClose: () => void
-  columns: string[]
+  columns: string[]//cambiar para poner otros datos
   relatedData: Record<string, any>[]
 }
 

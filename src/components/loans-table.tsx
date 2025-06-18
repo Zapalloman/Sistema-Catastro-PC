@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Edit, Trash2, Search, Download, ChevronLeft, ChevronRight, Printer, Eye, Plus } from "lucide-react"
+import { LoanDetailModal } from "./loan-detail-modal";
 
 // Sample loans data - easily replaceable with real company data
 const sampleLoans = [
@@ -15,14 +16,14 @@ const sampleLoans = [
   {
     estadoRecibo: "ACTIVO",
     nroRecibo: 1,
-    fechaRecibo: "06/04/2023",
+    fechaRecibo: "06/04/2028",
     grado: "PAC",
-    funcionario: "NATALIA NICOLE LOBOS ALARCON",
-    departamento: "DEPARTAMENTO COMERCIAL",
-    seccion: "SECCION MARKETING",
+    funcionario: "JUAN PIZARRO",
+    departamento: "SICE",
+    seccion: "SECCION INFORMATICA",
     dispositivo: "PENDRIVE",
-    capacidad: "8 GB",
-    serie: "200517382004743310C9",
+    capacidad: "10 TB",
+    serie: "123",
   },
   
 
@@ -40,6 +41,21 @@ export function LoansTable() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [activeTab, setActiveTab] = useState("activos")
+  const [showDetail, setShowDetail] = useState(false);
+  const [selectedLoan, setSelectedLoan] = useState<any>(null);
+
+  const columns = [
+    "estadoRecibo",
+    "nroRecibo",
+    "fechaRecibo",
+    "grado",
+    "funcionario",
+    "departamento",
+    "seccion",
+    "dispositivo",
+    "capacidad",
+    "serie",
+  ];
 
   // Filter data based on search term and active tab
   const filteredData = sampleLoans.filter((loan) => {
@@ -62,8 +78,8 @@ export function LoansTable() {
   const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage)
 
   const handleView = (loan: any) => {
-    console.log("View loan:", loan)
-    // TODO: Implement view functionality
+    setSelectedLoan(loan);
+    setShowDetail(true);
   }
 
   const handleEdit = (loan: any) => {
@@ -288,6 +304,14 @@ export function LoansTable() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Loan Detail Modal */}
+      <LoanDetailModal
+        loan={selectedLoan}
+        isOpen={showDetail}
+        onClose={() => setShowDetail(false)}
+        columns={columns}
+      />
     </div>
   )
 }
