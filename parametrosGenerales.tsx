@@ -12,11 +12,16 @@ const parameterOptions = [
   //seleccione una opcion
   
   { value: "RED", label: "Red" },
-  { value: "TEST", label: "Placeholder" },
-  
+  { value: "GRADO", label: "Grado" },
+  { value: "CARGO", label: "Cargo" },
+  { value: "EDIFICIO", label: "Edificio" },
+  { value: "UBICACION", label: "Ubicacion" },
+  { value: "DEPARTAMENTOS", label: "Departamentos" },
+  { value: "DOMINIO DE RED", label: "Dominio de Red" },
+  { value: "PROPIETARIO EQUIPO", label: "Propietario Equipo" },
 ]
 
-export default function ParametrosEquipo() {
+export default function ParametrosGenerales() {
   const [selectedParameter, setSelectedParameter] = useState("")
 
   const handleParameterSelect = () => {
@@ -34,9 +39,9 @@ export default function ParametrosEquipo() {
         <div className="flex items-center gap-3 mb-8">
           <Settings2 className="w-8 h-8 text-blue-600" />
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Parámetros de Equipo</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Parámetros Generales</h1>
             <p className="text-gray-600 mt-1">
-              Visualiza y gestiona los parámetros de los equipos dentro de la plataforma. Aquí puedes seleccionar y filtrar
+              Visualiza y gestiona los parámetros dentro de la plataforma. Aquí puedes seleccionar y filtrar
               diferentes parámetros para personalizar la visualización de datos.
             </p>
           </div>

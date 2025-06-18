@@ -1,18 +1,6 @@
 "use client"
 
-import {
-  ChevronDown,
-  Home,
-  Settings,
-  Users,
-  HardDrive,
-  Laptop,
-  Building,
-  Key,
-  FileText,
-  Monitor,
-  Wifi,
-} from "lucide-react"
+import { Home, Settings, Users, HardDrive, Laptop, Building, Key, FileText, Monitor, Wifi } from "lucide-react"
 
 import { usePathname } from "next/navigation"
 import {
@@ -24,11 +12,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 const menuItems = [
   {
@@ -120,9 +104,11 @@ export function AppSidebar() {
                       asChild
                       className={`flex items-center gap-3 px-4 py-2 rounded transition-colors
                         border-l-4
-                        ${isActive
-                          ? "border-blue-600 bg-blue-50 text-blue-800 font-semibold"
-                          : "border-transparent text-slate-800 hover:bg-slate-100"}
+                        ${
+                          isActive
+                            ? "border-blue-600 bg-blue-50 text-blue-800 font-semibold"
+                            : "border-transparent text-slate-800 hover:bg-slate-100"
+                        }
                       `}
                     >
                       <a href={item.href || "#"}>

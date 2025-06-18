@@ -1,5 +1,5 @@
-import Login from "../login"
+import Dashboard from "../login"
 
 export default function Page() {
-  return <Login />
+  return <Dashboard />
 }
