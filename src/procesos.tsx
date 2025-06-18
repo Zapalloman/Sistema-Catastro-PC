@@ -93,8 +93,8 @@ export default function Procesos() {
             </div>
             <div>
               <h3 className="font-medium text-gray-900 mb-2">Contacto de Soporte</h3>
-              <p>Email: hola123@igm.cl</p>
-              <p>Teléfono: -123456789</p>
+              <p>Email: soporte@igm.cl</p>
+              <p>Teléfono: 63340</p>
             </div>
           </div>
         </div>
