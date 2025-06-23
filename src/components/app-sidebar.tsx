@@ -18,7 +18,7 @@ const menuItems = [
   {
     title: "Dashboard",
     icon: Home,
-    href: "/",
+    href: "/dashboard",
     items: [],
   },
   {

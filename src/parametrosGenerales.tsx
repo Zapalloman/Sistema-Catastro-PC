@@ -10,7 +10,7 @@ import { Settings2, Filter } from "lucide-react"
 // Parameter options - easily customizable for company needs
 const parameterOptions = [
   //seleccione una opcion
-  
+
   { value: "RED", label: "Red" },
   { value: "GRADO", label: "Grado" },
   { value: "CARGO", label: "Cargo" },
@@ -41,8 +41,8 @@ export default function ParametrosGenerales() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Parámetros Generales</h1>
             <p className="text-gray-600 mt-1">
-              Visualiza y gestiona los parámetros dentro de la plataforma. Aquí puedes seleccionar y filtrar
-              diferentes parámetros para personalizar la visualización de datos.
+              Visualiza y gestiona los parámetros dentro de la plataforma. Aquí puedes seleccionar y filtrar diferentes
+              parámetros para personalizar la visualización de datos.
             </p>
           </div>
         </div>
@@ -78,7 +78,7 @@ export default function ParametrosGenerales() {
 
         {/* Parameters Table */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <ParametersTable />
+          <ParametersTable selectedParameterType={selectedParameter} />
         </div>
 
         {/* Additional Information */}
@@ -91,7 +91,6 @@ export default function ParametrosGenerales() {
           <div className="bg-green-50 rounded-lg p-4 border border-green-200">
             <h3 className="font-semibold text-green-900 mb-2">Última Actualización</h3>
             <p className="text-sm text-green-700">null</p>
-            
           </div>
           <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
             <h3 className="font-semibold text-orange-900 mb-2">Pendientes</h3>
