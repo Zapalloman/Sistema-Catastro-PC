@@ -69,12 +69,6 @@ const menuItems = [
     href: "/estaciones-mac",
     items: [],
   },
-  {
-    title: "Cambio Clave",
-    icon: Key,
-    href: "/cambio-clave",
-    items: [],
-  },
 ]
 
 export function AppSidebar() {
