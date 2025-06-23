@@ -18,7 +18,7 @@ const menuItems = [
   {
     title: "Dashboard",
     icon: Home,
-    href: "/dashboard",
+    href: "/",
     items: [],
   },
   {
@@ -58,9 +58,9 @@ const menuItems = [
     items: [],
   },
   {
-    title: "Estaciones ZB",
+    title: "Estaciones Z8",
     icon: Wifi,
-    href: "/estaciones-zb",
+    href: "/estaciones-z8",
     items: [],
   },
   {

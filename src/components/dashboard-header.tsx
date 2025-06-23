@@ -32,8 +32,22 @@ export function DashboardHeader() {
         <nav className="text-sm">
           <span>Home</span>
           <span className="mx-2">/</span>
-          <span className="text-blue-200">
-            {typeof window !== "undefined" && window.location.pathname === "/procesos" ? "Procesos" : "Starter Page"}
+          <span className="text-blue-200 capitalize">
+            {(() => {
+              if (typeof window !== "undefined") {
+          const path = window.location.pathname.replace(/^\//, "");
+          if (!path) return "Inicio";
+          // Puedes mapear rutas a nombres legibles aquí
+          const map: Record<string, string> = {
+            procesos: "Procesos",
+            dashboard: "Dashboard",
+            usuarios: "Usuarios",
+            // agrega más rutas según sea necesario
+          };
+          return map[path] || path.replace(/-/g, " ");
+              }
+              return "";
+            })()}
           </span>
         </nav>
 
