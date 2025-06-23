@@ -10,8 +10,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { ChevronDown, LogOut, Settings, User } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export function DashboardHeader() {
+  const router = useRouter();
+
   return (
     <header className="bg-blue-600 text-white px-4 py-3 flex items-center justify-between">
       <div className="flex items-center gap-4">
@@ -19,7 +22,7 @@ export function DashboardHeader() {
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
             <span className="text-blue-600 font-bold text-sm">IGM</span>
           </div>
-          <span className="font-medium">Catastro Informático - SCE</span>
+          <span className="font-medium">Catastro Computacional</span>
         </div>
         <SidebarTrigger className="text-white hover:bg-blue-700" />
         <span className="text-sm">Home</span>
@@ -38,6 +41,11 @@ export function DashboardHeader() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="text-white hover:bg-blue-700 gap-2">
               <User className="w-4 h-4" />
+              {/* Aquí podrías mostrar el nombre del usuario autenticado */}
+              {/* Si tienes un estado de usuario, puedes usarlo aquí: */}
+              {/* Por ejemplo, si tienes un estado de usuario: */}
+              {/* {user.name} */}
+             
               admin (IGM - CIMI)
               <ChevronDown className="w-4 h-4" />
             </Button>
@@ -52,9 +60,23 @@ export function DashboardHeader() {
               Configuración
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600">
-              <LogOut className="w-4 h-4 mr-2" />
-              Cerrar Sesión
+            <DropdownMenuItem asChild className="text-red-600">
+              <button
+                type="button"
+                onClick={() => {
+                  // Limpia el estado de autenticación, tokens, etc.
+                  if (typeof window !== "undefined") {
+                    localStorage.removeItem("token");
+                    sessionStorage.clear();
+                  }
+                  // Redirige al login (asegúrate que la ruta sea correcta, por ejemplo "/login" o "/auth/login")
+                  router.replace("/");
+                }}
+                className="flex items-center w-full"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Cerrar Sesión
+              </button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

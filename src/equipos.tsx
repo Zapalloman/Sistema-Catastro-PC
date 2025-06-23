@@ -10,6 +10,8 @@ import { Monitor, Filter, Plus } from "lucide-react"
 // Equipment owners - easily customizable for company needs
 const propietarioOptions = [
   { value: "TODOS", label: "Todos los Propietarios" },
+  { value: "IGM", label: "IGM" },
+  { value: "INFOWORLD", label: "INFOWORLD" }
   //cambiar en backend
 ]
 
