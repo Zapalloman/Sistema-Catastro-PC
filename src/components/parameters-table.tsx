@@ -98,7 +98,7 @@ export function ParametersTable() {
       {/* Table */}
       <div className="border rounded-lg overflow-hidden">
         <div className="bg-teal-500 text-white p-3">
-          <h3 className="font-medium">Parámetros del Sistema</h3>
+          <h3 className="font-medium">Parámetros</h3>
         </div>
         <Table>
           <TableHeader>

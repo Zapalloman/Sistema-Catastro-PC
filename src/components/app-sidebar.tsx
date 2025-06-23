@@ -18,7 +18,7 @@ const menuItems = [
   {
     title: "Dashboard",
     icon: Home,
-    href: "/",
+    href: "/dashboard",
     items: [],
   },
   {
@@ -46,9 +46,9 @@ const menuItems = [
     items: [],
   },
   {
-    title: "Equipos IGM",
+    title: "Equipos",
     icon: Laptop,
-    href: "/equipos-igm",
+    href: "/equipos",
     items: [],
   },
   {
