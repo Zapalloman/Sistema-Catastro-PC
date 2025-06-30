@@ -3,8 +3,31 @@
 import { ProcessLayout } from "./components/process-layout"
 import { DatacenterAssetsTable } from "./components/datacenter-assets-table"
 import { Server, Activity, Shield, Thermometer } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export default function Datacenter() {
+  const [data, setData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+ /* useEffect(() => {
+    fetch("http://localhost:3000/api/datacenter")
+      .then(res => {
+        if (!res.ok) throw new Error("Error al obtener datos")
+        return res.json()
+      })
+      .then(setData)
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    console.log("DATOS RECIBIDOS:", data);
+  }, [data])
+
+  if (loading) return <div>Cargando...</div>
+  if (error) return <div>Error: {error}</div>
+*/
   return (
     <ProcessLayout>
       <div className="space-y-6">
@@ -22,10 +45,10 @@ export default function Datacenter() {
 
         {/* Datacenter Assets Table */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <DatacenterAssetsTable />
+          <DatacenterAssetsTable data={data} />
         </div>
 
-        {/* Statistics */}
+        {/* estadisticas aaaaa
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-lg p-6 border border-slate-200">
             <div className="flex items-center justify-between">
@@ -40,7 +63,6 @@ export default function Datacenter() {
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
             <div className="flex items-center justify-between">
               <div>
-                //
                 <h3 className="font-semibold text-green-900 mb-2">Operativos</h3>
                 <p className="text-3xl font-bold text-green-600">6</p>
                 <p className="text-sm text-green-700">En funcionamiento</p>
@@ -68,7 +90,8 @@ export default function Datacenter() {
               <Thermometer className="w-8 h-8 text-cyan-500" />
             </div>
           </div>
-        </div>
+        </div>*/}
+
       </div>
     </ProcessLayout>
   )
