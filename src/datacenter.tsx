@@ -40,6 +40,7 @@ export default function Datacenter() {
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
             <div className="flex items-center justify-between">
               <div>
+                //
                 <h3 className="font-semibold text-green-900 mb-2">Operativos</h3>
                 <p className="text-3xl font-bold text-green-600">6</p>
                 <p className="text-sm text-green-700">En funcionamiento</p>

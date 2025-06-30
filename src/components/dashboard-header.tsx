@@ -1,100 +1,52 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { ChevronDown, LogOut, Settings, User } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { LogOut, User } from "lucide-react"
 
-export function DashboardHeader() {
-  const router = useRouter();
+interface DashboardHeaderProps {
+  title: string
+  subtitle?: string
+}
+
+export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
+  const handleLogout = () => {
+    // TODO: Implement logout functionality
+    console.log("Logging out...")
+    // Redirect to login page
+    window.location.href = "/"
+  }
 
   return (
-    <header className="bg-blue-600 text-white px-4 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-            <span className="text-blue-600 font-bold text-sm">IGM</span>
+    <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="flex items-center justify-between">
+        {/* Left side - User info */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+            <User className="w-5 h-5 text-white" />
           </div>
-          <span className="font-medium">Catastro Computacional</span>
+          <div>
+            <div className="text-sm font-medium text-gray-900">Administrador SIA CIMI</div>
+            <div className="text-xs text-gray-500">Instituto Geográfico Militar</div>
+          </div>
         </div>
-        <SidebarTrigger className="text-white hover:bg-blue-700" />
-        <span className="text-sm">Home</span>
-      </div>
 
-      <div className="flex items-center gap-4">
-        <nav className="text-sm">
-          <span>Home</span>
-          <span className="mx-2">/</span>
-          <span className="text-blue-200 capitalize">
-            {(() => {
-              if (typeof window !== "undefined") {
-          const path = window.location.pathname.replace(/^\//, "");
-          if (!path) return "Inicio";
-          // Puedes mapear rutas a nombres legibles aquí
-          const map: Record<string, string> = {
-            procesos: "Procesos",
-            dashboard: "Dashboard",
-            usuarios: "Usuarios",
-            // agrega más rutas según sea necesario
-          };
-          return map[path] || path.replace(/-/g, " ");
-              }
-              return "";
-            })()}
-          </span>
-        </nav>
+        {/* Center - Page title */}
+        <div className="text-center">
+          <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+          {subtitle && <p className="text-sm text-gray-600 mt-1">{subtitle}</p>}
+        </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="text-white hover:bg-blue-700 gap-2">
-              <User className="w-4 h-4" />
-              {/* Aquí podrías mostrar el nombre del usuario autenticado */}
-              {/* Si tienes un estado de usuario, puedes usarlo aquí: */}
-              {/* Por ejemplo, si tienes un estado de usuario: */}
-              {/* {user.name} */}
-             
-              admin (IGM - CIMI)
-              <ChevronDown className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem>
-              <User className="w-4 h-4 mr-2" />
-              Perfil
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className="w-4 h-4 mr-2" />
-              Configuración
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="text-red-600">
-              <button
-                type="button"
-                onClick={() => {
-                  // Limpia el estado de autenticación, tokens, etc.
-                  if (typeof window !== "undefined") {
-                    localStorage.removeItem("token");
-                    sessionStorage.clear();
-                  }
-                  // Redirige al login (asegúrate que la ruta sea correcta, por ejemplo "/login" o "/auth/login")
-                  router.replace("/");
-                }}
-                className="flex items-center w-full"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Cerrar Sesión
-              </button>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Right side - Logout button */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleLogout}
+          className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 bg-transparent"
+        >
+          <LogOut className="w-4 h-4" />
+          Cerrar Sesión
+        </Button>
       </div>
-    </header>
+    </div>
   )
 }
