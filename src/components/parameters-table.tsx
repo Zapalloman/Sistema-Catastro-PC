@@ -15,7 +15,11 @@ const sampleParameters = [
   //reemplazar con datos de la base de datos
 ]
 
-export function ParametersTable() {
+interface ParametersTableProps {
+  selectedParameterType: string
+}
+
+export function ParametersTable({ selectedParameterType }: ParametersTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(5)

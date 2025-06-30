@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Settings, Users, HardDrive, Laptop, Building, Key, FileText, Monitor, Wifi } from "lucide-react"
+import { Home, Settings, Users, HardDrive, Laptop, Key, FileText, Monitor, Wifi, Apple, Server } from "lucide-react"
 
 import { usePathname } from "next/navigation"
 import {
@@ -65,10 +65,16 @@ const menuItems = [
   },
   {
     title: "Estaciones MAC",
-    icon: Building,
+    icon: Apple,
     href: "/estaciones-mac",
     items: [],
   },
+  {
+    title: "Datacenter",
+    icon: Server,
+    href: "/datacenter",
+    items: [],
+  }
 ]
 
 export function AppSidebar() {
