@@ -10,19 +10,33 @@ export default function Component() {
   const router = useRouter()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    // Aquí iría tu lógica de autenticación
-    // Si es exitosa:
-    router.push("/dashboard")
+    setError("")
+    try {
+      const res = await fetch("http://localhost:3000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usuario: username, clave: password }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        // Puedes guardar datos del usuario aquí si lo necesitas
+        router.push("/dashboard")
+      } else {
+        setError(data.mensaje || "Usuario o clave incorrectos")
+      }
+    } catch (err) {
+      setError("Error de conexión con el servidor")
+    }
   }
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-white shadow-lg">
         <CardHeader className="text-center pb-6">
-          
           <div className="flex justify-center mb-4">
             <img
               src="/logo.png"
@@ -30,7 +44,6 @@ export default function Component() {
               className="h-34 w-54 rounded-md"
             />
           </div>
-
           <h1 className="text-lg font-medium text-gray-700 leading-tight">
             Bienvenido al Sistema de Catastro
             <br />
@@ -67,6 +80,10 @@ export default function Component() {
                 onChange={e => setPassword(e.target.value)}
               />
             </div>
+
+            {error && (
+              <div className="text-red-600 text-sm">{error}</div>
+            )}
 
             <Button type="submit" className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-medium mt-6">
               Ingresar

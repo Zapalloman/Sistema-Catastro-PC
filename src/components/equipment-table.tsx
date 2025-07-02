@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -9,78 +9,53 @@ import { Edit, Trash2, Search, Download, ChevronLeft, ChevronRight, Eye, Monitor
 import { EquipmentDetailModal } from "./equipment-detail-modal"
 
 // Sample equipment data - easily replaceable with real company data
-const sampleEquipment = [
-  {
-    serie: "IGM-PC-001-2024",
-    modeloPC: "OptiPlex 7090",
-    disco: "SSD 512GB",
-    ram: "16GB DDR4",
-    procesador: "Intel Core i7-11700",
-    velocidad: "2.5 GHz",
-    marca: "Dell",
-    mac: "00:1B:44:11:3A:B7",
-    ip: "192.168.1.101",
-    nombrePC: "IGM-ADMIN-01",
-    propietario: "ADMINISTRACION",
-    estado: "ACTIVO",
-    fechaAsignacion: "15/03/2024",
-    ubicacion: "Oficina Principal - Piso 2",
-  },
-  {
-    serie: "IGM-PC-002-2024",
-    modeloPC: "ThinkCentre M720q",
-    disco: "HDD 1TB",
-    ram: "8GB DDR4",
-    procesador: "Intel Core i5-9400T",
-    velocidad: "1.8 GHz",
-    marca: "Lenovo",
-    mac: "00:1B:44:11:3A:C8",
-    ip: "192.168.1.102",
-    nombrePC: "IGM-CARTO-01",
-    propietario: "CARTOGRAFIA",
-    estado: "ACTIVO",
-    fechaAsignacion: "20/03/2024",
-    ubicacion: "Departamento Cartografía",
-  },
-  {
-    serie: "IGM-PC-003-2024",
-    modeloPC: "Pavilion Desktop",
-    disco: "SSD 256GB",
-    ram: "12GB DDR4",
-    procesador: "AMD Ryzen 5 5600G",
-    velocidad: "3.9 GHz",
-    marca: "HP",
-    mac: "00:1B:44:11:3A:D9",
-    ip: "192.168.1.103",
-    nombrePC: "IGM-TOPOG-01",
-    propietario: "TOPOGRAFIA",
-    estado: "ACTIVO",
-    fechaAsignacion: "25/03/2024",
-    ubicacion: "Departamento Topografía",
-  },
-  {
-    serie: "IGM-PC-004-2024",
-    modeloPC: "Vostro 3681",
-    disco: "SSD 512GB",
-    ram: "16GB DDR4",
-    procesador: "Intel Core i7-10700",
-    velocidad: "2.9 GHz",
-    marca: "Dell",
-    mac: "00:1B:44:11:3A:EA",
-    ip: "192.168.1.104",
-    nombrePC: "IGM-GEOD-01",
-    propietario: "GEODESIA",
-    estado: "ACTIVO",
-    fechaAsignacion: "30/03/2024",
-    ubicacion: "Departamento Geodesia",
-  },
-]
+
+
+
 
 interface EquipmentTableProps {
   selectedPropietario: string
+  refresh: boolean
 }
 
-export function EquipmentTable({ selectedPropietario }: EquipmentTableProps) {
+export function EquipmentTable({ selectedPropietario, refresh }: EquipmentTableProps) {
+  const [equipos, setEquipos] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    setLoading(true)
+    fetch("http://localhost:3000/api/equipos")
+      .then(res => res.json())
+      .then(data => {
+        // Mapea los campos del backend a los que usa tu tabla
+        const mapped = data.map((eq: any) => ({
+          serie: eq.numero_serie || "",
+          modeloPC: eq.modelo || "",
+          disco: eq.almacenamiento || "",
+          ram: eq.ram || "",
+          procesador: eq.procesador || "",
+          velocidad: "", // Si tienes un campo de velocidad, mapea aquí
+          marca: eq.marca || "",
+          mac: eq.direccion_mac || "",
+          ip: eq.ip || "",
+          nombrePC: eq.nombre_pc || "",
+          propietario: eq.propietario || "",
+          ubicacion: eq.ubicacion || "",
+          id_equipo: eq.id_equipo,
+          // agrega otros campos si los necesitas
+        }))
+        setEquipos(mapped)
+      })
+      .catch(() => setError("No se pudo cargar la lista de equipos"))
+      .finally(() => setLoading(false))
+  }, [refresh])
+
+  // Filtrado por propietario (si aplica)
+  const filteredData = selectedPropietario === "TODOS"
+    ? equipos
+    : equipos.filter(eq => eq.id_propietario?.toString() === selectedPropietario)
+
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -88,7 +63,7 @@ export function EquipmentTable({ selectedPropietario }: EquipmentTableProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Filter data based on search term and selected propietario
-  const filteredData = sampleEquipment.filter((equipment) => {
+  const dataToDisplay = filteredData.filter((equipment) => {
     const matchesSearch =
       equipment.nombrePC.toLowerCase().includes(searchTerm.toLowerCase()) ||
       equipment.serie.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -102,9 +77,9 @@ export function EquipmentTable({ selectedPropietario }: EquipmentTableProps) {
   })
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+  const totalPages = Math.ceil(dataToDisplay.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage)
+  const paginatedData = dataToDisplay.slice(startIndex, startIndex + itemsPerPage)
 
   const handleViewDetails = (equipment: any) => {
     setSelectedEquipment(equipment)
@@ -125,6 +100,9 @@ export function EquipmentTable({ selectedPropietario }: EquipmentTableProps) {
     console.log("Export equipment data to Excel")
     // TODO: Implement Excel export functionality
   }
+
+  if (loading) return <div>Cargando...</div>
+  if (error) return <div>{error}</div>
 
   return (
     <div className="space-y-4">
@@ -166,7 +144,7 @@ export function EquipmentTable({ selectedPropietario }: EquipmentTableProps) {
       {/* Results Summary */}
       <div className="flex items-center justify-between text-sm text-gray-600">
         <span>
-          Mostrando {filteredData.length} equipo{filteredData.length !== 1 ? "s" : ""}
+          Mostrando {dataToDisplay.length} equipo{dataToDisplay.length !== 1 ? "s" : ""}
           {selectedPropietario !== "TODOS" && ` para ${selectedPropietario}`}
         </span>
       </div>

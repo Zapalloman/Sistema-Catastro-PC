@@ -1,26 +1,35 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ProcessLayout } from "./components/process-layout"
 import { EquipmentTable } from "./components/equipment-table"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Monitor, Filter, Plus } from "lucide-react"
+import { AddEquipmentModal } from "./components/add-equipment-modal"
 
-// Equipment owners - easily customizable for company needs
-const propietarioOptions = [
-  { value: "TODOS", label: "Todos los Propietarios" },
-  { value: "IGM", label: "IGM" },
-  { value: "INFOWORLD", label: "INFOWORLD" }
-  //cambiar en backend
-]
 
 export default function Equipos() {
   const [selectedPropietario, setSelectedPropietario] = useState("TODOS")
+  const [propietarioOptions, setPropietarioOptions] = useState<{id_propietario: number, nombre: string}[]>([])
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [refresh, setRefresh] = useState(false)
 
-  const handleAddEquipment = () => {
-    console.log("Add new equipment")
-    // TODO: Implement add equipment functionality
+  useEffect(() => {
+    fetch("http://localhost:3000/api/equipos/propietarios")
+      .then(res => res.json())
+      .then(data => setPropietarioOptions(data))
+      .catch(() => setPropietarioOptions([]))
+  }, [])
+
+  const handleAddEquipment = () => setShowAddModal(true)
+
+  const handleAdded = () => {
+    setRefresh(r => !r)
+    fetch("http://localhost:3000/api/equipos/propietarios")
+      .then(res => res.json())
+      .then(data => setPropietarioOptions(data))
+      .catch(() => setPropietarioOptions([]))
   }
 
   return (
@@ -53,9 +62,10 @@ export default function Equipos() {
                   <SelectValue placeholder="Seleccione un propietario..." />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="TODOS">Todos los propietarios</SelectItem>
                   {propietarioOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                    <SelectItem key={option.id_propietario} value={option.id_propietario.toString()}>
+                      {option.nombre}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -70,7 +80,7 @@ export default function Equipos() {
 
         {/* Equipment Table */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <EquipmentTable selectedPropietario={selectedPropietario} />
+          <EquipmentTable selectedPropietario={selectedPropietario} refresh={refresh} />
         </div>
 
         {/* Statistics */}
@@ -82,6 +92,13 @@ export default function Equipos() {
           </div>
         </div>
       </div>
+
+      <AddEquipmentModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAdded={handleAdded}
+        propietarioOptions={propietarioOptions}
+      />
     </ProcessLayout>
   )
 }
