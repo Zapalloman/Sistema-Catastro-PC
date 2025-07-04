@@ -1,64 +1,65 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Edit, Trash2, Search, Download, ChevronLeft, ChevronRight, Printer, Eye, Plus } from "lucide-react"
-import { LoanDetailModal } from "./loan-detail-modal";
+import { LoanDetailModal } from "./loan-detail-modal"
 
-// Sample loans data - easily replaceable with real company data
-const sampleLoans = [
-  //CAMBIAR EN BACKEND 
-  {
-    estadoRecibo: "ACTIVO",
-    nroRecibo: 1,
-    fechaRecibo: "06/04/2028",
-    grado: "PAC",
-    funcionario: "JUAN PIZARRO",
-    departamento: "SICE",
-    seccion: "SECCION INFORMATICA",
-    dispositivo: "PENDRIVE",
-    capacidad: "10 TB",
-    serie: "123",
-  },
-  
 
-]
 
-const loanTabs = [
-  { value: "activos", label: "Pendrives Activos", count: 5 },
-  { value: "pendientes", label: "Pendrives Pendientes", count: 0 },
-  { value: "disponible", label: "Pendrives Disponible", count: 18 },
-  { value: "bajas", label: "Pendrives Bajas", count: 0 },
-]
+interface LoansTableProps {
+  deviceType: string
+}
 
-export function LoansTable() {
+export function LoansTable({ deviceType }: LoansTableProps) {
+  const [prestamos, setPrestamos] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [activeTab, setActiveTab] = useState("activos")
-  const [showDetail, setShowDetail] = useState(false);
-  const [selectedLoan, setSelectedLoan] = useState<any>(null);
+  const [showDetail, setShowDetail] = useState(false)
+  const [selectedLoan, setSelectedLoan] = useState<any>(null)
+  const [deviceTypeState, setDeviceType] = useState(deviceType)
 
-  const columns = [
-    "estadoRecibo",
-    "nroRecibo",
-    "fechaRecibo",
-    "grado",
-    "funcionario",
-    "departamento",
-    "seccion",
-    "dispositivo",
-    "capacidad",
-    "serie",
-  ];
+  useEffect(() => {
+    fetch("http://localhost:3000/api/prestamos")
+      .then(res => res.json())
+      .then(data => setPrestamos(data))
+      .catch(() => setError("No se pudo cargar la lista de préstamos"))
+      .finally(() => setLoading(false))
+  }, [])
 
-  // Filter data based on search term and active tab
-  const filteredData = sampleLoans.filter((loan) => {
+  // Mapea los datos del backend al formato de la tabla
+  const loansData = prestamos.map((p) => ({
+    estadoRecibo:
+      p.estado === 1
+        ? "ACTIVO"
+        : p.estado === 0
+        ? "FINALIZADO"
+        : p.estado === 2
+        ? "NO APTO"
+        : "DESCONOCIDO",
+    nroRecibo: p.id_prestamo,
+    fechaRecibo: p.fecha_prestamo ? p.fecha_prestamo.slice(0, 10) : "",
+    grado: "-", // Si tienes este dato en el equipo o usuario, cámbialo aquí
+    funcionario: p.rut_usuario,
+    departamento: "-", // Si tienes este dato, cámbialo aquí
+    seccion: "-", // Si tienes este dato, cámbialo aquí
+    dispositivo: p.equipo?.categoria || "OTRO",
+    capacidad: p.equipo?.almacenamiento || "-",
+    serie: p.equipo?.numero_serie || "-",
+    descripcion: p.descripcion || "",
+    equipo: p.equipo,
+    raw: p,
+  }))
+
+  // Filtro por búsqueda, tipo y estado ACTIVO
+  const filteredData = loansData.filter((loan) => {
     const matchesSearch =
       loan.funcionario.toLowerCase().includes(searchTerm.toLowerCase()) ||
       loan.departamento.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -66,251 +67,163 @@ export function LoansTable() {
       loan.serie.toLowerCase().includes(searchTerm.toLowerCase()) ||
       loan.nroRecibo.toString().includes(searchTerm)
 
-    // Filter by tab (for now, all sample data is "ACTIVO")
-    const matchesTab = activeTab === "activos" ? loan.estadoRecibo === "ACTIVO" : true
+    const matchesDeviceType =
+      deviceType === "TODOS" ? true : loan.dispositivo?.toUpperCase() === deviceType
 
-    return matchesSearch && matchesTab
+    // Quita temporalmente el filtro de estado para debug
+    return matchesSearch && matchesDeviceType
   })
 
-  // Pagination logic
+  // Paginación
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage)
 
   const handleView = (loan: any) => {
-    setSelectedLoan(loan);
-    setShowDetail(true);
-  }
-
-  const handleEdit = (loan: any) => {
-    console.log("Edit loan:", loan)
-    // TODO: Implement edit functionality
-  }
-
-  const handlePrint = (loan: any) => {
-    console.log("Print loan:", loan)
-    // TODO: Implement print functionality
-  }
-
-  const handleDelete = (loan: any) => {
-    console.log("Delete loan:", loan)
-    // TODO: Implement delete functionality
-  }
-
-  const handleExport = () => {
-    console.log("Export loans to Excel")
-    // TODO: Implement Excel export functionality
-  }
-
-  const handleAddDevice = () => {
-    console.log("Add new device")
-    // TODO: Implement add device functionality
+    setSelectedLoan(loan)
+    setShowDetail(true)
   }
 
   return (
     <div className="space-y-4">
-      {/* Filter Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-blue-500">
-          {loanTabs.map((tab) => (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className="text-white data-[state=active]:bg-blue-600 data-[state=active]:text-white"
-            >
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      {/* Acciones y filtros */}
+      <div className="flex items-center gap-4">
+        <Button onClick={() => {}} className="bg-teal-500 hover:bg-teal-600">
+          <Plus className="w-4 h-4 mr-2" />
+          Agregar Dispositivo
+        </Button>
+        <Button onClick={() => {}} variant="outline" className="border-gray-300">
+          <Download className="w-4 h-4 mr-2" />
+          Exportar Excel
+        </Button>
+        
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Buscar..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 w-64"
+          />
+        </div>
+      </div>
 
-        <TabsContent value={activeTab} className="space-y-4">
-          {/* Action Buttons */}
-          <div className="flex items-center gap-4">
-            <Button onClick={handleAddDevice} className="bg-teal-500 hover:bg-teal-600">
-              <Plus className="w-4 h-4 mr-2" />
-              Agregar Dispositivo
-            </Button>
-            <Button onClick={handleExport} variant="outline" className="border-gray-300">
-              <Download className="w-4 h-4 mr-2" />
-              Exportar Excel
-            </Button>
-          </div>
-
-          {/* Search and Controls */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Mostrar</span>
-                <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
-                  <SelectTrigger className="w-20">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5">5</SelectItem>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="25">25</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span className="text-sm text-gray-600">registros por página</span>
-              </div>
-            </div>
-
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Buscar..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-64"
-              />
-            </div>
-          </div>
-
-          {/* Table */}
-          <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-100">
-                  <TableHead className="font-semibold text-gray-700">Estado Recibo</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Nro. Recibo</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Fecha Recibo</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Grado</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Funcionario</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Departamento</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Sección</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Dispositivo</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Capacidad</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Serie</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedData.map((loan, index) => (
-                  <TableRow key={`${loan.nroRecibo}-${index}`} className="hover:bg-gray-50">
-                    <TableCell>
-                      <Badge
-                        variant="default"
-                        className={loan.estadoRecibo === "ACTIVO" ? "bg-green-500" : "bg-gray-500"}
-                      >
-                        {loan.estadoRecibo}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">{loan.nroRecibo}</TableCell>
-                    <TableCell>{loan.fechaRecibo}</TableCell>
-                    <TableCell>{loan.grado}</TableCell>
-                    <TableCell className="max-w-48 truncate" title={loan.funcionario}>
-                      {loan.funcionario}
-                    </TableCell>
-                    <TableCell className="max-w-40 truncate" title={loan.departamento}>
-                      {loan.departamento}
-                    </TableCell>
-                    <TableCell className="max-w-32 truncate" title={loan.seccion}>
-                      {loan.seccion}
-                    </TableCell>
-                    <TableCell>{loan.dispositivo}</TableCell>
-                    <TableCell>{loan.capacidad}</TableCell>
-                    <TableCell className="font-mono text-xs" title={loan.serie}>
-                      {loan.serie.substring(0, 15)}...
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="bg-yellow-500 hover:bg-yellow-600 text-white border-yellow-500 p-2"
-                          onClick={() => handleEdit(loan)}
-                          title="Editar"
-                        >
-                          <Edit className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 p-2"
-                          onClick={() => handlePrint(loan)}
-                          title="Imprimir"
-                        >
-                          <Printer className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="bg-cyan-500 hover:bg-cyan-600 text-white border-cyan-500 p-2"
-                          onClick={() => handleView(loan)}
-                          title="Ver"
-                        >
-                          <Eye className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="bg-red-500 hover:bg-red-600 text-white border-red-500 p-2"
-                          onClick={() => handleDelete(loan)}
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Pagination */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">
-              Mostrando página {currentPage} de {totalPages}
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Anterior
-              </Button>
-
-              {/* Page numbers */}
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const pageNum = i + 1
-                return (
-                  <Button
-                    key={pageNum}
-                    variant={currentPage === pageNum ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={currentPage === pageNum ? "bg-blue-500" : ""}
+      {/* Tabla */}
+      <div className="border rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-100">
+              <TableHead className="font-semibold text-gray-700">Estado Recibo</TableHead>
+              <TableHead className="font-semibold text-gray-700">Nro. Recibo</TableHead>
+              <TableHead className="font-semibold text-gray-700">Fecha Recibo</TableHead>
+              <TableHead className="font-semibold text-gray-700">Grado</TableHead>
+              <TableHead className="font-semibold text-gray-700">Funcionario</TableHead>
+              <TableHead className="font-semibold text-gray-700">Departamento</TableHead>
+              <TableHead className="font-semibold text-gray-700">Sección</TableHead>
+              <TableHead className="font-semibold text-gray-700">Dispositivo</TableHead>
+              <TableHead className="font-semibold text-gray-700">Capacidad</TableHead>
+              <TableHead className="font-semibold text-gray-700">Serie</TableHead>
+              <TableHead className="font-semibold text-gray-700">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedData.map((loan, index) => (
+              <TableRow key={`${loan.nroRecibo}-${index}`} className="hover:bg-gray-50">
+                <TableCell>
+                  <Badge
+                    variant="default"
+                    className={loan.estadoRecibo === "ACTIVO" ? "bg-green-500" : "bg-gray-500"}
                   >
-                    {pageNum}
-                  </Button>
-                )
-              })}
+                    {loan.estadoRecibo}
+                  </Badge>
+                </TableCell>
+                <TableCell className="font-medium">{loan.nroRecibo}</TableCell>
+                <TableCell>{loan.fechaRecibo}</TableCell>
+                <TableCell>{loan.grado}</TableCell>
+                <TableCell className="max-w-48 truncate" title={loan.funcionario}>
+                  {loan.funcionario}
+                </TableCell>
+                <TableCell className="max-w-40 truncate" title={loan.departamento}>
+                  {loan.departamento}
+                </TableCell>
+                <TableCell className="max-w-32 truncate" title={loan.seccion}>
+                  {loan.seccion}
+                </TableCell>
+                <TableCell>{loan.dispositivo}</TableCell>
+                <TableCell>{loan.capacidad}</TableCell>
+                <TableCell className="font-mono text-xs" title={loan.serie}>
+                  {loan.serie.substring(0, 15)}...
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    {/* Aquí van los botones de acción */}
+                    <Button size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50" onClick={() => {}}>
+                      <Edit className="w-3 h-3" />
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-gray-600 border-gray-200 hover:bg-gray-50" onClick={() => {}}>
+                      <Printer className="w-3 h-3" />
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleView(loan)}>
+                      <Eye className="w-3 h-3" />
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => {}}>
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
+      {/* Paginación */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-gray-600">
+          Mostrando página {currentPage} de {totalPages}
+        </span>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Anterior
+          </Button>
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            const pageNum = i + 1
+            return (
               <Button
-                variant="outline"
+                key={pageNum}
+                variant={currentPage === pageNum ? "default" : "outline"}
                 size="sm"
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(pageNum)}
+                className={currentPage === pageNum ? "bg-blue-500" : ""}
               >
-                Siguiente
-                <ChevronRight className="w-4 h-4" />
+                {pageNum}
               </Button>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+            )
+          })}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Siguiente
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
 
       {/* Loan Detail Modal */}
       <LoanDetailModal
         loan={selectedLoan}
         isOpen={showDetail}
         onClose={() => setShowDetail(false)}
-        columns={columns}
+        columns={Object.keys(loansData[0] || {})}
       />
     </div>
   )
