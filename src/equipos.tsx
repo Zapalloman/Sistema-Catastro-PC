@@ -14,6 +14,7 @@ export default function Equipos() {
   const [propietarioOptions, setPropietarioOptions] = useState<{id_propietario: number, nombre: string}[]>([])
   const [showAddModal, setShowAddModal] = useState(false)
   const [refresh, setRefresh] = useState(false)
+  const [totalEquipos, setTotalEquipos] = useState(0)
 
   useEffect(() => {
     fetch("http://localhost:3000/api/equipos/propietarios")
@@ -31,6 +32,10 @@ export default function Equipos() {
       .then(data => setPropietarioOptions(data))
       .catch(() => setPropietarioOptions([]))
   }
+
+  const propietarioNombre = selectedPropietario === "TODOS"
+    ? ""
+    : propietarioOptions.find(p => p.id_propietario.toString() === selectedPropietario)?.nombre || "";
 
   return (
     <ProcessLayout>
@@ -80,15 +85,19 @@ export default function Equipos() {
 
         {/* Equipment Table */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <EquipmentTable selectedPropietario={selectedPropietario} refresh={refresh} />
+          <EquipmentTable
+            selectedPropietario={selectedPropietario}
+            refresh={refresh}
+            onCountChange={setTotalEquipos}
+          />
         </div>
 
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
             <h3 className="font-semibold text-blue-900 mb-2">Total Equipos</h3>
-            <p className="text-2xl font-bold text-blue-600">0</p>
-            <p className="text-sm text-blue-700">Equipos registrados</p>
+            <p className="text-2xl font-bold text-blue-600">{totalEquipos}</p>
+            <p className="text-sm text-blue-700">Equipos registrados por propietario</p>
           </div>
         </div>
       </div>

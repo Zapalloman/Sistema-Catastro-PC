@@ -7,18 +7,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Edit, Trash2, Search, Download, ChevronLeft, ChevronRight, Eye, Monitor } from "lucide-react"
 import { EquipmentDetailModal } from "./equipment-detail-modal"
-
-// Sample equipment data - easily replaceable with real company data
-
+import * as XLSX from "xlsx"
+import { saveAs } from "file-saver"
 
 
 
 interface EquipmentTableProps {
   selectedPropietario: string
   refresh: boolean
+  onCountChange?: (count: number) => void
 }
 
-export function EquipmentTable({ selectedPropietario, refresh }: EquipmentTableProps) {
+export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: EquipmentTableProps) {
   const [equipos, setEquipos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -41,6 +41,7 @@ export function EquipmentTable({ selectedPropietario, refresh }: EquipmentTableP
           ip: eq.ip || "",
           nombrePC: eq.nombre_pc || "",
           propietario: eq.propietario || "",
+          id_propietario: eq.id_propietario, // <-- AGREGA ESTA LÍNEA
           ubicacion: eq.ubicacion || "",
           id_equipo: eq.id_equipo,
           // agrega otros campos si los necesitas
@@ -70,10 +71,7 @@ export function EquipmentTable({ selectedPropietario, refresh }: EquipmentTableP
       equipment.modeloPC.toLowerCase().includes(searchTerm.toLowerCase()) ||
       equipment.marca.toLowerCase().includes(searchTerm.toLowerCase()) ||
       equipment.ip.includes(searchTerm)
-
-    const matchesPropietario = selectedPropietario === "TODOS" || equipment.propietario === selectedPropietario
-
-    return matchesSearch && matchesPropietario
+    return matchesSearch
   })
 
   // Pagination logic
@@ -97,12 +95,29 @@ export function EquipmentTable({ selectedPropietario, refresh }: EquipmentTableP
   }
 
   const handleExport = () => {
-    console.log("Export equipment data to Excel")
-    // TODO: Implement Excel export functionality
+    console.log("Exporting data to Excel")
+    // Exporta solo los datos visibles en la tabla
+    const exportData = dataToDisplay.map(({ id_equipo, ...row }) => row) // quita id_equipo si no quieres exportarlo
+    const worksheet = XLSX.utils.json_to_sheet(exportData)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Equipos")
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" })
+    const blob = new Blob([excelBuffer], { type: "application/octet-stream" })
+    saveAs(blob, "equipos.xlsx")
   }
+
+  useEffect(() => {
+    if (onCountChange) {
+      onCountChange(dataToDisplay.length)
+    }
+  }, [dataToDisplay.length, onCountChange])
 
   if (loading) return <div>Cargando...</div>
   if (error) return <div>{error}</div>
+
+  // Encuentra el nombre del propietario seleccionado
+  const propietarioSeleccionado = equipos.find(eq => eq.id_propietario?.toString() === selectedPropietario)
+  const propietarioNombre = propietarioSeleccionado ? propietarioSeleccionado.propietario : ""
 
   return (
     <div className="space-y-4">
@@ -145,7 +160,7 @@ export function EquipmentTable({ selectedPropietario, refresh }: EquipmentTableP
       <div className="flex items-center justify-between text-sm text-gray-600">
         <span>
           Mostrando {dataToDisplay.length} equipo{dataToDisplay.length !== 1 ? "s" : ""}
-          {selectedPropietario !== "TODOS" && ` para ${selectedPropietario}`}
+          {selectedPropietario !== "TODOS" && propietarioNombre && ` para ${propietarioNombre}`}
         </span>
       </div>
 

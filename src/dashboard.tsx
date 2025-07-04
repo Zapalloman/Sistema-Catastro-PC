@@ -6,8 +6,37 @@ import { EnhancedDashboardHeader } from "./components/enhanced-dashboard-header"
 import { ModernDashboardCard } from "./components/modern-dashboard-card"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { Wifi, Apple, Server, Monitor, HardDrive, Users } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export default function Dashboard() {
+  // Estado para el total de equipos
+  const [totalEquipos, setTotalEquipos] = useState(0)
+  const [quickStatsEquipos, setQuickStatsEquipos] = useState<{label: string, value: number}[]>([])
+
+  useEffect(() => {
+    fetch("http://localhost:3000/api/equipos")
+      .then(res => res.json())
+      .then(data => {
+        setTotalEquipos(data.length)
+        // Agrupa por propietario
+        const counts: Record<string, number> = {}
+        data.forEach((eq: any) => {
+          const propietario = eq.propietario || "Sin propietario"
+          counts[propietario] = (counts[propietario] || 0) + 1
+        })
+        // Ordena y toma los 3 principales
+        const quickStats = Object.entries(counts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([label, value]) => ({ label, value }))
+        setQuickStatsEquipos(quickStats)
+      })
+      .catch(() => {
+        setTotalEquipos(0)
+        setQuickStatsEquipos([])
+      })
+  }, [])
+
   // TODO: Replace with real API calls to fetch data from backend
 
   // Z8 Stations Data - Focus on essential operational information
@@ -46,15 +75,10 @@ export default function Dashboard() {
     alerts: [],
   }
 
-  // Equipment Overview Data - Focus on hardware inventory
+  // Equipment Overview Data - Solo el total real
   const equipmentOverviewData = {
-    total: 4,
-    quickStats: [
-      { label: "Dell", value: 2, trend: "stable" as const },
-      { label: "Lenovo", value: 1, trend: "stable" as const },
-      { label: "HP", value: 1, trend: "stable" as const },
-      { label: "En Mantenimiento", value: 0, trend: "stable" as const },
-    ],
+    total: totalEquipos,
+    quickStats: [],
     alerts: [],
   }
 
@@ -181,11 +205,11 @@ export default function Dashboard() {
                     value: equipmentOverviewData.total,
                     unit: "equipos",
                   }}
-                  quickStats={equipmentOverviewData.quickStats}
+                  quickStats={quickStatsEquipos}
                   alerts={equipmentOverviewData.alerts}
                   progressData={{
                     label: "Equipos Activos",
-                    value: 4,
+                    value: equipmentOverviewData.total,
                     max: equipmentOverviewData.total,
                     color: "blue",
                   }}
