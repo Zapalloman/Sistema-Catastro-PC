@@ -28,7 +28,6 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
     fetch("http://localhost:3000/api/equipos")
       .then(res => res.json())
       .then(data => {
-        // Mapea los campos del backend a los que usa tu tabla
         const mapped = data.map((eq: any) => ({
           serie: eq.numero_serie || "",
           modeloPC: eq.modelo || "",
@@ -36,15 +35,15 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
           ram: eq.ram || "",
           procesador: eq.procesador || "",
           velocidad: "", // Si tienes un campo de velocidad, mapea aquí
-          marca: eq.marca || "",
+          marca: typeof eq.marca === "object" && eq.marca !== null ? eq.marca.nombre : eq.marca || "",
           mac: eq.direccion_mac || "",
           ip: eq.ip || "",
           nombrePC: eq.nombre_pc || "",
           propietario: eq.propietario || "",
-          id_propietario: eq.id_propietario, // <-- AGREGA ESTA LÍNEA
-          ubicacion: eq.ubicacion || "",
+          id_propietario: eq.id_propietario,
+          ubicacion: typeof eq.ubicacion === "object" && eq.ubicacion !== null ? eq.ubicacion.nombre : eq.ubicacion || "",
+          categoria: typeof eq.categoria === "object" && eq.categoria !== null ? eq.categoria.nombre : eq.categoria || "",
           id_equipo: eq.id_equipo,
-          // agrega otros campos si los necesitas
         }))
         setEquipos(mapped)
       })
@@ -185,13 +184,14 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
               <TableHead className="font-semibold text-gray-700">MAC</TableHead>
               <TableHead className="font-semibold text-gray-700">IP</TableHead>
               <TableHead className="font-semibold text-gray-700">Nombre PC</TableHead>
+              <TableHead className="font-semibold text-gray-700">Categoria</TableHead>
               <TableHead className="font-semibold text-gray-700">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={12} className="text-center py-8 text-gray-500">
                   No se encontraron equipos para los criterios seleccionados
                 </TableCell>
               </TableRow>
@@ -210,6 +210,7 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
                   <TableCell className="font-mono text-xs">{equipment.mac}</TableCell>
                   <TableCell className="font-mono text-xs">{equipment.ip}</TableCell>
                   <TableCell className="font-semibold">{equipment.nombrePC}</TableCell>
+                  <TableCell>{equipment.categoria}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Button

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Users, Filter } from "lucide-react"
 import { LoansTable } from "./components/loans-table"
 import { AvailableDevicesTable } from "./components/available-devices-table"
@@ -30,6 +30,13 @@ const deviceTypes = [
 export default function Prestamos() {
 	const [selectedFilter, setSelectedFilter] = useState("TODOS")
 	const [activeTab, setActiveTab] = useState("activos")
+	const [categorias, setCategorias] = useState([])
+
+	useEffect(() => {
+		fetch("http://localhost:3000/api/categorias")
+			.then(res => res.json())
+			.then(data => setCategorias(Array.isArray(data) ? data : data.categorias || []))
+	}, [])
 
 	return (
 		<ProcessLayout>
@@ -59,11 +66,16 @@ export default function Prestamos() {
 									<SelectValue placeholder="Tipo de dispositivo" />
 								</SelectTrigger>
 								<SelectContent>
-									{deviceTypes.map((option) => (
-										<SelectItem key={option.value} value={option.value}>
-											{option.label}
-										</SelectItem>
-									))}
+									<SelectItem value="TODOS">Todos los Dispositivos</SelectItem>
+									<SelectItem value="OTRO">OTRO</SelectItem>
+									{[...categorias]
+										.filter(cat => cat.nombre !== "OTRO")
+										.sort((a, b) => a.nombre.localeCompare(b.nombre))
+										.map(cat => (
+											<SelectItem key={cat.id_categoria} value={cat.id_categoria.toString()}>
+												{cat.nombre}
+											</SelectItem>
+										))}
 								</SelectContent>
 							</Select>
 						</div>

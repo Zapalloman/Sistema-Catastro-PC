@@ -23,7 +23,10 @@ export function AvailableDevicesTable({ deviceType }: { deviceType: string }) {
     if (deviceType && deviceType !== "TODOS") url += `?categoria=${deviceType}`
     fetch(url)
       .then(res => res.json())
-      .then(data => setEquipos(Array.isArray(data) ? data : []))
+      .then(data => {
+        // ...mapeo...
+        setEquipos(Array.isArray(data) ? data : [])
+      })
       .catch(() => setError("No se pudo cargar la lista de equipos disponibles"))
       .finally(() => setLoading(false))
   }, [deviceType])
@@ -91,7 +94,7 @@ export function AvailableDevicesTable({ deviceType }: { deviceType: string }) {
                 <TableRow key={`${eq.id_equipo}-${index}`} className="hover:bg-gray-50">
                   <TableCell>{eq.nombre_pc}</TableCell>
                   <TableCell className="font-mono text-xs">{eq.numero_serie}</TableCell>
-                  <TableCell>{eq.categoria}</TableCell>
+                  <TableCell>{eq.categoria?.nombre || eq.categoria || "-"}</TableCell>
                   <TableCell>{eq.almacenamiento}</TableCell>
                   <TableCell>{eq.marca?.nombre || "-"}</TableCell>
                   <TableCell>{eq.ubicacion?.nombre || "-"}</TableCell>

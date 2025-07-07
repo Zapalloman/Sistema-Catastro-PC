@@ -4,13 +4,14 @@ import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
   open: boolean,
   onClose: () => void,
   onDeviceAdded?: () => void
 }) {
-  const [categorias, setCategorias] = useState<string[]>([])
+  const [categorias, setCategorias] = useState<{ id_categoria: number, nombre: string }[]>([])
   const [marcas, setMarcas] = useState<{ id_marca: number, nombre: string }[]>([])
   const [ubicaciones, setUbicaciones] = useState<{ id_ubicacion: number, nombre: string }[]>([])
   const [propietarios, setPropietarios] = useState<{ id_propietario: number, nombre: string }[]>([])
@@ -22,7 +23,7 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
     almacenamiento: "",
     ram: "",
     procesador: "",
-    categoria: "",
+    id_categoria: "",
     nueva_categoria: "",
     direccion_mac: "",
     ip: "",
@@ -30,6 +31,8 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
     nueva_marca: "",
     id_ubicacion: "",
     nueva_ubicacion: "",
+    id_propietario: "",
+    nuevo_propietario: "",
     descripcion: "",
   })
   const [loading, setLoading] = useState(false)
@@ -59,19 +62,20 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
     setLoading(true)
     setError("")
     try {
-      let categoria = form.categoria
+      let id_categoria = form.id_categoria
       let id_marca = form.id_marca
       let id_ubicacion = form.id_ubicacion
+      let id_propietario = form.id_propietario
 
-      // Si es nueva categoría, crea y usa el nuevo valor
-      if (categoria === "__nuevo__" && form.nueva_categoria) {
+      // Si es nueva categoría, crea y usa el nuevo id
+      if (id_categoria === "__nuevo__" && form.nueva_categoria) {
         const res = await fetch("http://localhost:3000/api/categorias", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ nombre: form.nueva_categoria }),
         })
         const data = await res.json()
-        categoria = data.nombre
+        id_categoria = data.id_categoria
       }
 
       // Si es nueva marca, crea y usa el nuevo id
@@ -96,6 +100,24 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
         id_ubicacion = data.id_ubicacion
       }
 
+      // Si es nuevo propietario, crea y usa el nuevo id
+      if (id_propietario === "__nuevo__" && form.nuevo_propietario) {
+        const res = await fetch("http://localhost:3000/api/propietarios", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre: form.nuevo_propietario }),
+        })
+        const data = await res.json()
+        id_propietario = data.id_propietario
+      }
+
+      // Validación extra
+      if (!id_categoria || !id_marca || !id_ubicacion || !id_propietario) {
+        setError("Debe seleccionar o crear categoría, marca, ubicación y propietario.")
+        setLoading(false)
+        return
+      }
+
       // Construye el payload, permitiendo campos vacíos
       const payload = {
         nombre_pc: form.nombre_pc || null,
@@ -104,13 +126,13 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
         almacenamiento: form.almacenamiento || null,
         ram: form.ram || null,
         procesador: form.procesador || null,
-        categoria: categoria || null,
+        id_categoria: id_categoria ? Number(id_categoria) : null,
         direccion_mac: form.direccion_mac || null,
         ip: form.ip || null,
-        id_marca: id_marca || null,
-        id_ubicacion: id_ubicacion || null,
+        id_marca: id_marca ? Number(id_marca) : null,
+        id_ubicacion: id_ubicacion ? Number(id_ubicacion) : null,
         descripcion: form.descripcion || null,
-        id_propietario: form.id_propietario ? Number(form.id_propietario) : null,
+        id_propietario: id_propietario ? Number(id_propietario) : null,
       }
 
       const res = await fetch("http://localhost:3000/api/equipos", {
@@ -126,7 +148,7 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
         almacenamiento: "",
         ram: "",
         procesador: "",
-        categoria: "",
+        id_categoria: "",
         nueva_categoria: "",
         direccion_mac: "",
         ip: "",
@@ -134,6 +156,8 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
         nueva_marca: "",
         id_ubicacion: "",
         nueva_ubicacion: "",
+        id_propietario: "",
+        nuevo_propietario: "",
         descripcion: "",
       })
       onDeviceAdded && onDeviceAdded()
@@ -163,24 +187,26 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
             <select
-              name="categoria"
-              value={form.categoria}
+              name="id_categoria"
+              value={form.id_categoria}
               onChange={handleChange}
               className="border rounded px-2 py-2 text-gray-700 w-full"
+              required
             >
               <option value="">Seleccione una categoría...</option>
               {categorias.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat.id_categoria} value={cat.id_categoria}>{cat.nombre}</option>
               ))}
               <option value="__nuevo__">Otra (escribir nueva)</option>
             </select>
-            {form.categoria === "__nuevo__" && (
+            {form.id_categoria === "__nuevo__" && (
               <Input
                 name="nueva_categoria"
                 placeholder="Nueva categoría"
                 value={form.nueva_categoria}
                 onChange={handleChange}
                 className="mt-2"
+                required
               />
             )}
           </div>
@@ -193,6 +219,7 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
               value={form.id_marca}
               onChange={handleChange}
               className="border rounded px-2 py-2 text-gray-700 w-full"
+              required
             >
               <option value="">Seleccione una marca...</option>
               {marcas.map((m) => (
@@ -207,6 +234,7 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
                 value={form.nueva_marca}
                 onChange={handleChange}
                 className="mt-2"
+                required
               />
             )}
           </div>
@@ -219,6 +247,7 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
               value={form.id_ubicacion}
               onChange={handleChange}
               className="border rounded px-2 py-2 text-gray-700 w-full"
+              required
             >
               <option value="">Seleccione una ubicación...</option>
               {ubicaciones.map((u) => (
@@ -233,6 +262,7 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
                 value={form.nueva_ubicacion}
                 onChange={handleChange}
                 className="mt-2"
+                required
               />
             )}
           </div>
@@ -251,13 +281,22 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
               {propietarios.map((p) => (
                 <option key={p.id_propietario} value={p.id_propietario}>{p.nombre}</option>
               ))}
+              <option value="__nuevo__">Otro (escribir nuevo)</option>
             </select>
+            {form.id_propietario === "__nuevo__" && (
+              <Input
+                name="nuevo_propietario"
+                placeholder="Nuevo propietario (empresa)"
+                value={form.nuevo_propietario}
+                onChange={handleChange}
+                className="mt-2"
+                required
+              />
+            )}
           </div>
 
           <Input name="direccion_mac" placeholder="MAC" value={form.direccion_mac} onChange={handleChange} />
           <Input name="ip" placeholder="IP" value={form.ip} onChange={handleChange} />
-
-          {/* Descripción */}
           <Input name="descripcion" placeholder="Descripción (opcional)" value={form.descripcion} onChange={handleChange} />
 
           {error && <div className="text-red-500 text-sm">{error}</div>}

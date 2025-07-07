@@ -62,6 +62,10 @@ export function LoanDetailModal({
                 <p className="text-base">{loan.fechaRecibo}</p>
               </div>
               <div>
+                <label className="text-sm font-medium text-gray-600">Ubicación</label>
+                <p className="text-base">{loan.ubicacion}</p>
+              </div>
+              <div>
                 <label className="text-sm font-medium text-gray-600">Descripción</label>
                 <p className="text-base">{loan.descripcion}</p>
               </div>
@@ -102,7 +106,7 @@ export function LoanDetailModal({
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Categoría</label>
-                    <p className="text-base">{equipo.categoria || loan.dispositivo || "-"}</p>
+                    <p className="text-base">{equipo.categoria?.nombre || loan.dispositivo || "-"}</p>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -138,7 +142,7 @@ export function LoanDetailModal({
               <Select value={selectedDeviceId} onValueChange={setSelectedDeviceId}>
                 {availableDevices.map(device => (
                   <SelectItem key={device.id_equipo} value={device.id_equipo}>
-                    {device.nombre_pc || device.nombre} ({device.categoria})
+                    {device.nombre_pc || device.nombre} ({device.categoria?.nombre || "-"})
                   </SelectItem>
                 ))}
               </Select>

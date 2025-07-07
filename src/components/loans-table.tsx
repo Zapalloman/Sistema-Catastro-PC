@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -8,6 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Edit, Trash2, Search, Download, ChevronLeft, ChevronRight, Printer, Eye, Plus } from "lucide-react"
 import { LoanDetailModal } from "./loan-detail-modal"
+import { AddLoanModal } from "./add-loan-modal"
+import * as XLSX from "xlsx"
+import { saveAs } from "file-saver"
 
 
 
@@ -25,6 +29,10 @@ export function LoansTable({ deviceType }: LoansTableProps) {
   const [showDetail, setShowDetail] = useState(false)
   const [selectedLoan, setSelectedLoan] = useState<any>(null)
   const [deviceTypeState, setDeviceType] = useState(deviceType)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [availableDevices, setAvailableDevices] = useState<any[]>([])
+  const [selectedDevice, setSelectedDevice] = useState<string>("")
+  const [equipos, setEquipos] = useState([]) // <--- AGREGA ESTA LÍNEA
 
   useEffect(() => {
     fetch("http://localhost:3000/api/prestamos")
@@ -32,6 +40,22 @@ export function LoansTable({ deviceType }: LoansTableProps) {
       .then(data => setPrestamos(data))
       .catch(() => setError("No se pudo cargar la lista de préstamos"))
       .finally(() => setLoading(false))
+  }, [])
+
+  // Cargar dispositivos disponibles al abrir el modal
+  useEffect(() => {
+    if (showAddModal) {
+      fetch("http://localhost:3000/api/equipos/disponibles")
+        .then(res => res.json())
+        .then(data => setAvailableDevices(Array.isArray(data) ? data : []))
+    }
+  }, [showAddModal])
+
+  // Cargar equipos (dispositivos) al cargar el componente
+  useEffect(() => {
+    fetch("http://localhost:3000/api/equipos/disponibles")
+      .then(res => res.json())
+      .then(data => setEquipos(Array.isArray(data) ? data : []))
   }, [])
 
   // Mapea los datos del backend al formato de la tabla
@@ -46,11 +70,9 @@ export function LoansTable({ deviceType }: LoansTableProps) {
         : "DESCONOCIDO",
     nroRecibo: p.id_prestamo,
     fechaRecibo: p.fecha_prestamo ? p.fecha_prestamo.slice(0, 10) : "",
-    grado: "-", // Si tienes este dato en el equipo o usuario, cámbialo aquí
     funcionario: p.rut_usuario,
-    departamento: "-", // Si tienes este dato, cámbialo aquí
-    seccion: "-", // Si tienes este dato, cámbialo aquí
-    dispositivo: p.equipo?.categoria || "OTRO",
+    ubicacion: p.equipo?.ubicacion?.nombre || "-",
+    dispositivo: p.equipo?.categoria?.nombre || "OTRO",
     capacidad: p.equipo?.almacenamiento || "-",
     serie: p.equipo?.numero_serie || "-",
     descripcion: p.descripcion || "",
@@ -62,15 +84,25 @@ export function LoansTable({ deviceType }: LoansTableProps) {
   const filteredData = loansData.filter((loan) => {
     const matchesSearch =
       loan.funcionario.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      loan.departamento.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      //loan.departamento.toLowerCase().includes(searchTerm.toLowerCase()) ||
       loan.dispositivo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       loan.serie.toLowerCase().includes(searchTerm.toLowerCase()) ||
       loan.nroRecibo.toString().includes(searchTerm)
 
-    const matchesDeviceType =
-      deviceType === "TODOS" ? true : loan.dispositivo?.toUpperCase() === deviceType
+    let matchesDeviceType = true
+    if (deviceType !== "TODOS") {
+      if (deviceType === "OTRO") {
+        // Mostrar préstamos cuyo equipo no tiene categoría (o es nulo)
+        matchesDeviceType =
+          !loan.equipo?.categoria ||
+          !loan.equipo.categoria.id_categoria
+      } else {
+        matchesDeviceType =
+          !!loan.equipo?.categoria?.id_categoria &&
+          String(loan.equipo.categoria.id_categoria) === deviceType
+      }
+    }
 
-    // Quita temporalmente el filtro de estado para debug
     return matchesSearch && matchesDeviceType
   })
 
@@ -84,15 +116,56 @@ export function LoansTable({ deviceType }: LoansTableProps) {
     setShowDetail(true)
   }
 
+  const handleAddLoan = async () => {
+    if (!selectedDevice) return
+    // Aquí puedes pedir más datos si lo necesitas (ej: usuario, fecha, etc)
+    await fetch("http://localhost:3000/api/prestamos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id_equipo: Number(selectedDevice),
+        rut_usuario: "PRUEBA", // Cambia esto por el usuario real
+        fecha_prestamo: new Date().toISOString().slice(0, 10),
+        estado: 1, // ACTIVO
+        descripcion: "Préstamo generado desde UI"
+      })
+    })
+    setShowAddModal(false)
+    setSelectedDevice("")
+    // Refresca la tabla de préstamos activos (puedes llamar a tu función de recarga aquí)
+    window.location.reload()
+  }
+
+  const handleExportExcel = () => {
+    // Solo exporta los datos filtrados y paginados
+    const exportData = filteredData.map(loan => ({
+      "Estado Recibo": loan.estadoRecibo,
+      "Nro. Recibo": loan.nroRecibo,
+      "Fecha Recibo": loan.fechaRecibo,
+      "Funcionario": loan.funcionario,
+      "Ubicación": loan.ubicacion,
+      "Dispositivo": loan.equipo?.categoria?.nombre || "-",
+      "Capacidad": loan.capacidad,
+      "Serie": loan.serie,
+      "Descripción": loan.descripcion,
+    }))
+    const worksheet = XLSX.utils.json_to_sheet(exportData)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Préstamos")
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" })
+    const blob = new Blob([excelBuffer], { type: "application/octet-stream" })
+    saveAs(blob, "prestamos.xlsx")
+  }
+
   return (
     <div className="space-y-4">
       {/* Acciones y filtros */}
       <div className="flex items-center gap-4">
-        <Button onClick={() => {}} className="bg-teal-500 hover:bg-teal-600">
+        <Button onClick={() => setShowAddModal(true)} className="bg-teal-500 hover:bg-teal-600">
           <Plus className="w-4 h-4 mr-2" />
           Agregar Dispositivo
         </Button>
-        <Button onClick={() => {}} variant="outline" className="border-gray-300">
+        <Button onClick={handleExportExcel} variant="outline" className="border-gray-300">
           <Download className="w-4 h-4 mr-2" />
           Exportar Excel
         </Button>
@@ -116,10 +189,8 @@ export function LoansTable({ deviceType }: LoansTableProps) {
               <TableHead className="font-semibold text-gray-700">Estado Recibo</TableHead>
               <TableHead className="font-semibold text-gray-700">Nro. Recibo</TableHead>
               <TableHead className="font-semibold text-gray-700">Fecha Recibo</TableHead>
-              <TableHead className="font-semibold text-gray-700">Grado</TableHead>
               <TableHead className="font-semibold text-gray-700">Funcionario</TableHead>
-              <TableHead className="font-semibold text-gray-700">Departamento</TableHead>
-              <TableHead className="font-semibold text-gray-700">Sección</TableHead>
+              <TableHead className="font-semibold text-gray-700">Ubicación</TableHead>
               <TableHead className="font-semibold text-gray-700">Dispositivo</TableHead>
               <TableHead className="font-semibold text-gray-700">Capacidad</TableHead>
               <TableHead className="font-semibold text-gray-700">Serie</TableHead>
@@ -127,52 +198,51 @@ export function LoansTable({ deviceType }: LoansTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedData.map((loan, index) => (
-              <TableRow key={`${loan.nroRecibo}-${index}`} className="hover:bg-gray-50">
-                <TableCell>
-                  <Badge
-                    variant="default"
-                    className={loan.estadoRecibo === "ACTIVO" ? "bg-green-500" : "bg-gray-500"}
-                  >
-                    {loan.estadoRecibo}
-                  </Badge>
-                </TableCell>
-                <TableCell className="font-medium">{loan.nroRecibo}</TableCell>
-                <TableCell>{loan.fechaRecibo}</TableCell>
-                <TableCell>{loan.grado}</TableCell>
-                <TableCell className="max-w-48 truncate" title={loan.funcionario}>
-                  {loan.funcionario}
-                </TableCell>
-                <TableCell className="max-w-40 truncate" title={loan.departamento}>
-                  {loan.departamento}
-                </TableCell>
-                <TableCell className="max-w-32 truncate" title={loan.seccion}>
-                  {loan.seccion}
-                </TableCell>
-                <TableCell>{loan.dispositivo}</TableCell>
-                <TableCell>{loan.capacidad}</TableCell>
-                <TableCell className="font-mono text-xs" title={loan.serie}>
-                  {loan.serie.substring(0, 15)}...
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    {/* Aquí van los botones de acción */}
-                    <Button size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50" onClick={() => {}}>
-                      <Edit className="w-3 h-3" />
-                    </Button>
-                    <Button size="sm" variant="outline" className="text-gray-600 border-gray-200 hover:bg-gray-50" onClick={() => {}}>
-                      <Printer className="w-3 h-3" />
-                    </Button>
-                    <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleView(loan)}>
-                      <Eye className="w-3 h-3" />
-                    </Button>
-                    <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => {}}>
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </div>
+            {paginatedData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                  No hay préstamos activos para los criterios seleccionados.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              paginatedData.map((loan) => (
+                <TableRow key={loan.nroRecibo} className="hover:bg-gray-50">
+                  <TableCell>
+                    <Badge
+                      variant="default"
+                      className={loan.estadoRecibo === "ACTIVO" ? "bg-green-500" : "bg-gray-500"}
+                    >
+                      {loan.estadoRecibo}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-medium">{loan.nroRecibo}</TableCell>
+                  <TableCell>{loan.fechaRecibo}</TableCell>
+                  <TableCell className="max-w-48 truncate" title={loan.funcionario}>
+                    {loan.funcionario}
+                  </TableCell>
+                  <TableCell className="max-w-40 truncate" title={loan.ubicacion}>
+                    {loan.ubicacion}
+                  </TableCell>
+                  <TableCell>
+                    {loan.equipo?.categoria?.nombre || "-"}
+                  </TableCell>
+                  <TableCell>{loan.capacidad}</TableCell>
+                  <TableCell className="font-mono text-xs" title={loan.serie}>
+                    {(loan.serie || "").substring(0, 15)}...
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleView(loan.raw)}
+                      title="Ver Detalle"
+                    >
+                      <Eye className="w-5 h-5 text-blue-600" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
@@ -224,6 +294,16 @@ export function LoansTable({ deviceType }: LoansTableProps) {
         isOpen={showDetail}
         onClose={() => setShowDetail(false)}
         columns={Object.keys(loansData[0] || {})}
+      />
+
+      {/* Modal para agregar préstamo */}
+      <AddLoanModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        availableDevices={availableDevices}
+        selectedDevice={selectedDevice}
+        setSelectedDevice={setSelectedDevice}
+        onAddLoan={handleAddLoan}
       />
     </div>
   )
