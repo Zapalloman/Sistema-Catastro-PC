@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { RutAutocomplete } from "./rut-autocomplete"
 
 export function YourComponent() {
   const [showAddLoan, setShowAddLoan] = useState(false)
@@ -35,7 +36,8 @@ export function AddLoanModal({ open, onClose = () => {}, onLoanAdded }) {
   const [equipos, setEquipos] = useState([])
   const [search, setSearch] = useState("")
   const [selectedEquipo, setSelectedEquipo] = useState(null)
-  const [rutFuncionario, setRutFuncionario] = useState("") // NUEVO
+  const [rutFuncionario, setRutFuncionario] = useState("")
+  const [userDetail, setUserDetail] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -93,12 +95,11 @@ export function AddLoanModal({ open, onClose = () => {}, onLoanAdded }) {
         <div className="space-y-4">
           {/* Campo para RUT */}
           <div>
-            <label className="block mb-1 font-medium">RUT Funcionario</label>
-            <Input
-              placeholder="Ingrese el RUT del funcionario"
+            <label className="block mb-1 font-medium">Funcionario</label>
+            <RutAutocomplete
               value={rutFuncionario}
-              onChange={e => setRutFuncionario(e.target.value)}
-              className="w-full"
+              onChange={setRutFuncionario}
+              onUserSelected={setUserDetail}
             />
           </div>
           {/* Select de categoría */}
@@ -117,11 +118,11 @@ export function AddLoanModal({ open, onClose = () => {}, onLoanAdded }) {
           </div>
           {/* Filtro de búsqueda */}
           <Input
-            placeholder="Buscar dispositivo por nombre, serie, modelo, etc..."
+            placeholder="Buscar por nombre, serie, modelo, etc..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full"
-            disabled={!selectedCategoria}
+            autoComplete="off"
           />
           {/* Tabla responsiva de dispositivos */}
           <div className="overflow-x-auto rounded border">
