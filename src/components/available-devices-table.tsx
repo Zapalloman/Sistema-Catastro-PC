@@ -51,7 +51,6 @@ export function AvailableDevicesTable({ deviceType }: { deviceType: string }) {
 
   return (
     <div className="space-y-4">
-      {/* Acciones y filtros */}
       <div className="flex items-center gap-4">
         <Button onClick={() => setShowAddModal(true)} className="bg-teal-500 hover:bg-teal-600">
           <Plus className="w-4 h-4 mr-2" />

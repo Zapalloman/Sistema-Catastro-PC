@@ -21,6 +21,12 @@ export function LoanDetailModal({
 }: LoanDetailModalProps) {
   if (!loan) return null
 
+  const estadoTexto = {
+    1: "ACTIVO",
+    0: "DISPONIBLE",
+    2: "NO APTO"
+  } as Record<string | number, string>;
+
   const equipo = loan.equipo && Object.keys(loan.equipo).length > 0 ? loan.equipo : null
   const availableDevices = Array.isArray(loan.disponibles) ? loan.disponibles : []
   const [selectedDeviceId, setSelectedDeviceId] = React.useState<string | null>(null)
@@ -39,50 +45,28 @@ export function LoanDetailModal({
 
         <div className="space-y-6">
           {/* Información principal */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium text-gray-600">Nro. Recibo</label>
-                <p className="text-lg font-semibold">{loan.nroRecibo}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Funcionario</label>
-                <p className="text-base">{loan.funcionario}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Estado</label>
-                <div className="mt-1">
-                  <Badge variant={loan.estadoRecibo === "ACTIVO" ? "default" : "secondary"} className="bg-green-500">
-                    {loan.estadoRecibo}
-                  </Badge>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Fecha Préstamo</label>
-                <p className="text-base">{loan.fechaRecibo}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Ubicación</label>
-                <p className="text-base">{loan.ubicacion}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Descripción</label>
-                <p className="text-base">{loan.descripcion}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <div className="text-xs text-gray-500">Nro. Recibo</div>
+              <div className="font-semibold">{loan?.id_prestamo ?? "-"}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Funcionario</div>
+              <div className="font-semibold">{loan?.rut_revisor ?? loan?.rut_usuario ?? "-"}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Estado</div>
+              <div className="font-semibold">
+                {estadoTexto[loan?.estado] ?? loan?.estado ?? "-"}
               </div>
             </div>
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium text-gray-600">Departamento</label>
-                <p className="text-base">{loan.departamento}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Sección</label>
-                <p className="text-base">{loan.seccion}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Grado</label>
-                <p className="text-base">{loan.grado}</p>
-              </div>
+            <div>
+              <div className="text-xs text-gray-500">Fecha Préstamo</div>
+              <div className="font-semibold">{loan?.fecha_prestamo ? loan.fecha_prestamo.slice(0, 10) : "-"}</div>
+            </div>
+            <div className="md:col-span-2">
+              <div className="text-xs text-gray-500">Descripción</div>
+              <div className="font-semibold">{loan?.descripcion ?? "-"}</div>
             </div>
           </div>
 
@@ -148,6 +132,20 @@ export function LoanDetailModal({
               </Select>
             </div>
           </div>
+
+          {/* Lista de equipos en el préstamo (nuevo) */}
+          {loan.equipos && loan.equipos.length > 0 && (
+            <div className="border-t pt-4">
+              <h3 className="text-lg font-semibold mb-4">Equipos en el Préstamo</h3>
+              <ul className="list-disc list-inside space-y-2">
+                {loan.equipos.map(eq => (
+                  <li key={eq.id_equipo} className="text-base">
+                    {eq.nombre_pc || eq.modelo} - Serie: {eq.numero_serie} - Capacidad: {eq.almacenamiento}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -60,34 +60,25 @@ export function LoansTable({ deviceType }: LoansTableProps) {
 
   // Mapea los datos del backend al formato de la tabla
   const loansData = prestamos.map((p) => ({
-    estadoRecibo:
-      p.estado === 1
-        ? "ACTIVO"
-        : p.estado === 0
-        ? "FINALIZADO"
-        : p.estado === 2
-        ? "NO APTO"
-        : "DESCONOCIDO",
+    estadoRecibo: p.estado === 1 ? "ACTIVO" : p.estado === 0 ? "FINALIZADO" : p.estado === 2 ? "NO APTO" : "DESCONOCIDO",
     nroRecibo: p.id_prestamo,
     fechaRecibo: p.fecha_prestamo ? p.fecha_prestamo.slice(0, 10) : "",
-    funcionario: p.rut_usuario,
-    ubicacion: p.equipo?.ubicacion?.nombre || "-",
-    dispositivo: p.equipo?.categoria?.nombre || "OTRO",
-    capacidad: p.equipo?.almacenamiento || "-",
-    serie: p.equipo?.numero_serie || "-",
+    funcionario: p.nombre_revisor || p.rut_revisor || "-",
+    dispositivos: p.equipos && p.equipos.length > 0
+      ? p.equipos.map(eq => eq.nombre_pc || eq.modelo || eq.numero_serie).join(', ')
+      : '-',
+    cantidadDispositivos: p.equipos ? p.equipos.length : 0,
     descripcion: p.descripcion || "",
-    equipo: p.equipo,
     raw: p,
-  }))
+  }));
 
   // Filtro por búsqueda, tipo y estado ACTIVO
   const filteredData = loansData.filter((loan) => {
     const matchesSearch =
-      loan.funcionario.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      //loan.departamento.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      loan.dispositivo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      loan.serie.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      loan.nroRecibo.toString().includes(searchTerm)
+      (loan.funcionario || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (loan.dispositivo || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (loan.serie || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (loan.nroRecibo ? loan.nroRecibo.toString() : "").includes(searchTerm)
 
     let matchesDeviceType = true
     if (deviceType !== "TODOS") {
@@ -190,10 +181,9 @@ export function LoansTable({ deviceType }: LoansTableProps) {
               <TableHead className="font-semibold text-gray-700">Nro. Recibo</TableHead>
               <TableHead className="font-semibold text-gray-700">Fecha Recibo</TableHead>
               <TableHead className="font-semibold text-gray-700">Funcionario</TableHead>
-              <TableHead className="font-semibold text-gray-700">Ubicación</TableHead>
-              <TableHead className="font-semibold text-gray-700">Dispositivo</TableHead>
-              <TableHead className="font-semibold text-gray-700">Capacidad</TableHead>
-              <TableHead className="font-semibold text-gray-700">Serie</TableHead>
+              <TableHead className="font-semibold text-gray-700">Dispositivos</TableHead>
+              <TableHead className="font-semibold text-gray-700">Cantidad</TableHead>
+              <TableHead className="font-semibold text-gray-700">Descripción</TableHead>
               <TableHead className="font-semibold text-gray-700">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -220,24 +210,14 @@ export function LoansTable({ deviceType }: LoansTableProps) {
                   <TableCell className="max-w-48 truncate" title={loan.funcionario}>
                     {loan.funcionario}
                   </TableCell>
-                  <TableCell className="max-w-40 truncate" title={loan.ubicacion}>
-                    {loan.ubicacion}
+                  <TableCell className="max-w-40 truncate" title={loan.dispositivos}>
+                    {loan.dispositivos}
                   </TableCell>
+                  <TableCell>{loan.cantidadDispositivos}</TableCell>
+                  <TableCell>{loan.descripcion}</TableCell>
                   <TableCell>
-                    {loan.equipo?.categoria?.nombre || "-"}
-                  </TableCell>
-                  <TableCell>{loan.capacidad}</TableCell>
-                  <TableCell className="font-mono text-xs" title={loan.serie}>
-                    {(loan.serie || "").substring(0, 15)}...
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleView(loan.raw)}
-                      title="Ver Detalle"
-                    >
-                      <Eye className="w-5 h-5 text-blue-600" />
+                    <Button onClick={() => handleView(loan.raw)} variant="ghost" size="icon" title="Ver Detalle">
+                      <Eye className="w-5 h-5" />
                     </Button>
                   </TableCell>
                 </TableRow>

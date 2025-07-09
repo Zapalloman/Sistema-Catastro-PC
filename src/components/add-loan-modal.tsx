@@ -35,9 +35,15 @@ export function AddLoanModal({ open, onClose = () => {}, onLoanAdded }) {
   const [selectedCategoria, setSelectedCategoria] = useState("")
   const [equipos, setEquipos] = useState([])
   const [search, setSearch] = useState("")
-  const [selectedEquipo, setSelectedEquipo] = useState(null)
-  const [rutFuncionario, setRutFuncionario] = useState("")
-  const [userDetail, setUserDetail] = useState<any>(null)
+  const [selectedEquipos, setSelectedEquipos] = useState<number[]>([])
+  const [rutRevisor, setRutRevisor] = useState("")
+  const [rutEntrega, setRutEntrega] = useState("")
+  const [rutResponsable, setRutResponsable] = useState("")
+  const [cargoPrestamo, setCargoPrestamo] = useState("")
+  const [motivo, setMotivo] = useState("")
+  const [firma1, setFirma1] = useState({ nombre: "", cargoMilitar: "", cargoDepto: "", subrogante: false })
+  const [firma2, setFirma2] = useState({ nombre: "", cargoMilitar: "", cargoDepto: "", subrogante: false })
+  const [distribucion, setDistribucion] = useState("")
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -47,13 +53,13 @@ export function AddLoanModal({ open, onClose = () => {}, onLoanAdded }) {
   }, [])
 
   useEffect(() => {
+    let url = "http://localhost:3000/api/equipos/disponibles";
     if (selectedCategoria) {
-      fetch(`http://localhost:3000/api/equipos/disponibles?categoria=${selectedCategoria}`)
-        .then(res => res.json())
-        .then(data => setEquipos(Array.isArray(data) ? data : []))
-    } else {
-      setEquipos([])
+      url += `?categoria=${selectedCategoria}`;
     }
+    fetch(url)
+      .then(res => res.json())
+      .then(data => setEquipos(Array.isArray(data) ? data : []));
   }, [selectedCategoria])
 
   const filteredEquipos = equipos.filter(eq =>
@@ -66,67 +72,93 @@ export function AddLoanModal({ open, onClose = () => {}, onLoanAdded }) {
   )
 
   const handleAddLoan = async () => {
-    if (!selectedEquipo || !rutFuncionario) return
-    setLoading(true)
-    await fetch("http://localhost:3000/api/prestamos", {
+    if (!rutRevisor || !rutEntrega || !rutResponsable || selectedEquipos.length === 0 || !cargoPrestamo) return;
+    setLoading(true);
+    const response = await fetch("http://localhost:3000/api/prestamos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id_equipo: selectedEquipo,
-        rut_usuario: rutFuncionario, // Usa el rut ingresado
+        rut_revisor: rutRevisor,
+        rut_entrega: rutEntrega,
+        rut_responsable: rutResponsable,
+        equipos: selectedEquipos,
+        cargo_prestamo: cargoPrestamo,
+        descripcion: motivo,
+        firma1_nombre: firma1.nombre,
+        firma1_cargo_militar: firma1.cargoMilitar,
+        firma1_cargo_departamento: firma1.cargoDepto,
+        firma1_subrogante: firma1.subrogante,
+        firma2_nombre: firma2.nombre,
+        firma2_cargo_militar: firma2.cargoMilitar,
+        firma2_cargo_departamento: firma2.cargoDepto,
+        firma2_subrogante: firma2.subrogante,
+        distribucion,
         fecha_prestamo: new Date().toISOString().slice(0, 10),
         estado: "1"
       })
-    })
-    setLoading(false)
-    onLoanAdded && onLoanAdded()
-    onClose()
+    });
+    const prestamo = await response.json();
+    // Descargar el Word
+    window.open(`http://localhost:3000/api/prestamos/${prestamo.id_prestamo}/documento`, "_blank");
+    setLoading(false);
+    onLoanAdded && onLoanAdded();
+    onClose();
   }
 
   return (
     <Dialog open={open} onOpenChange={open => { if (!open) onClose(); }}>
       <DialogContent
-        className="w-[950px] max-w-[98vw] p-6"
-        style={{ minWidth: 1000 }}
+        className="max-w-[1200px] w-full p-6"
+        style={{ minWidth: 1100 }}
       >
         <DialogHeader>
           <DialogTitle>Agregar Préstamo</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          {/* Campo para RUT */}
-          <div>
-            <label className="block mb-1 font-medium">Funcionario</label>
-            <RutAutocomplete
-              value={rutFuncionario}
-              onChange={setRutFuncionario}
-              onUserSelected={setUserDetail}
-            />
+          {/* Selección de funcionarios */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block mb-1 font-medium">Funcionario que revisa</label>
+              <RutAutocomplete value={rutRevisor} onChange={setRutRevisor} />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium">Funcionario que entrega</label>
+              <RutAutocomplete value={rutEntrega} onChange={setRutEntrega} />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium">Responsable de la unidad</label>
+              <RutAutocomplete value={rutResponsable} onChange={setRutResponsable} />
+            </div>
           </div>
-          {/* Select de categoría */}
-          <div>
-            <label className="block mb-1 font-medium">Categoría</label>
-            <select
-              className="border rounded px-2 py-2 w-full"
-              value={selectedCategoria}
-              onChange={e => setSelectedCategoria(e.target.value)}
-            >
-              <option value="">Seleccione una categoría...</option>
-              {categorias.map(cat => (
-                <option key={cat.id_categoria} value={cat.id_categoria}>{cat.nombre}</option>
-              ))}
-            </select>
+          {/* Selección de categoría y búsqueda */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block mb-1 font-medium">Categoría</label>
+              <select
+                className="border rounded px-2 py-2 w-full"
+                value={selectedCategoria}
+                onChange={e => setSelectedCategoria(e.target.value)}
+              >
+                <option value="">Todos los dispositivos</option>
+                {categorias.map(cat => (
+                  <option key={cat.id_categoria} value={cat.id_categoria.toString()}>{cat.nombre}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block mb-1 font-medium">Buscar dispositivo</label>
+              <Input
+                placeholder="Buscar por nombre, serie, modelo, etc..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full"
+                autoComplete="off"
+              />
+            </div>
           </div>
-          {/* Filtro de búsqueda */}
-          <Input
-            placeholder="Buscar por nombre, serie, modelo, etc..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full"
-            autoComplete="off"
-          />
-          {/* Tabla responsiva de dispositivos */}
-          <div className="overflow-x-auto rounded border">
-            <Table className="min-w-[900px]">
+          {/* Tabla de dispositivos con selección múltiple */}
+          <div className="overflow-x-auto rounded border bg-white">
+            <Table className="min-w-[1000px]">
               <TableHeader>
                 <TableRow>
                   <TableHead></TableHead>
@@ -148,18 +180,15 @@ export function AddLoanModal({ open, onClose = () => {}, onLoanAdded }) {
                   </TableRow>
                 ) : (
                   filteredEquipos.map(eq => (
-                    <TableRow
-                      key={eq.id_equipo}
-                      className={selectedEquipo === eq.id_equipo ? "bg-blue-100" : ""}
-                      onClick={() => setSelectedEquipo(eq.id_equipo)}
-                      style={{ cursor: "pointer" }}
-                    >
+                    <TableRow key={eq.id_equipo}>
                       <TableCell>
                         <input
-                          type="radio"
-                          name="equipo"
-                          checked={selectedEquipo === eq.id_equipo}
-                          onChange={() => setSelectedEquipo(eq.id_equipo)}
+                          type="checkbox"
+                          checked={selectedEquipos.includes(eq.id_equipo)}
+                          onChange={e => {
+                            if (e.target.checked) setSelectedEquipos([...selectedEquipos, eq.id_equipo]);
+                            else setSelectedEquipos(selectedEquipos.filter(id => id !== eq.id_equipo));
+                          }}
                         />
                       </TableCell>
                       <TableCell>{eq.nombre_pc}</TableCell>
@@ -175,9 +204,114 @@ export function AddLoanModal({ open, onClose = () => {}, onLoanAdded }) {
               </TableBody>
             </Table>
           </div>
+          {/* Cargo del préstamo */}
+          <div>
+            <label className="block mb-1 font-medium">Cargo del préstamo</label>
+            <select
+              value={cargoPrestamo}
+              onChange={e => setCargoPrestamo(e.target.value)}
+              className="border rounded px-2 py-2 w-full"
+            >
+              <option value="">Seleccione...</option>
+              <option value="FISCAL">Fiscal</option>
+              <option value="PARTICULAR">Particular</option>
+            </select>
+          </div>
+          {/* Motivo */}
+          <div>
+            <label className="block mb-1 font-medium">Motivo</label>
+            <textarea
+              value={motivo}
+              onChange={e => setMotivo(e.target.value)}
+              className="w-full border rounded"
+            />
+          </div>
+          {/* Firmas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block mb-1 font-medium">Firma 1</label>
+              <input
+                placeholder="Nombre"
+                value={firma1.nombre}
+                onChange={e => setFirma1({ ...firma1, nombre: e.target.value })}
+                className="border rounded px-2 py-2 w-full mb-2"
+              />
+              <input
+                placeholder="Cargo militar"
+                value={firma1.cargoMilitar}
+                onChange={e => setFirma1({ ...firma1, cargoMilitar: e.target.value })}
+                className="border rounded px-2 py-2 w-full mb-2"
+              />
+              <input
+                placeholder="Cargo departamento"
+                value={firma1.cargoDepto}
+                onChange={e => setFirma1({ ...firma1, cargoDepto: e.target.value })}
+                className="border rounded px-2 py-2 w-full mb-2"
+              />
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={firma1.subrogante}
+                  onChange={e => setFirma1({ ...firma1, subrogante: e.target.checked })}
+                  className="mr-2"
+                />
+                Subrogante
+              </label>
+            </div>
+            <div>
+              <label className="block mb-1 font-medium">Firma 2</label>
+              <input
+                placeholder="Nombre"
+                value={firma2.nombre}
+                onChange={e => setFirma2({ ...firma2, nombre: e.target.value })}
+                className="border rounded px-2 py-2 w-full mb-2"
+              />
+              <input
+                placeholder="Cargo militar"
+                value={firma2.cargoMilitar}
+                onChange={e => setFirma2({ ...firma2, cargoMilitar: e.target.value })}
+                className="border rounded px-2 py-2 w-full mb-2"
+              />
+              <input
+                placeholder="Cargo departamento"
+                value={firma2.cargoDepto}
+                onChange={e => setFirma2({ ...firma2, cargoDepto: e.target.value })}
+                className="border rounded px-2 py-2 w-full mb-2"
+              />
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={firma2.subrogante}
+                  onChange={e => setFirma2({ ...firma2, subrogante: e.target.checked })}
+                  className="mr-2"
+                />
+                Subrogante
+              </label>
+            </div>
+          </div>
+          {/* Distribución */}
+          <div>
+            <label className="block mb-1 font-medium">Distribución (destinatarios)</label>
+            <textarea
+              value={distribucion}
+              onChange={e => setDistribucion(e.target.value)}
+              className="w-full border rounded"
+            />
+          </div>
+          {/* Botones */}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onClose}>Cancelar</Button>
-            <Button onClick={handleAddLoan} disabled={!selectedEquipo || !rutFuncionario || loading}>
+            <Button
+              onClick={handleAddLoan}
+              disabled={
+                !rutRevisor ||
+                !rutEntrega ||
+                !rutResponsable ||
+                selectedEquipos.length === 0 ||
+                !cargoPrestamo ||
+                loading
+              }
+            >
               {loading ? "Agregando..." : "Agregar Préstamo"}
             </Button>
           </div>
