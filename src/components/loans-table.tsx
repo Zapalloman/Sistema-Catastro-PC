@@ -69,29 +69,29 @@ export function LoansTable({ deviceType }: LoansTableProps) {
       : '-',
     cantidadDispositivos: p.equipos ? p.equipos.length : 0,
     descripcion: p.descripcion || "",
-    raw: p,
+    raw: p, // p debe tener p.equipos con la info de categoria
   }));
 
   // Filtro por búsqueda, tipo y estado ACTIVO
   const filteredData = loansData.filter((loan) => {
     const matchesSearch =
       (loan.funcionario || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (loan.dispositivo || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (loan.dispositivos || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (loan.serie || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (loan.nroRecibo ? loan.nroRecibo.toString() : "").includes(searchTerm)
+      (loan.nroRecibo ? loan.nroRecibo.toString() : "").includes(searchTerm);
 
-    let matchesDeviceType = true
+    let matchesDeviceType = true;
     if (deviceType !== "TODOS") {
-      if (deviceType === "OTRO") {
-        // Mostrar préstamos cuyo equipo no tiene categoría (o es nulo)
-        matchesDeviceType =
-          !loan.equipo?.categoria ||
-          !loan.equipo.categoria.id_categoria
-      } else {
-        matchesDeviceType =
-          !!loan.equipo?.categoria?.id_categoria &&
-          String(loan.equipo.categoria.id_categoria) === deviceType
-      }
+      // loan.raw.equipos debe ser un array de equipos con categoria
+      matchesDeviceType =
+        Array.isArray(loan.raw?.equipos) &&
+        loan.raw.equipos.some(
+          (eq) =>
+            eq.categoria &&
+            (eq.categoria.id_categoria?.toString() === deviceType ||
+              eq.categoria === deviceType || // por si viene como string
+              eq.categoria.nombre?.toUpperCase() === deviceType.toUpperCase())
+        );
     }
 
     return matchesSearch && matchesDeviceType
@@ -154,7 +154,7 @@ export function LoansTable({ deviceType }: LoansTableProps) {
       <div className="flex items-center gap-4">
         <Button onClick={() => setShowAddModal(true)} className="bg-teal-500 hover:bg-teal-600">
           <Plus className="w-4 h-4 mr-2" />
-          Agregar Dispositivo
+          Activar Préstamo
         </Button>
         <Button onClick={handleExportExcel} variant="outline" className="border-gray-300">
           <Download className="w-4 h-4 mr-2" />
@@ -216,9 +216,15 @@ export function LoansTable({ deviceType }: LoansTableProps) {
                   <TableCell>{loan.cantidadDispositivos}</TableCell>
                   <TableCell>{loan.descripcion}</TableCell>
                   <TableCell>
-                    <Button onClick={() => handleView(loan.raw)} variant="ghost" size="icon" title="Ver Detalle">
-                      <Eye className="w-5 h-5" />
-                    </Button>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500"
+                        onClick={() => handleView(loan.raw)}
+                        title="Ver detalles"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
                   </TableCell>
                 </TableRow>
               ))

@@ -34,6 +34,7 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
     id_propietario: "",
     nuevo_propietario: "",
     descripcion: "",
+    llave_inventario: "",
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -159,6 +160,7 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
         id_propietario: "",
         nuevo_propietario: "",
         descripcion: "",
+        llave_inventario: "",
       })
       onDeviceAdded && onDeviceAdded()
       onClose()
@@ -298,6 +300,19 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
           <Input name="direccion_mac" placeholder="MAC" value={form.direccion_mac} onChange={handleChange} />
           <Input name="ip" placeholder="IP" value={form.ip} onChange={handleChange} />
           <Input name="descripcion" placeholder="Descripción (opcional)" value={form.descripcion} onChange={handleChange} />
+
+          {form.id_propietario === "1" && (
+            <div className="col-span-2 mt-4">
+              <Input
+                name="llave_inventario"
+                placeholder="Llave de Inventario"
+                value={form.llave_inventario}
+                onChange={handleChange}
+                required
+              />
+              <span className="text-xs text-gray-500">Obligatorio para equipos IGM</span>
+            </div>
+          )}
 
           {error && <div className="text-red-500 text-sm">{error}</div>}
           <div className="flex justify-end gap-2">

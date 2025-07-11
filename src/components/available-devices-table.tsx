@@ -73,6 +73,7 @@ export function AvailableDevicesTable({ deviceType }: { deviceType: string }) {
           <TableHeader>
             <TableRow className="bg-gray-100">
               <TableHead className="font-semibold text-gray-700">Nombre PC</TableHead>
+              <TableHead className="font-semibold text-gray-700">Llave de Inventario</TableHead>
               <TableHead className="font-semibold text-gray-700">Serie</TableHead>
               <TableHead className="font-semibold text-gray-700">Tipo</TableHead>
               <TableHead className="font-semibold text-gray-700">Capacidad</TableHead>
@@ -84,14 +85,17 @@ export function AvailableDevicesTable({ deviceType }: { deviceType: string }) {
           <TableBody>
             {paginatedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                   No hay dispositivos disponibles para los criterios seleccionados
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedData.map((eq, index) => (
-                <TableRow key={`${eq.id_equipo}-${index}`} className="hover:bg-gray-50">
+              paginatedData.map((eq, idx) => (
+                <TableRow key={eq.id_equipo + '-' + idx}>
                   <TableCell>{eq.nombre_pc}</TableCell>
+                  <TableCell>
+                    {eq.llave_inventario ? eq.llave_inventario : ""}
+                  </TableCell>
                   <TableCell className="font-mono text-xs">{eq.numero_serie}</TableCell>
                   <TableCell>{eq.categoria?.nombre || eq.categoria || "-"}</TableCell>
                   <TableCell>{eq.almacenamiento}</TableCell>

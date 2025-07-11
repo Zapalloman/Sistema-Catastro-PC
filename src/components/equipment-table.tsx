@@ -42,8 +42,14 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
           propietario: eq.propietario || "",
           id_propietario: eq.id_propietario,
           ubicacion: typeof eq.ubicacion === "object" && eq.ubicacion !== null ? eq.ubicacion.nombre : eq.ubicacion || "",
-          categoria: typeof eq.categoria === "object" && eq.categoria !== null ? eq.categoria.nombre : eq.categoria || "",
+          categoria: typeof eq.categoria === "object" && eq.categoria !== null
+  ? eq.categoria.nombre
+  : eq.categoria || "",
           id_equipo: eq.id_equipo,
+          llave_inventario: eq.llave_inventario || "", // Agregado aquí
+          fechaAdquisicion: formatFecha(eq.fecha_adquisicion), // Agregado aquí
+          version_sistema_operativo: eq.version_sistema_operativo || "", // Agregado aquí
+          version_office: eq.version_office || "", // Agregado aquí
         }))
         setEquipos(mapped)
       })
@@ -51,26 +57,43 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
       .finally(() => setLoading(false))
   }, [refresh])
 
-  // Filtrado por propietario (si aplica)
-  const filteredData = selectedPropietario === "TODOS"
-    ? equipos
-    : equipos.filter(eq => eq.id_propietario?.toString() === selectedPropietario)
-
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [selectedEquipment, setSelectedEquipment] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedCategoria, setSelectedCategoria] = useState("TODOS")
+  const [categorias, setCategorias] = useState<any[]>([])
 
-  // Filter data based on search term and selected propietario
-  const dataToDisplay = filteredData.filter((equipment) => {
+  // Filtrado por propietario (si aplica)
+  const filteredData = selectedPropietario === "TODOS"
+    ? equipos
+    : equipos.filter(eq => eq.id_propietario?.toString() === selectedPropietario);
+
+  const filteredByCategoria = selectedCategoria === "TODOS"
+    ? filteredData
+    : filteredData.filter(eq => eq.categoria === selectedCategoria);
+
+  // Fetch categories for filtering
+  useEffect(() => {
+    fetch("http://localhost:3000/api/categorias")
+      .then(res => res.json())
+      .then(data => setCategorias(data))
+      .catch(() => setError("No se pudo cargar las categorías"))
+  }, [])
+
+  // Filter data based on search term, selected propietario, and selected categoria
+  const dataToDisplay = filteredByCategoria.filter((equipment) => {
     const matchesSearch =
       equipment.nombrePC.toLowerCase().includes(searchTerm.toLowerCase()) ||
       equipment.serie.toLowerCase().includes(searchTerm.toLowerCase()) ||
       equipment.modeloPC.toLowerCase().includes(searchTerm.toLowerCase()) ||
       equipment.marca.toLowerCase().includes(searchTerm.toLowerCase()) ||
       equipment.ip.includes(searchTerm)
-    return matchesSearch
+
+    const matchesCategoria = selectedCategoria === "TODOS" || equipment.categoria === selectedCategoria
+
+    return matchesSearch && matchesCategoria
   })
 
   // Pagination logic
@@ -118,6 +141,47 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
   const propietarioSeleccionado = equipos.find(eq => eq.id_propietario?.toString() === selectedPropietario)
   const propietarioNombre = propietarioSeleccionado ? propietarioSeleccionado.propietario : ""
 
+  // Utilidad para agrupar y contar
+  function groupCount(arr, keyFn) {
+    const map = new Map();
+    arr.forEach(item => {
+      const key = keyFn(item);
+      if (!key) return;
+      map.set(key, (map.get(key) || 0) + 1);
+    });
+    return Array.from(map.entries()).map(([key, count]) => ({ key, count }));
+  }
+
+  // Agrupa por versión de Windows (detecta "windows" en version_sistema_operativo)
+  const windowsCounts = groupCount(equipos, eq => {
+    const v = eq.version_sistema_operativo?.toLowerCase() || "";
+    if (v.includes("windows")) {
+      // Extrae "Windows X" o "Windows X.X"
+      const match = v.match(/windows\s*([0-9]+(\.[0-9]+)?)/i);
+      return match ? `Windows ${match[1]}` : "Windows";
+    }
+    return null;
+  }).sort((a, b) => b.count - a.count);
+
+  // Agrupa por versión de Office
+  const officeCounts = groupCount(equipos, eq => {
+    const v = eq.version_office?.toLowerCase() || "";
+    if (v.includes("office")) {
+      // Extrae "Office XXXX" o "Office 365"
+      const match = v.match(/office\s*([0-9]{4}|365)/i);
+      return match ? `Office ${match[1]}` : "Office";
+    }
+    return null;
+  }).sort((a, b) => b.count - a.count);
+
+  // Agrupa por marca
+  const marcaCounts = groupCount(equipos, eq => eq.marca || null).sort((a, b) => b.count - a.count);
+
+  // Paleta de colores para los recuadros (puedes agregar más)
+  const cardColors = [
+    "bg-blue-500", "bg-green-500", "bg-orange-500", "bg-purple-500", "bg-pink-500", "bg-yellow-500", "bg-cyan-500"
+  ];
+
   return (
     <div className="space-y-4">
       {/* Search and Controls */}
@@ -155,6 +219,21 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
         </Button>
       </div>
 
+      {/* Filter by category */}
+      <div className="flex items-center gap-4 mb-2">
+        <label className="text-sm">Filtrar por tipo:</label>
+        <select
+          value={selectedCategoria}
+          onChange={e => setSelectedCategoria(e.target.value)}
+          className="border rounded px-2 py-1"
+        >
+          <option value="TODOS">Todos</option>
+          {categorias.map(cat => (
+            <option key={cat.id_categoria} value={cat.nombre}>{cat.nombre}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Results Summary */}
       <div className="flex items-center justify-between text-sm text-gray-600">
         <span>
@@ -164,28 +243,31 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
       </div>
 
       {/* Table */}
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-x-auto w-full max-w-full mx-auto">
         <div className="bg-blue-500 text-white p-3">
           <h3 className="font-medium flex items-center gap-2">
             <Monitor className="w-4 h-4" />
-            Equipos de Cómputo
+            {selectedCategoria === "TODOS" ? "Equipos de Cómputo" : `Equipos: ${selectedCategoria}`}
           </h3>
         </div>
-        <Table>
+        <Table className="w-full">
           <TableHeader>
             <TableRow className="bg-gray-100">
-              <TableHead className="font-semibold text-gray-700">Serie</TableHead>
-              <TableHead className="font-semibold text-gray-700">Modelo PC</TableHead>
-              <TableHead className="font-semibold text-gray-700">Disco</TableHead>
-              <TableHead className="font-semibold text-gray-700">RAM</TableHead>
-              <TableHead className="font-semibold text-gray-700">Procesador</TableHead>
-              <TableHead className="font-semibold text-gray-700">Velocidad</TableHead>
-              <TableHead className="font-semibold text-gray-700">Marca</TableHead>
-              <TableHead className="font-semibold text-gray-700">MAC</TableHead>
-              <TableHead className="font-semibold text-gray-700">IP</TableHead>
-              <TableHead className="font-semibold text-gray-700">Nombre PC</TableHead>
-              <TableHead className="font-semibold text-gray-700">Categoria</TableHead>
-              <TableHead className="font-semibold text-gray-700">Acciones</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[70px]">Serie</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[110px]">Fecha de Adquisición</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[90px]">Llave de Inventario</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[90px]">Modelo PC</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[60px]">Disco</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[60px]">RAM</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[100px] truncate">Procesador</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[60px]">Marca</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[70px]">MAC</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[70px]">IP</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[80px]">Nombre PC</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[60px]">Categoria</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[120px]">Versión SO</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[100px]">Versión Office</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[50px] whitespace-nowrap text-center">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -197,22 +279,31 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
               </TableRow>
             ) : (
               paginatedData.map((equipment, index) => (
-                <TableRow key={`${equipment.serie}-${index}`} className="hover:bg-gray-50">
+                <TableRow key={equipment.serie + '-' + index}>
                   <TableCell className="font-mono text-xs">{equipment.serie}</TableCell>
+                  <TableCell className="min-w-[110px]">
+                    {equipment.fechaAdquisicion
+    ? equipment.fechaAdquisicion.split("T")[0].split("-").reverse().join("-")
+    : "-"}
+                  </TableCell>
+                  <TableCell className="min-w-[90px]">
+                    {equipment.id_propietario === 1 && equipment.llave_inventario ? equipment.llave_inventario : ""}
+                  </TableCell>
                   <TableCell>{equipment.modeloPC}</TableCell>
                   <TableCell>{equipment.disco}</TableCell>
                   <TableCell>{equipment.ram}</TableCell>
-                  <TableCell className="max-w-32 truncate" title={equipment.procesador}>
+                  <TableCell className="max-w-24 truncate" title={equipment.procesador}>
                     {equipment.procesador}
                   </TableCell>
-                  <TableCell>{equipment.velocidad}</TableCell>
                   <TableCell>{equipment.marca}</TableCell>
                   <TableCell className="font-mono text-xs">{equipment.mac}</TableCell>
                   <TableCell className="font-mono text-xs">{equipment.ip}</TableCell>
                   <TableCell className="font-semibold">{equipment.nombrePC}</TableCell>
                   <TableCell>{equipment.categoria}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
+                  <TableCell>{equipment.version_sistema_operativo || "-"}</TableCell>
+                  <TableCell>{equipment.version_office || "-"}</TableCell>
+                  <TableCell className="min-w-[50px] whitespace-nowrap text-center">
+                    <div className="flex items-center gap-2 justify-center">
                       <Button
                         size="sm"
                         variant="outline"
@@ -221,24 +312,6 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
                         title="Ver detalles"
                       >
                         <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white border-yellow-500"
-                        onClick={() => handleEdit(equipment)}
-                        title="Editar"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="bg-red-500 hover:bg-red-600 text-white border-red-500"
-                        onClick={() => handleDelete(equipment)}
-                        title="Eliminar"
-                      >
-                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </TableCell>
@@ -266,20 +339,29 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
           </Button>
 
           {/* Page numbers */}
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            const pageNum = i + 1
-            return (
-              <Button
-                key={pageNum}
-                variant={currentPage === pageNum ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentPage(pageNum)}
-                className={currentPage === pageNum ? "bg-blue-500" : ""}
-              >
-                {pageNum}
-              </Button>
-            )
-          })}
+          {(() => {
+            const pageWindow = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(pageWindow / 2));
+            let endPage = Math.min(totalPages, startPage + pageWindow - 1);
+            if (endPage - startPage < pageWindow - 1) {
+              startPage = Math.max(1, endPage - pageWindow + 1);
+            }
+
+            return Array.from({ length: endPage - startPage + 1 }, (_, i) => {
+              const pageNum = startPage + i;
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={currentPage === pageNum ? "bg-blue-500" : ""}
+                >
+                  {pageNum}
+                </Button>
+              );
+            });
+          })()}
 
           <Button
             variant="outline"
@@ -297,4 +379,10 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
       <EquipmentDetailModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} equipment={selectedEquipment} />
     </div>
   )
+}
+
+function formatFecha(fecha: string) {
+  if (!fecha) return "";
+  // Si viene con hora, corta solo la fecha
+  return fecha.split("T")[0].split("-").reverse().join("-");
 }

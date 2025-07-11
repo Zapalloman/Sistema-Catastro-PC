@@ -16,9 +16,10 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
   // Estados para selects
   const [marcas, setMarcas] = useState<{ id_marca: number, nombre: string }[]>([])
   const [ubicaciones, setUbicaciones] = useState<{ id_ubicacion: number, nombre: string }[]>([])
+  const [categorias, setCategorias] = useState<{ id_categoria: number, nombre: string }[]>([]);
 
   // Estado del formulario
-  const [form, setForm] = useState<any>({
+  const [form, setForm] = useState({
     numero_serie: "",
     modelo: "",
     almacenamiento: "",
@@ -34,6 +35,11 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
     nueva_marca: "",
     nueva_ubicacion: "",
     ubicacion: "",
+    llave_inventario: "",
+    id_categoria: "",
+    fecha_adquisicion: "",
+    version_sistema_operativo: "",
+    version_office: "",
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -43,8 +49,21 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
     fetch("http://localhost:3000/api/ubicaciones").then(res => res.json()).then(setUbicaciones)
   }, [open])
 
+  useEffect(() => {
+    if (open) {
+      fetch("http://localhost:3000/api/categorias")
+        .then(res => res.json())
+        .then(data => setCategorias(data))
+        .catch(() => setCategorias([]))
+    }
+  }, [open]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const { name, value } = e.target;
+    setForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
   }
 
   // Maneja el guardado de nuevas entidades si corresponde
@@ -103,6 +122,11 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
         id_propietario: id_propietario && id_propietario !== "__nuevo__" ? Number(id_propietario) : null,
         id_marca: id_marca && id_marca !== "__nuevo__" ? Number(id_marca) : null,
         id_ubicacion: id_ubicacion && id_ubicacion !== "__nuevo__" ? Number(id_ubicacion) : null,
+        id_categoria: form.id_categoria ? Number(form.id_categoria) : null, // <-- agrega esto
+        llave_inventario: form.llave_inventario || null,
+        fecha_adquisicion: form.fecha_adquisicion || null,
+        version_sistema_operativo: form.version_sistema_operativo || null,
+        version_office: form.version_office || null,
       }
 
       // Validación extra antes de enviar
@@ -110,6 +134,13 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
         setError("Debe seleccionar o crear propietario, marca y ubicación.")
         setLoading(false)
         return
+      }
+
+      // Validación específica para IGM
+      if (form.id_propietario === "1" && !form.llave_inventario) {
+        setError("La llave de inventario es obligatoria para equipos IGM.");
+        setLoading(false);
+        return;
       }
 
       const res = await fetch("http://localhost:3000/api/equipos", {
@@ -134,6 +165,11 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
         nueva_marca: "",
         nueva_ubicacion: "",
         ubicacion: "",
+        llave_inventario: "",
+        id_categoria: "",
+        fecha_adquisicion: "",
+        version_sistema_operativo: "",
+        version_office: "",
       })
       onAdded()
       onClose()
@@ -247,7 +283,92 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
                 />
               )}
             </div>
+
+            {/* Categoría */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+              <select
+                name="id_categoria"
+                value={form.id_categoria || ""}
+                onChange={handleChange}
+                required
+                className="w-full border rounded px-2 py-1"
+              >
+                <option value="">Seleccione una categoría...</option>
+                {categorias.map(cat => (
+                  <option key={cat.id_categoria} value={cat.id_categoria}>
+                    {cat.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Fecha de Adquisición */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de Adquisición</label>
+              <input
+                type="date"
+                name="fecha_adquisicion"
+                value={form.fecha_adquisicion || ""}
+                onChange={handleChange}
+                className="w-full border rounded px-2 py-1"
+                required
+              />
+            </div>
           </div>
+
+          {/* Llave de Inventario, solo si el propietario es IGM */}
+          {form.id_propietario === "1" && (
+            <div className="col-span-2 mt-4">
+              <Input
+                name="llave_inventario"
+                placeholder="Llave de Inventario"
+                value={form.llave_inventario}
+                onChange={handleChange}
+                required
+              />
+              <span className="text-xs text-gray-500">Obligatorio para equipos IGM</span>
+            </div>
+          )}
+
+          {/* Campos adicionales si la categoría es notebook, pc, pc normal o workstation */}
+          {form.id_categoria && (() => {
+            const cat = categorias.find(cat => cat.id_categoria === Number(form.id_categoria));
+            if (!cat) return false;
+            const nombre = cat.nombre.toLowerCase();
+            return (
+              nombre.includes("notebook") ||
+              nombre === "pc" ||
+              nombre === "pc normal" ||
+              nombre.includes("workstation")
+            );
+          })() && (
+            <>
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Versión de Sistema Operativo</label>
+                <input
+                  type="text"
+                  name="version_sistema_operativo"
+                  value={form.version_sistema_operativo || ""}
+                  onChange={handleChange}
+                  className="w-full border rounded px-2 py-1"
+                  placeholder="Ej: Windows 10 Pro, Ubuntu 22.04"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Versión de Office</label>
+                <input
+                  type="text"
+                  name="version_office"
+                  value={form.version_office || ""}
+                  onChange={handleChange}
+                  className="w-full border rounded px-2 py-1"
+                  placeholder="Ej: Office 2019, Office 365"
+                />
+              </div>
+            </>
+          )}
+
           {error && <div className="text-red-600 text-sm">{error}</div>}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
