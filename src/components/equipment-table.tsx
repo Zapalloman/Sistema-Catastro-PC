@@ -46,8 +46,9 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
   ? eq.categoria.nombre
   : eq.categoria || "",
           id_equipo: eq.id_equipo,
-          llave_inventario: eq.llave_inventario || "", // Agregado aquí
-          fechaAdquisicion: formatFecha(eq.fecha_adquisicion), // Agregado aquí
+          llave_inventario: eq.llave_inventario || "",
+          fechaAdquisicion: formatFecha(eq.fecha_adquisicion),
+          fechaAsignacion: formatFecha(eq.fecha_asignacion), // <-- AGREGA ESTA LÍNEA
           version_sistema_operativo: eq.version_sistema_operativo || "", // Agregado aquí
           version_office: eq.version_office || "", // Agregado aquí
         }))
@@ -181,6 +182,16 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
   const cardColors = [
     "bg-blue-500", "bg-green-500", "bg-orange-500", "bg-purple-500", "bg-pink-500", "bg-yellow-500", "bg-cyan-500"
   ];
+
+  const handleShowDetail = (eq) => {
+    setSelectedEquipment({
+      ...eq,
+      fechaAsignacion: eq.fecha_asignacion || eq.fechaAsignacion || "", // mapea correctamente
+      fechaAdquisicion: eq.fecha_adquisicion || eq.fechaAdquisicion || "",
+      // ...otros campos si es necesario
+    });
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="space-y-4">
@@ -376,7 +387,11 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
       </div>
 
       {/* Equipment Detail Modal */}
-      <EquipmentDetailModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} equipment={selectedEquipment} />
+      <EquipmentDetailModal
+        equipment={selectedEquipment}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   )
 }

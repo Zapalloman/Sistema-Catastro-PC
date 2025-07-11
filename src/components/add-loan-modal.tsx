@@ -139,7 +139,7 @@ export function AddLoanModal({ open, onClose = () => {}, onLoanAdded }) {
                 value={selectedCategoria}
                 onChange={e => setSelectedCategoria(e.target.value)}
               >
-                <option value="">Todos los dispositivos</option>
+                <option value="">Seleccione una categoría</option>
                 {categorias.map(cat => (
                   <option key={cat.id_categoria} value={cat.id_categoria.toString()}>{cat.nombre}</option>
                 ))}
@@ -157,53 +157,55 @@ export function AddLoanModal({ open, onClose = () => {}, onLoanAdded }) {
             </div>
           </div>
           {/* Tabla de dispositivos con selección múltiple */}
-          <div className="overflow-x-auto rounded border bg-white">
-            <Table className="min-w-[1000px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead></TableHead>
-                  <TableHead>Nombre PC</TableHead>
-                  <TableHead>Serie</TableHead>
-                  <TableHead>Modelo</TableHead>
-                  <TableHead>Capacidad</TableHead>
-                  <TableHead>Categoría</TableHead>
-                  <TableHead>Marca</TableHead>
-                  <TableHead>Ubicación</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEquipos.length === 0 ? (
+          {selectedCategoria && (
+            <div className="overflow-x-auto rounded border bg-white max-h-[400px] mt-4">
+              <Table className="min-w-[1000px]">
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-gray-500">
-                      No hay dispositivos disponibles para esta categoría o búsqueda.
-                    </TableCell>
+                    <TableHead></TableHead>
+                    <TableHead>Nombre PC</TableHead>
+                    <TableHead>Serie</TableHead>
+                    <TableHead>Modelo</TableHead>
+                    <TableHead>Capacidad</TableHead>
+                    <TableHead>Categoría</TableHead>
+                    <TableHead>Marca</TableHead>
+                    <TableHead>Ubicación</TableHead>
                   </TableRow>
-                ) : (
-                  filteredEquipos.map(eq => (
-                    <TableRow key={eq.id_equipo}>
-                      <TableCell>
-                        <input
-                          type="checkbox"
-                          checked={selectedEquipos.includes(eq.id_equipo)}
-                          onChange={e => {
-                            if (e.target.checked) setSelectedEquipos([...selectedEquipos, eq.id_equipo]);
-                            else setSelectedEquipos(selectedEquipos.filter(id => id !== eq.id_equipo));
-                          }}
-                        />
+                </TableHeader>
+                <TableBody>
+                  {filteredEquipos.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center text-gray-500">
+                        No hay dispositivos disponibles para esta categoría o búsqueda.
                       </TableCell>
-                      <TableCell>{eq.nombre_pc}</TableCell>
-                      <TableCell>{eq.numero_serie}</TableCell>
-                      <TableCell>{eq.modelo}</TableCell>
-                      <TableCell>{eq.almacenamiento}</TableCell>
-                      <TableCell>{eq.categoria?.nombre || "-"}</TableCell>
-                      <TableCell>{eq.marca?.nombre || "-"}</TableCell>
-                      <TableCell>{eq.ubicacion?.nombre || "-"}</TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ) : (
+                    filteredEquipos.map(eq => (
+                      <TableRow key={eq.id_equipo}>
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            checked={selectedEquipos.includes(eq.id_equipo)}
+                            onChange={e => {
+                              if (e.target.checked) setSelectedEquipos([...selectedEquipos, eq.id_equipo]);
+                              else setSelectedEquipos(selectedEquipos.filter(id => id !== eq.id_equipo));
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>{eq.nombre_pc}</TableCell>
+                        <TableCell>{eq.numero_serie}</TableCell>
+                        <TableCell>{eq.modelo}</TableCell>
+                        <TableCell>{eq.almacenamiento}</TableCell>
+                        <TableCell>{eq.categoria?.nombre || "-"}</TableCell>
+                        <TableCell>{eq.marca?.nombre || "-"}</TableCell>
+                        <TableCell>{eq.ubicacion?.nombre || "-"}</TableCell>
+                      </TableRow>
+                    ))
+                  }
+                </TableBody>
+              </Table>
+            </div>
+          )}
           {/* Cargo del préstamo */}
           <div>
             <label className="block mb-1 font-medium">Cargo del préstamo</label>
@@ -318,5 +320,5 @@ export function AddLoanModal({ open, onClose = () => {}, onLoanAdded }) {
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

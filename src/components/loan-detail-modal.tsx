@@ -114,6 +114,14 @@ export function LoanDetailModal({
                     <label className="text-sm font-medium text-gray-600">IP</label>
                     <p className="font-mono text-sm bg-blue-50 p-2 rounded border">{equipo.ip || "-"}</p>
                   </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Fecha de Adquisición</label>
+                    <p className="text-base">
+                      {equipo.fechaAdquisicion
+                        ? equipo.fechaAdquisicion.split("T")[0].split("-").reverse().join("-")
+                        : "-"}
+                    </p>
+                  </div>
                 </div>
               </div>
             ) : (

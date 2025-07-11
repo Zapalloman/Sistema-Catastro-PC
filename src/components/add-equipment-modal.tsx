@@ -379,3 +379,4 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
     </Dialog>
   )
 }
+

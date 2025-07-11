@@ -20,6 +20,7 @@ interface Equipment {
   estado: string
   fechaAsignacion: string
   ubicacion: string
+  fechaAdquisicion?: string // Campo opcional añadido
 }
 
 interface EquipmentDetailModalProps {
@@ -30,6 +31,15 @@ interface EquipmentDetailModalProps {
 
 export function EquipmentDetailModal({ equipment, isOpen, onClose }: EquipmentDetailModalProps) {
   if (!equipment) return null
+
+  // Utilidad para formatear fechas
+  function formatFecha(fecha?: string) {
+    if (!fecha) return "-"
+    // Si viene con hora, corta solo la fecha
+    const soloFecha = fecha.split("T")[0]
+    if (!soloFecha || soloFecha === "0001-01-01" || soloFecha === "1970-01-01") return "-"
+    return soloFecha.split("-").reverse().join("-")
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -83,7 +93,7 @@ export function EquipmentDetailModal({ equipment, isOpen, onClose }: EquipmentDe
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600">Fecha Asignación</label>
-                <p className="text-base">{equipment.fechaAsignacion}</p>
+                <p className="text-base">{formatFecha(equipment.fechaAdquisicion)}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600">Ubicación</label>
@@ -149,6 +159,20 @@ export function EquipmentDetailModal({ equipment, isOpen, onClose }: EquipmentDe
               <div>
                 <label className="text-sm font-medium text-gray-600">Dirección MAC</label>
                 <p className="font-mono text-sm bg-green-50 p-2 rounded border">{equipment.mac}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Fecha de Adquisición - Nuevo campo añadido */}
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Monitor className="w-5 h-5" />
+              Información Adicional
+            </h3>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-600">Fecha de Adquisición</label>
+                <p className="text-base">{formatFecha(equipment.fechaAdquisicion)}</p>
               </div>
             </div>
           </div>
