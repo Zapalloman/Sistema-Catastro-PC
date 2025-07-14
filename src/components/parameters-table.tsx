@@ -39,8 +39,8 @@ export function ParametersTable({
 
   // Filtrar parámetros por búsqueda
   const filteredParametros = parametros.filter(p =>
-    p.valor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (p.descripcion || "").toLowerCase().includes(searchTerm.toLowerCase())
+    (p.valor ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (p.descripcion ?? '').toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const handleAdd = () => {

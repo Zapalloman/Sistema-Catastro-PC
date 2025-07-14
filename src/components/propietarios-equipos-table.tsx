@@ -27,21 +27,23 @@ export function PropietariosEquiposTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((row: any) => (
-            <TableRow key={row.propietario.COD_TI_PROPIETARIO}>
-              <TableCell>{row.propietario.DES_TI_PROPIETARIO}</TableCell>
-              <TableCell>
-                {row.equipos.map((eq: any) => (
-                  <div key={eq.equipo.id_equipo}>
-                    {eq.equipo.nombre_pc || eq.equipo.modelo || eq.equipo.numero_serie}
-                  </div>
-                ))}
-              </TableCell>
-              <TableCell>
-                {row.equipos.flatMap((eq: any) => eq.usuarios).join(", ")}
-              </TableCell>
-            </TableRow>
-          ))}
+          {data
+            .filter(item => (item.DES_TI_PROPIETARIO ?? '').toLowerCase().includes(''))
+            .map((row: any) => (
+              <TableRow key={row.COD_TI_PROPIETARIO}>
+                <TableCell>{row.DES_TI_PROPIETARIO}</TableCell>
+                <TableCell>
+                  {(row.equipos ?? []).map((eq: any) => (
+                    <div key={eq.equipo?.id_equipo}>
+                      {eq.equipo?.nombre_pc || eq.equipo?.modelo || eq.equipo?.numero_serie}
+                    </div>
+                  ))}
+                </TableCell>
+                <TableCell>
+                  {(row.equipos ?? []).flatMap((eq: any) => eq.usuarios ?? []).join(", ")}
+                </TableCell>
+              </TableRow>
+            ))}
         </TableBody>
       </Table>
     </div>
