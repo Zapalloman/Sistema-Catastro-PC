@@ -45,9 +45,9 @@ export default function Prestamos() {
 				<div className="flex items-center gap-3 mb-8">
 					<Users className="w-8 h-8 text-blue-600" />
 					<div>
-						<h1 className="text-3xl font-bold text-gray-900">Préstamos de Dispositivos</h1>
+						<h1 className="text-3xl font-bold text-gray-900">Préstamos de Dispositivos Externos</h1>
 						<p className="text-gray-600 mt-1">
-							Gestiona los préstamos de dispositivos. Visualiza, edita y controla todos los préstamos activos y los dispositivos
+							Gestiona los préstamos de dispositivos. Visualiza todos los préstamos activos y los dispositivos
 							disponibles.
 						</p>
 					</div>
