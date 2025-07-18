@@ -20,6 +20,7 @@ interface Equipment {
   estado: string
   fechaAsignacion: string
   ubicacion: string
+  categoria: string // Nuevo campo añadido
   fechaAdquisicion?: string // Campo opcional añadido
 }
 
@@ -98,6 +99,14 @@ export function EquipmentDetailModal({ equipment, isOpen, onClose }: EquipmentDe
               <div>
                 <label className="text-sm font-medium text-gray-600">Ubicación</label>
                 <p className="text-base">{equipment.ubicacion}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Categoría</label>
+                <p className="text-base">{equipment.categoria}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Llave de Inventario</label>
+                <p className="text-base">{equipment.llave_inventario}</p>
               </div>
             </div>
           </div>

@@ -13,50 +13,17 @@ import { saveAs } from "file-saver"
 
 
 interface EquipmentTableProps {
+  equipos: any[]
   selectedPropietario: string
   refresh: boolean
   onCountChange?: (count: number) => void
 }
 
-export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: EquipmentTableProps) {
-  const [equipos, setEquipos] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountChange }: EquipmentTableProps) {
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    setLoading(true)
-    fetch("http://localhost:3000/api/equipos")
-      .then(res => res.json())
-      .then(data => {
-        const mapped = data.map((eq: any) => ({
-          serie: eq.numero_serie || "",
-          modeloPC: eq.modelo || "",
-          disco: eq.almacenamiento || "",
-          ram: eq.ram || "",
-          procesador: eq.procesador || "",
-          velocidad: "", // Si tienes un campo de velocidad, mapea aquí
-          marca: typeof eq.marca === "object" && eq.marca !== null ? eq.marca.nombre : eq.marca || "",
-          mac: eq.direccion_mac || "",
-          ip: eq.ip || "",
-          nombrePC: eq.nombre_pc || "",
-          propietario: eq.propietario || "",
-          id_propietario: eq.id_propietario,
-          ubicacion: typeof eq.ubicacion === "object" && eq.ubicacion !== null ? eq.ubicacion.nombre : eq.ubicacion || "",
-          categoria: typeof eq.categoria === "object" && eq.categoria !== null
-  ? eq.categoria.nombre
-  : eq.categoria || "",
-          id_equipo: eq.id_equipo,
-          llave_inventario: eq.llave_inventario || "",
-          fechaAdquisicion: formatFecha(eq.fecha_adquisicion),
-          fechaAsignacion: formatFecha(eq.fecha_asignacion), // <-- AGREGA ESTA LÍNEA
-          version_sistema_operativo: eq.version_sistema_operativo || "", // Agregado aquí
-          version_office: eq.version_office || "", // Agregado aquí
-        }))
-        setEquipos(mapped)
-      })
-      .catch(() => setError("No se pudo cargar la lista de equipos"))
-      .finally(() => setLoading(false))
-  }, [refresh])
+
 
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
@@ -69,7 +36,7 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
   // Filtrado por propietario (si aplica)
   const filteredData = selectedPropietario === "TODOS"
     ? equipos
-    : equipos.filter(eq => eq.id_propietario?.toString() === selectedPropietario);
+    : equipos.filter(eq => eq.id_propietario === selectedPropietario);
 
   const filteredByCategoria = selectedCategoria === "TODOS"
     ? filteredData
@@ -81,6 +48,7 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
       .then(res => res.json())
       .then(data => setCategorias(data))
       .catch(() => setError("No se pudo cargar las categorías"))
+      .finally(() => setLoading(false))
   }, [])
 
   // Filter data based on search term, selected propietario, and selected categoria
@@ -135,8 +103,8 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
     }
   }, [dataToDisplay.length, onCountChange])
 
-  if (loading) return <div>Cargando...</div>
   if (error) return <div>{error}</div>
+  if (loading) return <div>Cargando...</div>
 
   // Encuentra el nombre del propietario seleccionado
   const propietarioSeleccionado = equipos.find(eq => eq.id_propietario?.toString() === selectedPropietario)
@@ -186,7 +154,7 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
   const handleShowDetail = (eq) => {
     setSelectedEquipment({
       ...eq,
-      fechaAsignacion: eq.fecha_asignacion || eq.fechaAsignacion || "", // mapea correctamente
+      fechaAsignacion: eq.fecha_asignacion || eq.fechaAdquisicion || "", // mapea correctamente
       fechaAdquisicion: eq.fecha_adquisicion || eq.fechaAdquisicion || "",
       // ...otros campos si es necesario
     });
@@ -272,10 +240,9 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
               <TableHead className="font-semibold text-gray-700 min-w-[60px]">RAM</TableHead>
               <TableHead className="font-semibold text-gray-700 min-w-[100px] truncate">Procesador</TableHead>
               <TableHead className="font-semibold text-gray-700 min-w-[60px]">Marca</TableHead>
-              <TableHead className="font-semibold text-gray-700 min-w-[70px]">MAC</TableHead>
-              <TableHead className="font-semibold text-gray-700 min-w-[70px]">IP</TableHead>
-              <TableHead className="font-semibold text-gray-700 min-w-[80px]">Nombre PC</TableHead>
               <TableHead className="font-semibold text-gray-700 min-w-[60px]">Categoria</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[70px]">Propietario</TableHead>
+              <TableHead className="font-semibold text-gray-700 min-w-[70px]">Ubicación</TableHead>
               <TableHead className="font-semibold text-gray-700 min-w-[120px]">Versión SO</TableHead>
               <TableHead className="font-semibold text-gray-700 min-w-[100px]">Versión Office</TableHead>
               <TableHead className="font-semibold text-gray-700 min-w-[50px] whitespace-nowrap text-center">Acciones</TableHead>
@@ -284,22 +251,20 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
           <TableBody>
             {paginatedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={12} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={14} className="text-center py-8 text-gray-500">
                   No se encontraron equipos para los criterios seleccionados
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedData.map((equipment, index) => (
-                <TableRow key={equipment.serie + '-' + index}>
+              paginatedData.map((equipment) => (
+                <TableRow key={equipment.id_equipo}>
                   <TableCell className="font-mono text-xs">{equipment.serie}</TableCell>
                   <TableCell className="min-w-[110px]">
                     {equipment.fechaAdquisicion
-    ? equipment.fechaAdquisicion.split("T")[0].split("-").reverse().join("-")
-    : "-"}
+                      ? equipment.fechaAdquisicion.split("T")[0].split("-").reverse().join("-")
+                      : "-"}
                   </TableCell>
-                  <TableCell className="min-w-[90px]">
-                    {equipment.id_propietario === 1 && equipment.llave_inventario ? equipment.llave_inventario : ""}
-                  </TableCell>
+                  <TableCell className="min-w-[90px]">{equipment.llave_inventario}</TableCell>
                   <TableCell>{equipment.modeloPC}</TableCell>
                   <TableCell>{equipment.disco}</TableCell>
                   <TableCell>{equipment.ram}</TableCell>
@@ -307,10 +272,9 @@ export function EquipmentTable({ selectedPropietario, refresh, onCountChange }: 
                     {equipment.procesador}
                   </TableCell>
                   <TableCell>{equipment.marca}</TableCell>
-                  <TableCell className="font-mono text-xs">{equipment.mac}</TableCell>
-                  <TableCell className="font-mono text-xs">{equipment.ip}</TableCell>
-                  <TableCell className="font-semibold">{equipment.nombrePC}</TableCell>
                   <TableCell>{equipment.categoria}</TableCell>
+                  <TableCell>{equipment.propietario}</TableCell>
+                  <TableCell>{equipment.ubicacion}</TableCell>
                   <TableCell>{equipment.version_sistema_operativo || "-"}</TableCell>
                   <TableCell>{equipment.version_office || "-"}</TableCell>
                   <TableCell className="min-w-[50px] whitespace-nowrap text-center">

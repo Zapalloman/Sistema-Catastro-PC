@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Monitor, Filter, Plus } from "lucide-react"
 import { AddEquipmentModal } from "./components/add-equipment-modal"
 
-
 function groupCount(arr, keyFn) {
   const map = new Map();
   arr.forEach(item => {
@@ -21,15 +20,24 @@ function groupCount(arr, keyFn) {
 
 export default function Equipos() {
   const [selectedPropietario, setSelectedPropietario] = useState("TODOS")
-  const [propietarioOptions, setPropietarioOptions] = useState<{id_propietario: number, nombre: string}[]>([])
+  const [propietarioOptions, setPropietarioOptions] = useState<{id_propietario: string, nombre: string}[]>([])
   const [showAddModal, setShowAddModal] = useState(false)
   const [refresh, setRefresh] = useState(false)
   const [totalEquipos, setTotalEquipos] = useState(0)
+  const [equiposFiltrados, setEquiposFiltrados] = useState<any[]>([]);
 
+  // Carga propietarios y normaliza los datos SIEMPRE
   useEffect(() => {
     fetch("http://localhost:3000/api/equipos/propietarios")
       .then(res => res.json())
-      .then(data => setPropietarioOptions(data))
+      .then(data => setPropietarioOptions(
+        Array.isArray(data)
+          ? data.map(p => ({
+              id_propietario: p.cod_ti_propietario?.toString(),
+              nombre: p.des_ti_propietario
+            }))
+          : []
+      ))
       .catch(() => setPropietarioOptions([]))
   }, [])
 
@@ -39,28 +47,51 @@ export default function Equipos() {
     setRefresh(r => !r)
     fetch("http://localhost:3000/api/equipos/propietarios")
       .then(res => res.json())
-      .then(data => setPropietarioOptions(data))
+      .then(data => setPropietarioOptions(
+        Array.isArray(data)
+          ? data.map(p => ({
+              id_propietario: p.cod_ti_propietario?.toString(),
+              nombre: p.des_ti_propietario
+            }))
+          : []
+      ))
       .catch(() => setPropietarioOptions([]))
   }
 
-  const propietarioNombre = selectedPropietario === "TODOS"
-    ? ""
-    : propietarioOptions.find(p => p.id_propietario.toString() === selectedPropietario)?.nombre || "";
-
-  // Estado para equipos filtrados
-  const [equiposFiltrados, setEquiposFiltrados] = useState<any[]>([]);
-
-  // Actualiza equipos filtrados cuando cambia el propietario o refresh
+  // Carga y mapea equipos SIEMPRE
   useEffect(() => {
     fetch("http://localhost:3000/api/equipos")
       .then(res => res.json())
       .then(data => {
         let equipos = Array.isArray(data) ? data : [];
+        equipos = equipos.map(eq => ({
+          serie: eq.numero_serie || "",
+          modeloPC: eq.modelo || "",
+          disco: eq.almacenamiento || "",
+          ram: eq.ram || "",
+          procesador: eq.procesador || "",
+          velocidad: eq.velocidad || "",
+          marca: eq.nombre_marca || "",
+          mac: eq.direccion_mac || "",
+          ip: eq.ip || "",
+          nombrePC: eq.nombre_pc || "",
+          propietario: eq.nombre_propietario || "",
+          estado: eq.estado || "",
+          fechaAsignacion: eq.fecha_asignacion || "",
+          ubicacion: eq.nombre_ubicacion || "",
+          categoria: eq.nombre_categoria || "",
+          llave_inventario: eq.llave_inventario || "",
+          fechaAdquisicion: eq.fecha_adquisicion || "",
+          id_equipo: eq.id_equipo,
+          id_propietario: eq.cod_ti_propietario?.toString() ?? "", // <-- AGREGA ESTA LÍNEA
+        }));
+        // Filtra por propietario SIEMPRE usando string
         if (selectedPropietario !== "TODOS") {
-          equipos = equipos.filter(eq => eq.id_propietario?.toString() === selectedPropietario);
+          equipos = equipos.filter(eq => eq.id_propietario === selectedPropietario);
         }
         setEquiposFiltrados(equipos);
         setTotalEquipos(equipos.length);
+        console.log(equipos);
       });
   }, [selectedPropietario, refresh]);
 
@@ -85,10 +116,7 @@ export default function Equipos() {
   });
 
   // Agrupa por marca
-  const marcaCounts = groupCount(equiposFiltrados, eq => {
-    if (typeof eq.marca === "object" && eq.marca !== null) return eq.marca.nombre;
-    return eq.marca || null;
-  });
+  const marcaCounts = groupCount(equiposFiltrados, eq => eq.marca || null);
 
   // Paleta de colores pastel para los recuadros
   const cardColors = [
@@ -131,12 +159,17 @@ export default function Equipos() {
                   <SelectValue placeholder="Seleccione un propietario..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="TODOS">Todos los propietarios</SelectItem>
-                  {propietarioOptions.map((option) => (
-                    <SelectItem key={option.id_propietario} value={option.id_propietario.toString()}>
-                      {option.nombre}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="TODOS" key="TODOS">Todos los propietarios</SelectItem>
+                  {propietarioOptions
+                    .filter(option => option.id_propietario !== undefined && option.id_propietario !== null)
+                    .map(option => (
+                      <SelectItem
+                        key={option.id_propietario}
+                        value={option.id_propietario}
+                      >
+                        {option.nombre ?? ""}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -150,7 +183,8 @@ export default function Equipos() {
         {/* Equipment Table */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <EquipmentTable
-            selectedPropietario={selectedPropietario}
+            equipos={equiposFiltrados}
+            selectedPropietario={selectedPropietario} // <-- AGREGA ESTA LÍNEA
             refresh={refresh}
             onCountChange={setTotalEquipos}
           />

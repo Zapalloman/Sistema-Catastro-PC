@@ -15,8 +15,9 @@ interface AddEquipmentModalProps {
 export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }: AddEquipmentModalProps) {
   // Estados para selects
   const [marcas, setMarcas] = useState<{ id_marca: number, nombre: string }[]>([])
-  const [ubicaciones, setUbicaciones] = useState<{ id_ubicacion: number, nombre: string }[]>([])
-  const [categorias, setCategorias] = useState<{ id_categoria: number, nombre: string }[]>([]);
+  const [ubicaciones, setUbicaciones] = useState<{ cod_ti_ubicacion: number, nombre: string }[]>([])
+  const [categorias, setCategorias] = useState<any[]>([]);
+  const [propietarioOptionsLocal, setPropietarioOptions] = useState<any[]>([]);
 
   // Estado del formulario
   const [form, setForm] = useState({
@@ -30,11 +31,11 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
     nombre_pc: "",
     id_propietario: "",
     id_marca: "",
-    id_ubicacion: "",
+    cod_ti_ubicacion: "",
     nuevo_propietario: "",
     nueva_marca: "",
     nueva_ubicacion: "",
-    ubicacion: "",
+    des_ti_ubicacion: "",
     llave_inventario: "",
     id_categoria: "",
     fecha_adquisicion: "",
@@ -45,18 +46,46 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
   const [error, setError] = useState("")
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/marcas").then(res => res.json()).then(setMarcas)
-    fetch("http://localhost:3000/api/ubicaciones").then(res => res.json()).then(setUbicaciones)
+    // Marcas
+    fetch("http://localhost:3000/api/marcas")
+      .then(res => res.json())
+      .then(data => setMarcas(data.map(m => ({
+        id_marca: m.cod_ti_marca,
+        nombre: m.des_ti_marca
+      }))));
+
+    // Ubicaciones
+    fetch("http://localhost:3000/api/ubicaciones")
+      .then(res => res.json())
+      .then(data => setUbicaciones(data.map(u => ({
+        id_ubicacion: u.cod_ti_ubicacion,
+        nombre: u.des_ti_ubicacion
+      }))));
   }, [open])
 
   useEffect(() => {
     if (open) {
       fetch("http://localhost:3000/api/categorias")
         .then(res => res.json())
-        .then(data => setCategorias(data))
+        .then(data => setCategorias(Array.isArray(data) ? data : []))
         .catch(() => setCategorias([]))
     }
   }, [open]);
+
+  useEffect(() => {
+    // Propietarios
+    if (open) {
+      fetch("http://localhost:3000/api/propietarios")
+        .then(res => res.json())
+        .then(data => setPropietarioOptions(data.map(p => ({
+          id_propietario: p.cod_ti_propietario,
+          nombre: p.des_ti_propietario
+        }))))
+        .catch(() => setPropietarioOptions([]));
+    }
+  }, [open]);
+
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -66,6 +95,37 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
     }));
   }
 
+  const syncUbicacionIGM = async (id, nombre) => {
+    const res = await fetch(`http://localhost:3000/api/ubicaciones-igm/${id}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.id_ubicacion === id) return id;
+    }
+    const createRes = await fetch("http://localhost:3000/api/ubicaciones-igm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_ubicacion: id, nombre }),
+    });
+    const created = await createRes.json().catch(() => null);
+    if (!created || !created.id_ubicacion) throw new Error("No se pudo crear la ubicación");
+    return created.id_ubicacion;
+  };
+
+  const syncPropietarioIGM = async (id, nombre) => {
+    const res = await fetch(`http://localhost:3000/api/propietarios-igm/${id}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.id_propietario === id) return id;
+    }
+    const createRes = await fetch("http://localhost:3000/api/propietarios-igm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_propietario: id, nombre }),
+    });
+    const created = await createRes.json();
+    return created.id_propietario;
+  };
+
   // Maneja el guardado de nuevas entidades si corresponde
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -74,7 +134,7 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
     try {
       let id_propietario = form.id_propietario
       let id_marca = form.id_marca
-      let id_ubicacion = form.id_ubicacion
+      let id_ubicacion = form.cod_ti_ubicacion; // <-- usa cod_ti_ubicacion
 
       // Si es nuevo propietario, crea y usa el nuevo id
       if (id_propietario === "__nuevo__") {
@@ -85,6 +145,12 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
         })
         const data = await res.json()
         id_propietario = data.id_propietario
+      } else {
+        // Sincroniza propietario en IGM si viene de CATASTRO
+        const propietarioObj = propietarioOptionsLocal.find(p => p.id_propietario == id_propietario);
+        if (propietarioObj) {
+          id_propietario = await syncPropietarioIGM(propietarioObj.id_propietario, propietarioObj.nombre);
+        }
       }
 
       // Si es nueva marca, crea y usa el nuevo id
@@ -107,6 +173,12 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
         })
         const data = await res.json()
         id_ubicacion = data.id_ubicacion
+      } else {
+        // Sincroniza ubicación en IGM si viene de CATASTRO
+        const ubicacionObj = ubicaciones.find(u => u.COD_TI_UBICACION == id_ubicacion);
+        if (ubicacionObj) {
+          id_ubicacion = await syncUbicacionIGM(ubicacionObj.COD_TI_UBICACION, ubicacionObj.DES_TI_UBICACION);
+        }
       }
 
       // Ahora sí, guarda el equipo
@@ -119,10 +191,10 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
         ip: form.ip,
         direccion_mac: form.direccion_mac,
         nombre_pc: form.nombre_pc,
-        id_propietario: id_propietario && id_propietario !== "__nuevo__" ? Number(id_propietario) : null,
-        id_marca: id_marca && id_marca !== "__nuevo__" ? Number(id_marca) : null,
-        id_ubicacion: id_ubicacion && id_ubicacion !== "__nuevo__" ? Number(id_ubicacion) : null,
-        id_categoria: form.id_categoria ? Number(form.id_categoria) : null, // <-- agrega esto
+        cod_ti_propietario: id_propietario && id_propietario !== "__nuevo__" ? Number(id_propietario) : null,
+        cod_ti_marca: id_marca && id_marca !== "__nuevo__" ? Number(id_marca) : null,
+        cod_ti_ubicacion: id_ubicacion && id_ubicacion !== "__nuevo__" ? Number(id_ubicacion) : null,
+        id_tipo: form.id_categoria ? Number(form.id_categoria) : null,
         llave_inventario: form.llave_inventario || null,
         fecha_adquisicion: form.fecha_adquisicion || null,
         version_sistema_operativo: form.version_sistema_operativo || null,
@@ -130,7 +202,7 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
       }
 
       // Validación extra antes de enviar
-      if (!equipoPayload.id_propietario || !equipoPayload.id_marca || !equipoPayload.id_ubicacion) {
+      if (!equipoPayload.cod_ti_propietario || !equipoPayload.cod_ti_marca || !equipoPayload.cod_ti_ubicacion) {
         setError("Debe seleccionar o crear propietario, marca y ubicación.")
         setLoading(false)
         return
@@ -147,8 +219,11 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(equipoPayload),
-      })
-      if (!res.ok) throw new Error("Error al agregar equipo")
+      });
+      if (!res.ok) throw new Error("Error al agregar equipo");
+      const data = await res.json().catch(() => null);
+      if (!data || !data.id_equipo) throw new Error("No se pudo guardar el equipo");
+
       setForm({
         numero_serie: "",
         modelo: "",
@@ -160,11 +235,11 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
         nombre_pc: "",
         id_propietario: "",
         id_marca: "",
-        id_ubicacion: "",
+        cod_ti_ubicacion: "",
         nuevo_propietario: "",
         nueva_marca: "",
         nueva_ubicacion: "",
-        ubicacion: "",
+        des_ti_ubicacion: "",
         llave_inventario: "",
         id_categoria: "",
         fecha_adquisicion: "",
@@ -211,7 +286,7 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
                 className="border rounded px-2 py-2 text-gray-700 w-full"
               >
                 <option value="">Seleccione una marca...</option>
-                {marcas.map((m) => (
+                {marcas.map(m => (
                   <option key={m.id_marca} value={m.id_marca}>{m.nombre}</option>
                 ))}
                 <option value="__nuevo__">Otra (escribir nueva)</option>
@@ -232,14 +307,14 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
             <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Ubicación</label>
               <select
-                name="id_ubicacion"
-                value={form.id_ubicacion}
+                name="cod_ti_ubicacion"
+                value={form.cod_ti_ubicacion}
                 onChange={handleChange}
                 required
                 className="border rounded px-2 py-2 text-gray-700 w-full"
               >
                 <option value="">Seleccione una ubicación...</option>
-                {ubicaciones.map((u) => (
+                {ubicaciones.map(u => (
                   <option key={u.id_ubicacion} value={u.id_ubicacion}>{u.nombre}</option>
                 ))}
                 <option value="__nuevo__">Otra (escribir nueva)</option>
@@ -267,7 +342,7 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
                 className="border rounded px-2 py-2 text-gray-700 w-full"
               >
                 <option value="">Seleccione un propietario...</option>
-                {propietarioOptions.map((p) => (
+                {propietarioOptionsLocal.map((p) => (
                   <option key={p.id_propietario} value={p.id_propietario}>{p.nombre}</option>
                 ))}
                 <option value="__nuevo__">Otro (escribir nuevo)</option>
@@ -296,9 +371,7 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
               >
                 <option value="">Seleccione una categoría...</option>
                 {categorias.map(cat => (
-                  <option key={cat.id_categoria} value={cat.id_categoria}>
-                    {cat.nombre}
-                  </option>
+                  <option key={cat.id_tipo} value={cat.id_tipo}>{cat.desc_tipo}</option>
                 ))}
               </select>
             </div>
