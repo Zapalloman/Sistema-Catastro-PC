@@ -8,15 +8,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { RutAutocomplete } from "./rut-autocomplete"
 
 interface Categoria {
-  id_tipo: number      // <-- CAMBIAR de id_categoria a id_tipo
-  desc_tipo: string    // <-- CAMBIAR de nombre a desc_tipo
+  id_tipo: number
+  desc_tipo: string
 }
 
 interface Marca {
+  des_ti_marca: string
   nombre: string
 }
 
 interface Ubicacion {
+  des_ti_ubicacion: string
   nombre: string
 }
 
@@ -46,7 +48,6 @@ interface AddLoanModalProps {
 
 export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) {
   const [categorias, setCategorias] = useState<Categoria[]>([])
-  const [disponibles, setDisponibles] = useState<Equipo[]>([])
   const [selectedCategoria, setSelectedCategoria] = useState("")
   const [equipos, setEquipos] = useState<Equipo[]>([])
   const [search, setSearch] = useState("")
@@ -76,6 +77,7 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
       fetch("http://localhost:3000/api/equipos/categorias")
         .then((res) => res.json())
         .then((data) => {
+          console.log("Categorías cargadas:", data)
           const categoriasArray = Array.isArray(data) ? data : []
           setCategorias(categoriasArray)
         })
@@ -88,14 +90,22 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
 
   useEffect(() => {
     if (selectedCategoria) {
+      console.log("Cargando equipos para categoría:", selectedCategoria)
       let url = "http://localhost:3000/api/equipos/disponibles"
-      if (selectedCategoria) {
-        url += `?categoria=${selectedCategoria}`
+      if (selectedCategoria && selectedCategoria !== "TODOS") {
+        url += `?categoria=${encodeURIComponent(selectedCategoria)}`
       }
+
       fetch(url)
         .then((res) => res.json())
-        .then((data) => setEquipos(Array.isArray(data) ? data : []))
-        .catch((err) => console.error("Error fetching equipos:", err))
+        .then((data) => {
+          console.log("Equipos cargados:", data)
+          setEquipos(Array.isArray(data) ? data : [])
+        })
+        .catch((err) => {
+          console.error("Error fetching equipos:", err)
+          setEquipos([])
+        })
     }
   }, [selectedCategoria])
 
@@ -104,13 +114,12 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
       (eq.nombre_pc || "").toLowerCase().includes(search.toLowerCase()) ||
       (eq.numero_serie || "").toLowerCase().includes(search.toLowerCase()) ||
       (eq.modelo || "").toLowerCase().includes(search.toLowerCase()) ||
-      (eq.almacenamiento || "").toLowerCase().includes(search.toLowerCase()) ||
-      (eq.marca?.nombre || "").toLowerCase().includes(search.toLowerCase()) ||
-      (eq.ubicacion?.nombre || "").toLowerCase().includes(search.toLowerCase()),
+      (eq.almacenamiento || "").toLowerCase().includes(search.toLowerCase())
   )
 
   const handleAddLoan = async () => {
     if (!rutRevisor || !rutEntrega || !rutResponsable || selectedEquipos.length === 0 || !cargoPrestamo) {
+      alert("Por favor complete todos los campos obligatorios")
       return
     }
 
@@ -141,35 +150,25 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
         }),
       })
 
+      if (!response.ok) {
+        throw new Error("Error al crear el préstamo")
+      }
+
       const prestamo = await response.json()
 
-      // Descargar el Word
       window.open(`http://localhost:3000/api/prestamos/${prestamo.id_prestamo}/documento`, "_blank")
 
-      // Reset form
-      setSelectedEquipos([])
-      setRutRevisor("")
-      setRutEntrega("")
-      setRutResponsable("")
-      setCargoPrestamo("")
-      setMotivo("")
-      setFirma1({ nombre: "", cargoMilitar: "", cargoDepto: "", subrogante: false })
-      setFirma2({ nombre: "", cargoMilitar: "", cargoDepto: "", subrogante: false })
-      setDistribucion("")
-      setSelectedCategoria("")
-      setSearch("")
-
+      handleClose()
       onLoanAdded && onLoanAdded()
-      onClose()
     } catch (error) {
       console.error("Error creating loan:", error)
+      alert("Error al crear el préstamo")
     } finally {
       setLoading(false)
     }
   }
 
   const handleClose = () => {
-    // Reset form when closing
     setSelectedEquipos([])
     setRutRevisor("")
     setRutEntrega("")
@@ -185,223 +184,253 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(isOpen) => {
-        if (!isOpen) handleClose()
-      }}
-    >
-      <DialogContent className="max-w-[1200px] w-full p-6" style={{ minWidth: 1100 }}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
+      <DialogContent 
+        className="w-screen max-w-none h-[90vh] mx-4 p-8 overflow-y-auto"
+        style={{ width: 'calc(100vw - 2rem)', maxWidth: 'none' }}
+      >
         <DialogHeader>
-          <DialogTitle>Agregar Préstamo</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-gray-900 mb-4">Agregar Préstamo de Equipos</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
-          {/* Selección de funcionarios */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block mb-1 font-medium">Funcionario que revisa</label>
-              <RutAutocomplete value={rutRevisor} onChange={setRutRevisor} />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Funcionario que entrega</label>
-              <RutAutocomplete value={rutEntrega} onChange={setRutEntrega} />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Responsable de la unidad</label>
-              <RutAutocomplete value={rutResponsable} onChange={setRutResponsable} />
-            </div>
-          </div>
-
-          {/* Selección de categoría y búsqueda */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-1 font-medium">Categoría</label>
-              <select
-                className="border rounded px-2 py-2 w-full"
-                value={selectedCategoria}
-                onChange={(e) => setSelectedCategoria(e.target.value)}
-              >
-                <option value="">Seleccione una categoría</option>
-                {categorias
-                  .filter((cat) => cat && cat.desc_tipo && cat.desc_tipo !== "OTRO") // <-- USAR desc_tipo
-                  .sort((a, b) => (a.desc_tipo || "").localeCompare(b.desc_tipo || ""))
-                  .map((cat) => (
-                    <option key={cat.id_tipo} value={cat.desc_tipo}> {/* <-- USAR id_tipo y desc_tipo */}
-                      {cat.desc_tipo}  {/* <-- USAR desc_tipo */}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Buscar dispositivo</label>
-              <Input
-                placeholder="Buscar por nombre, serie, modelo, etc..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full"
-                autoComplete="off"
-              />
+        <div className="space-y-6">
+          {/* Funcionarios - Una sola fila horizontal */}
+          <div className="bg-gray-50 p-6 rounded-lg">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">Información de Funcionarios</h3>
+            <div className="grid grid-cols-3 gap-8">
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-700">Funcionario que revisa *</label>
+                <RutAutocomplete value={rutRevisor} onChange={setRutRevisor} />
+              </div>
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-700">Funcionario que entrega *</label>
+                <RutAutocomplete value={rutEntrega} onChange={setRutEntrega} />
+              </div>
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-700">Responsable de la unidad *</label>
+                <RutAutocomplete value={rutResponsable} onChange={setRutResponsable} />
+              </div>
             </div>
           </div>
 
-          {/* Tabla de dispositivos con selección múltiple */}
-          {selectedCategoria && (
-            <div className="overflow-x-auto rounded border bg-white max-h-[400px] mt-4">
-              <Table className="min-w-[1000px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead></TableHead>
-                    <TableHead>Nombre PC</TableHead>
-                    <TableHead>Serie</TableHead>
-                    <TableHead>Modelo</TableHead>
-                    <TableHead>Capacidad</TableHead>
-                    <TableHead>Categoría</TableHead>
-                    <TableHead>Marca</TableHead>
-                    <TableHead>Ubicación</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredEquipos.length === 0 ? (
+          {/* Selección de Equipos - Layout horizontal */}
+          <div className="bg-gray-50 p-6 rounded-lg">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">Selección de Equipos</h3>
+            <div className="grid grid-cols-2 gap-8 mb-6">
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-700">Categoría *</label>
+                <select
+                  className="border rounded px-4 py-3 w-full text-base focus:ring-2 focus:ring-blue-500"
+                  value={selectedCategoria}
+                  onChange={(e) => setSelectedCategoria(e.target.value)}
+                >
+                  <option value="">Seleccione una categoría</option>
+                  {categorias
+                    .filter((cat) => cat && cat.desc_tipo && cat.desc_tipo !== "OTRO")
+                    .sort((a, b) => (a.desc_tipo || "").localeCompare(b.desc_tipo || ""))
+                    .map((cat) => (
+                      <option key={cat.id_tipo} value={cat.desc_tipo}>
+                        {cat.desc_tipo}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-700">Buscar dispositivo</label>
+                <Input
+                  placeholder="Buscar por nombre, serie, modelo..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full text-base py-3"
+                />
+              </div>
+            </div>
+
+            {/* Tabla de equipos - Mucho más amplia */}
+            {selectedCategoria && (
+              <div className="border rounded-lg bg-white max-h-80 overflow-y-auto">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-gray-100">
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center text-gray-500">
-                        No hay dispositivos disponibles para esta categoría o búsqueda.
-                      </TableCell>
+                      <TableHead className="w-20 text-center">Seleccionar</TableHead>
+                      <TableHead className="min-w-[180px]">Nombre PC</TableHead>
+                      <TableHead className="min-w-[160px]">Serie</TableHead>
+                      <TableHead className="min-w-[200px]">Modelo</TableHead>
+                      <TableHead className="min-w-[140px]">Capacidad</TableHead>
+                      <TableHead className="min-w-[120px]">Categoría</TableHead>
+                      <TableHead className="min-w-[160px]">Marca</TableHead>
+                      <TableHead className="min-w-[160px]">Ubicación</TableHead>
                     </TableRow>
-                  ) : (
-                    filteredEquipos.map((eq) => (
-                      <TableRow key={eq.id_equipo}>
-                        <TableCell>
-                          <input
-                            type="checkbox"
-                            checked={selectedEquipos.includes(eq.id_equipo)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedEquipos([...selectedEquipos, eq.id_equipo])
-                              } else {
-                                setSelectedEquipos(selectedEquipos.filter((id) => id !== eq.id_equipo))
-                              }
-                            }}
-                          />
+                  </TableHeader>
+                  <TableBody>
+                    {filteredEquipos.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                          {equipos.length === 0 ? "No hay dispositivos disponibles para esta categoría" : "No se encontraron dispositivos con ese criterio de búsqueda"}
                         </TableCell>
-                        <TableCell>{eq.nombre_pc}</TableCell>
-                        <TableCell>{eq.numero_serie}</TableCell>
-                        <TableCell>{eq.modelo}</TableCell>
-                        <TableCell>{eq.almacenamiento}</TableCell>
-                        <TableCell>{eq.categoria?.desc_tipo || eq.categoria?.nombre || "-"}</TableCell> {/* <-- AGREGAR desc_tipo */}
-                        <TableCell>{eq.marca?.des_ti_marca || eq.marca?.nombre || "-"}</TableCell>     {/* <-- AGREGAR des_ti_marca */}
-                        <TableCell>{eq.ubicacion?.des_ti_ubicacion || eq.ubicacion?.nombre || "-"}</TableCell> {/* <-- AGREGAR des_ti_ubicacion */}
                       </TableRow>
-                    ))
-                  }
-                </TableBody>
-              </Table>
+                    ) : (
+                      filteredEquipos.map((eq) => (
+                        <TableRow key={eq.id_equipo} className="hover:bg-gray-50">
+                          <TableCell className="text-center">
+                            <input
+                              type="checkbox"
+                              checked={selectedEquipos.includes(eq.id_equipo)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedEquipos([...selectedEquipos, eq.id_equipo])
+                                } else {
+                                  setSelectedEquipos(selectedEquipos.filter((id) => id !== eq.id_equipo))
+                                }
+                              }}
+                              className="w-5 h-5"
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium text-base">{eq.nombre_pc || "-"}</TableCell>
+                          <TableCell className="font-mono">{eq.numero_serie || "-"}</TableCell>
+                          <TableCell className="text-base">{eq.modelo || "-"}</TableCell>
+                          <TableCell className="text-base">{eq.almacenamiento || "-"}</TableCell>
+                          <TableCell className="text-base">{eq.categoria?.desc_tipo || "-"}</TableCell>
+                          <TableCell className="text-base">{eq.marca?.des_ti_marca || eq.marca?.nombre || "-"}</TableCell>
+                          <TableCell className="text-base">{eq.ubicacion?.des_ti_ubicacion || eq.ubicacion?.nombre || "-"}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+            
+            {selectedEquipos.length > 0 && (
+              <div className="mt-4 text-base text-green-600 font-medium">
+                {selectedEquipos.length} equipo(s) seleccionado(s)
+              </div>
+            )}
+          </div>
+
+          {/* Información del Préstamo e Firmas - Layout más horizontal */}
+          <div className="grid grid-cols-2 gap-10">
+            {/* Información del Préstamo */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-6 text-gray-800">Información del Préstamo</h3>
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">Cargo del préstamo *</label>
+                    <select
+                      value={cargoPrestamo}
+                      onChange={(e) => setCargoPrestamo(e.target.value)}
+                      className="border rounded px-4 py-3 w-full text-base focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Seleccione...</option>
+                      <option value="FISCAL">Fiscal</option>
+                      <option value="PARTICULAR">Particular</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">Distribución</label>
+                    <Input
+                      value={distribucion}
+                      onChange={(e) => setDistribucion(e.target.value)}
+                      placeholder="Ej: 3 copias: Original - Triplicado - Archivo"
+                      className="w-full text-base py-3"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">Motivo del préstamo</label>
+                  <textarea
+                    value={motivo}
+                    onChange={(e) => setMotivo(e.target.value)}
+                    className="w-full border rounded px-4 py-3 text-base focus:ring-2 focus:ring-blue-500"
+                    rows={5}
+                    placeholder="Describa el motivo del préstamo..."
+                  />
+                </div>
+              </div>
             </div>
-          )}
 
-          {/* Cargo del préstamo */}
-          <div>
-            <label className="block mb-1 font-medium">Cargo del préstamo</label>
-            <select
-              value={cargoPrestamo}
-              onChange={(e) => setCargoPrestamo(e.target.value)}
-              className="border rounded px-2 py-2 w-full"
-            >
-              <option value="">Seleccione...</option>
-              <option value="FISCAL">Fiscal</option>
-              <option value="PARTICULAR">Particular</option>
-            </select>
-          </div>
+            {/* Firmas */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-6 text-gray-800">Firmas del Documento</h3>
+              
+              {/* Firma 1 */}
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-700 mb-4">Primera Firma</h4>
+                <div className="space-y-4">
+                  <Input
+                    value={firma1.nombre}
+                    onChange={(e) => setFirma1({...firma1, nombre: e.target.value})}
+                    placeholder="Nombre completo"
+                    className="text-base py-3"
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      value={firma1.cargoMilitar}
+                      onChange={(e) => setFirma1({...firma1, cargoMilitar: e.target.value})}
+                      placeholder="Cargo militar"
+                      className="text-base py-3"
+                    />
+                    <Input
+                      value={firma1.cargoDepto}
+                      onChange={(e) => setFirma1({...firma1, cargoDepto: e.target.value})}
+                      placeholder="Cargo departamento"
+                      className="text-base py-3"
+                    />
+                  </div>
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={firma1.subrogante}
+                      onChange={(e) => setFirma1({...firma1, subrogante: e.target.checked})}
+                      className="w-5 h-5"
+                    />
+                    <span className="text-base text-gray-600">Subrogante</span>
+                  </label>
+                </div>
+              </div>
 
-          {/* Motivo */}
-          <div>
-            <label className="block mb-1 font-medium">Motivo</label>
-            <textarea
-              value={motivo}
-              onChange={(e) => setMotivo(e.target.value)}
-              className="w-full border rounded px-2 py-2"
-              rows={3}
-            />
-          </div>
-
-          {/* Firmas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-1 font-medium">Firma 1</label>
-              <input
-                placeholder="Nombre"
-                value={firma1.nombre}
-                onChange={(e) => setFirma1({ ...firma1, nombre: e.target.value })}
-                className="border rounded px-2 py-2 w-full mb-2"
-              />
-              <input
-                placeholder="Cargo militar"
-                value={firma1.cargoMilitar}
-                onChange={(e) => setFirma1({ ...firma1, cargoMilitar: e.target.value })}
-                className="border rounded px-2 py-2 w-full mb-2"
-              />
-              <input
-                placeholder="Cargo departamento"
-                value={firma1.cargoDepto}
-                onChange={(e) => setFirma1({ ...firma1, cargoDepto: e.target.value })}
-                className="border rounded px-2 py-2 w-full mb-2"
-              />
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={firma1.subrogante}
-                  onChange={(e) => setFirma1({ ...firma1, subrogante: e.target.checked })}
-                  className="mr-2"
-                />
-                Subrogante
-              </label>
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Firma 2</label>
-              <input
-                placeholder="Nombre"
-                value={firma2.nombre}
-                onChange={(e) => setFirma2({ ...firma2, nombre: e.target.value })}
-                className="border rounded px-2 py-2 w-full mb-2"
-              />
-              <input
-                placeholder="Cargo militar"
-                value={firma2.cargoMilitar}
-                onChange={(e) => setFirma2({ ...firma2, cargoMilitar: e.target.value })}
-                className="border rounded px-2 py-2 w-full mb-2"
-              />
-              <input
-                placeholder="Cargo departamento"
-                value={firma2.cargoDepto}
-                onChange={(e) => setFirma2({ ...firma2, cargoDepto: e.target.value })}
-                className="border rounded px-2 py-2 w-full mb-2"
-              />
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={firma2.subrogante}
-                  onChange={(e) => setFirma2({ ...firma2, subrogante: e.target.checked })}
-                  className="mr-2"
-                />
-                Subrogante
-              </label>
+              {/* Firma 2 */}
+              <div>
+                <h4 className="font-medium text-gray-700 mb-4">Segunda Firma</h4>
+                <div className="space-y-4">
+                  <Input
+                    value={firma2.nombre}
+                    onChange={(e) => setFirma2({...firma2, nombre: e.target.value})}
+                    placeholder="Nombre completo"
+                    className="text-base py-3"
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      value={firma2.cargoMilitar}
+                      onChange={(e) => setFirma2({...firma2, cargoMilitar: e.target.value})}
+                      placeholder="Cargo militar"
+                      className="text-base py-3"
+                    />
+                    <Input
+                      value={firma2.cargoDepto}
+                      onChange={(e) => setFirma2({...firma2, cargoDepto: e.target.value})}
+                      placeholder="Cargo departamento"
+                      className="text-base py-3"
+                    />
+                  </div>
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={firma2.subrogante}
+                      onChange={(e) => setFirma2({...firma2, subrogante: e.target.checked})}
+                      className="w-5 h-5"
+                    />
+                    <span className="text-base text-gray-600">Subrogante</span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Distribución */}
-          <div>
-            <label className="block mb-1 font-medium">Distribución (destinatarios)</label>
-            <textarea
-              value={distribucion}
-              onChange={(e) => setDistribucion(e.target.value)}
-              className="w-full border rounded px-2 py-2"
-              rows={3}
-            />
-          </div>
-
-          {/* Botones */}
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleClose}>
+          {/* Botones de acción */}
+          <div className="flex justify-end gap-6 pt-6 border-t border-gray-200">
+            <Button variant="outline" onClick={handleClose} disabled={loading} size="lg">
               Cancelar
             </Button>
             <Button
@@ -414,8 +443,10 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
                 !cargoPrestamo ||
                 loading
               }
+              className="bg-teal-600 hover:bg-teal-700"
+              size="lg"
             >
-              {loading ? "Agregando..." : "Agregar Préstamo"}
+              {loading ? "Generando préstamo..." : "Generar Préstamo"}
             </Button>
           </div>
         </div>

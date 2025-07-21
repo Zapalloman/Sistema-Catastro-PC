@@ -59,18 +59,27 @@ export function LoansTable({ deviceType }: LoansTableProps) {
   }, [])
 
   // Mapea los datos del backend al formato de la tabla
-  const loansData = prestamos.map((p) => ({
-    estadoRecibo: p.estado === 1 ? "ACTIVO" : p.estado === 0 ? "FINALIZADO" : p.estado === 2 ? "NO APTO" : "DESCONOCIDO",
-    nroRecibo: p.id_prestamo,
-    fechaRecibo: p.fecha_prestamo ? p.fecha_prestamo.slice(0, 10) : "",
-    funcionario: p.nombre_revisor || p.rut_revisor || "-",
-    dispositivos: p.equipos && p.equipos.length > 0
-      ? p.equipos.map(eq => eq.nombre_pc || eq.modelo || eq.numero_serie).join(', ')
-      : '-',
-    cantidadDispositivos: p.equipos ? p.equipos.length : 0,
-    descripcion: p.descripcion || "",
-    raw: p, // p debe tener p.equipos con la info de categoria
-  }));
+  const loansData = prestamos.map((p) => {
+    console.log("Préstamo:", p.id_prestamo, "Equipos:", p.equipos); // Debug log
+    
+    return {
+      estadoRecibo: p.estado === "1" || p.estado === 1 ? "ACTIVO" : 
+                   p.estado === "0" || p.estado === 0 ? "FINALIZADO" : 
+                   p.estado === "2" || p.estado === 2 ? "NO APTO" : "DESCONOCIDO",
+      nroRecibo: p.id_prestamo,
+      fechaRecibo: p.fecha_prestamo ? p.fecha_prestamo.slice(0, 10) : "",
+      funcionario: p.nombre_revisor || p.rut_revisor || "-",
+      dispositivos: p.equipos && p.equipos.length > 0
+        ? p.equipos.map(eq => eq.nombre_pc || eq.modelo || eq.numero_serie).join(', ')
+        : '-',
+      cantidadDispositivos: p.equipos ? p.equipos.length : 0,
+      descripcion: p.descripcion || "",
+      raw: p, // Incluye toda la información original
+    };
+  });
+
+  console.log("Device Type actual:", deviceType); // Debug log
+  console.log("Loans data:", loansData); // Debug log
 
   // Filtro por búsqueda, tipo y estado ACTIVO
   const filteredData = loansData.filter((loan) => {
@@ -82,16 +91,16 @@ export function LoansTable({ deviceType }: LoansTableProps) {
 
     let matchesDeviceType = true;
     if (deviceType !== "TODOS") {
-      // loan.raw.equipos debe ser un array de equipos con categoria
-      matchesDeviceType =
-        Array.isArray(loan.raw?.equipos) &&
-        loan.raw.equipos.some(
-          (eq) =>
-            eq.categoria &&
-            (eq.categoria.id_categoria?.toString() === deviceType ||
-              eq.categoria === deviceType || // por si viene como string
-              eq.categoria.nombre?.toUpperCase() === deviceType.toUpperCase())
-        );
+      // Verificar si loan.raw.equipos existe y tiene equipos
+      if (Array.isArray(loan.raw?.equipos)) {
+        matchesDeviceType = loan.raw.equipos.some((eq) => {
+          // Verificar diferentes formas de acceder a la categoría
+          const categoria = eq.categoria?.desc_tipo || eq.categoria?.nombre || eq.categoria;
+          return categoria && categoria.toUpperCase() === deviceType.toUpperCase();
+        });
+      } else {
+        matchesDeviceType = false; // Si no tiene equipos, no coincide con ningún filtro específico
+      }
     }
 
     return matchesSearch && matchesDeviceType
@@ -216,15 +225,29 @@ export function LoansTable({ deviceType }: LoansTableProps) {
                   <TableCell>{loan.cantidadDispositivos}</TableCell>
                   <TableCell>{loan.descripcion}</TableCell>
                   <TableCell>
-                    <Button
+                    <div className="flex items-center gap-2">
+                      <Button
                         size="sm"
                         variant="outline"
                         className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500"
-                        onClick={() => handleView(loan.raw)}
+                        onClick={() => handleView(loan)}
                         title="Ver detalles"
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-green-500 hover:bg-green-600 text-white border-green-500"
+                        onClick={() => {
+                          const url = `http://localhost:3000/api/prestamos/${loan.nroRecibo}/documento`;
+                          window.open(url, '_blank');
+                        }}
+                        title="Descargar documento"
+                      >
+                        <Download className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

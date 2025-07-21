@@ -38,6 +38,7 @@ export default function Prestamos() {
 		fetch("http://localhost:3000/api/equipos/categorias")
 			.then(res => res.json())
 			.then(data => {
+				console.log("Categorías cargadas:", data); // Debug log
 				const categoriasArray = Array.isArray(data) ? data : [];
 				setCategorias(categoriasArray);
 			})
@@ -93,24 +94,24 @@ export default function Prestamos() {
 
 				{/* Tabs para activos y disponibles */}
 				<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-					<TabsList className="grid w-full grid-cols-2 bg-blue-500">
-						<TabsTrigger
-							value="activos"
-							className="text-white data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+					<TabsList className="grid w-full grid-cols-2 bg-gray-100">
+						<TabsTrigger 
+							value="activos" 
+							className="data-[state=active]:bg-blue-500 data-[state=active]:text-white"
 						>
-							PRÉSTAMOS ACTIVOS
+							Préstamos Activos
 						</TabsTrigger>
-						<TabsTrigger
+						<TabsTrigger 
 							value="disponibles"
-							className="text-white data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+							className="data-[state=active]:bg-blue-500 data-[state=active]:text-white"
 						>
-							DISPOSITIVOS DISPONIBLES
+							Dispositivos Disponibles
 						</TabsTrigger>
 					</TabsList>
-					<TabsContent value="activos" className="space-y-4">
+					<TabsContent value="activos">
 						<LoansTable deviceType={selectedFilter} />
 					</TabsContent>
-					<TabsContent value="disponibles" className="space-y-4">
+					<TabsContent value="disponibles">
 						<AvailableDevicesTable deviceType={selectedFilter} />
 					</TabsContent>
 				</Tabs>

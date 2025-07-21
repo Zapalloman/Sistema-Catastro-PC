@@ -10,8 +10,6 @@ import { EquipmentDetailModal } from "./equipment-detail-modal"
 import * as XLSX from "xlsx"
 import { saveAs } from "file-saver"
 
-
-
 interface EquipmentTableProps {
   equipos: any[]
   selectedPropietario: string
@@ -22,29 +20,19 @@ interface EquipmentTableProps {
 export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountChange }: EquipmentTableProps) {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(true)
-
-
-
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [selectedEquipment, setSelectedEquipment] = useState(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedCategoria, setSelectedCategoria] = useState("TODOS")
   const [categorias, setCategorias] = useState<any[]>([])
+  const [selectedEquipment, setSelectedEquipment] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Filtrado por propietario (si aplica)
-  const filteredData = selectedPropietario === "TODOS"
-    ? equipos
-    : equipos.filter(eq => eq.id_propietario === selectedPropietario);
+  // Filtrar equipos por propietario
+  const filteredByCategoria = equipos
 
-  const filteredByCategoria = selectedCategoria === "TODOS"
-    ? filteredData
-    : filteredData.filter(eq => eq.categoria === selectedCategoria);
-
-  // Fetch categories for filtering
   useEffect(() => {
-    fetch("http://localhost:3000/api/equipos/categorias") // <-- CAMBIAR DE /api/categorias A /api/equipos/categorias
+    fetch("http://localhost:3000/api/equipos/categorias")
       .then(res => res.json())
       .then(data => {
         const categoriasArray = Array.isArray(data) ? data : [];
@@ -74,7 +62,14 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
   const paginatedData = dataToDisplay.slice(startIndex, startIndex + itemsPerPage)
 
   const handleViewDetails = (equipment: any) => {
-    setSelectedEquipment(equipment)
+    const enhancedEquipment = {
+      ...equipment,
+      fechaAsignacion: equipment.fecha_asignacion || equipment.fechaAdquisicion || "",
+      fechaAdquisicion: equipment.fecha_adquisicion || equipment.fechaAdquisicion || "",
+      // Usar el estado que ya viene del backend a través de equipos.tsx
+      estadoPrestamo: equipment.estadoPrestamo || "DISPONIBLE"
+    }
+    setSelectedEquipment(enhancedEquipment)
     setIsModalOpen(true)
   }
 
@@ -115,54 +110,34 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
 
   // Utilidad para agrupar y contar
   function groupCount(arr, keyFn) {
-    const map = new Map();
+    const groups = {}
     arr.forEach(item => {
-      const key = keyFn(item);
-      if (!key) return;
-      map.set(key, (map.get(key) || 0) + 1);
-    });
-    return Array.from(map.entries()).map(([key, count]) => ({ key, count }));
+      const key = keyFn(item) || "Sin especificar"
+      groups[key] = (groups[key] || 0) + 1
+    })
+    return Object.entries(groups)
+      .map(([key, count]) => ({ key, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
   }
 
   // Agrupa por versión de Windows (detecta "windows" en version_sistema_operativo)
-  const windowsCounts = groupCount(equipos, eq => {
-    const v = eq.version_sistema_operativo?.toLowerCase() || "";
-    if (v.includes("windows")) {
-      // Extrae "Windows X" o "Windows X.X"
-      const match = v.match(/windows\s*([0-9]+(\.[0-9]+)?)/i);
-      return match ? `Windows ${match[1]}` : "Windows";
-    }
-    return null;
-  }).sort((a, b) => b.count - a.count);
+  const windowsCounts = groupCount(
+    dataToDisplay.filter(eq => 
+      eq.version_sistema_operativo && 
+      eq.version_sistema_operativo.toLowerCase().includes('windows')
+    ), 
+    eq => eq.version_sistema_operativo
+  )
 
   // Agrupa por versión de Office
-  const officeCounts = groupCount(equipos, eq => {
-    const v = eq.version_office?.toLowerCase() || "";
-    if (v.includes("office")) {
-      // Extrae "Office XXXX" o "Office 365"
-      const match = v.match(/office\s*([0-9]{4}|365)/i);
-      return match ? `Office ${match[1]}` : "Office";
-    }
-    return null;
-  }).sort((a, b) => b.count - a.count);
+  const officeCounts = groupCount(
+    dataToDisplay.filter(eq => eq.version_office), 
+    eq => eq.version_office
+  )
 
   // Agrupa por marca
-  const marcaCounts = groupCount(equipos, eq => eq.marca || null).sort((a, b) => b.count - a.count);
-
-  // Paleta de colores para los recuadros (puedes agregar más)
-  const cardColors = [
-    "bg-blue-500", "bg-green-500", "bg-orange-500", "bg-purple-500", "bg-pink-500", "bg-yellow-500", "bg-cyan-500"
-  ];
-
-  const handleShowDetail = (eq) => {
-    setSelectedEquipment({
-      ...eq,
-      fechaAsignacion: eq.fecha_asignacion || eq.fechaAdquisicion || "", // mapea correctamente
-      fechaAdquisicion: eq.fecha_adquisicion || eq.fechaAdquisicion || "",
-      // ...otros campos si es necesario
-    });
-    setIsModalOpen(true);
-  };
+  const marcaCounts = groupCount(dataToDisplay, eq => eq.marca || null)
 
   return (
     <div className="space-y-4">
@@ -195,34 +170,34 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
           </div>
         </div>
 
-        <Button onClick={handleExport} className="bg-green-600 hover:bg-green-700">
-          <Download className="w-4 h-4 mr-2" />
-          Exportar Excel
-        </Button>
-      </div>
+        <div className="flex items-center gap-2">
+          <Select value={selectedCategoria} onValueChange={setSelectedCategoria}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filtrar por categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="TODOS">Todas las Categorías</SelectItem>
+              {categorias.map((cat) => (
+                <SelectItem key={cat.id_tipo} value={cat.desc_tipo}>
+                  {cat.desc_tipo}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-      {/* Filter by category */}
-      <div className="flex items-center gap-4 mb-2">
-        <label className="text-sm">Filtrar por tipo:</label>
-        <select
-          value={selectedCategoria}
-          onChange={e => setSelectedCategoria(e.target.value)}
-          className="border rounded px-2 py-1"
-        >
-          <option value="TODOS">Todos</option>
-          {categorias.map(cat => (
-            <option key={cat.id_categoria || cat.id_tipo} value={cat.nombre || cat.desc_tipo}>
-              {cat.nombre || cat.desc_tipo}
-            </option>
-          ))}
-        </select>
+          <Button onClick={handleExport} className="bg-green-600 hover:bg-green-700">
+            <Download className="w-4 h-4 mr-2" />
+            Exportar Excel
+          </Button>
+        </div>
       </div>
 
       {/* Results Summary */}
-      <div className="flex items-center justify-between text-sm text-gray-600">
-        <span>
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-gray-600">
           Mostrando {dataToDisplay.length} equipo{dataToDisplay.length !== 1 ? "s" : ""}
-          {selectedPropietario !== "TODOS" && propietarioNombre && ` para ${propietarioNombre}`}
+          {propietarioNombre && ` del propietario: ${propietarioNombre}`}
+          {selectedCategoria !== "TODOS" && ` (Categoría: ${selectedCategoria})`}
         </span>
       </div>
 
@@ -363,10 +338,4 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
       />
     </div>
   )
-}
-
-function formatFecha(fecha: string) {
-  if (!fecha) return "";
-  // Si viene con hora, corta solo la fecha
-  return fecha.split("T")[0].split("-").reverse().join("-");
 }

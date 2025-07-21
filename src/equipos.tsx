@@ -60,40 +60,60 @@ export default function Equipos() {
 
   // Carga y mapea equipos SIEMPRE
   useEffect(() => {
+    // Usar el endpoint original temporalmente hasta que arreglemos el de estados
     fetch("http://localhost:3000/api/equipos")
       .then(res => res.json())
-      .then(data => {
-        let equipos = Array.isArray(data) ? data : [];
-        equipos = equipos.map(eq => ({
+      .then(async (data) => {
+        // Obtener préstamos activos para verificar estados
+        const prestamosResponse = await fetch("http://localhost:3000/api/prestamos");
+        const prestamos = await prestamosResponse.json();
+        
+        // Crear un Set con IDs de equipos en préstamos activos
+        const equiposEnPrestamo = new Set();
+        prestamos.forEach(prestamo => {
+          if (prestamo.estado === "1" || prestamo.estado === 1) { // Solo préstamos activos
+            if (prestamo.equipos && Array.isArray(prestamo.equipos)) {
+              prestamo.equipos.forEach(equipo => {
+                equiposEnPrestamo.add(equipo.id_equipo);
+              });
+            }
+          }
+        });
+
+        let equipos = data.map(eq => ({
+          nombrePC: eq.nombre_pc || "",
           serie: eq.numero_serie || "",
           modeloPC: eq.modelo || "",
           disco: eq.almacenamiento || "",
           ram: eq.ram || "",
           procesador: eq.procesador || "",
-          velocidad: eq.velocidad || "",
           marca: eq.nombre_marca || "",
-          mac: eq.direccion_mac || "",
-          ip: eq.ip || "",
-          nombrePC: eq.nombre_pc || "",
-          propietario: eq.nombre_propietario || "",
-          estado: eq.estado || "",
-          fechaAsignacion: eq.fecha_asignacion || "",
-          ubicacion: eq.nombre_ubicacion || "",
           categoria: eq.nombre_categoria || "",
-          llave_inventario: eq.llave_inventario || "",
+          propietario: eq.nombre_propietario || "",
+          ubicacion: eq.nombre_ubicacion || "",
           fechaAdquisicion: eq.fecha_adquisicion || "",
-          version_sistema_operativo: eq.version_sistema_operativo || "", // <-- AGREGA ESTA LÍNEA
-          version_office: eq.version_office || "", // <-- AGREGA ESTA LÍNEA
+          llave_inventario: eq.llave_inventario || "",
+          ip: eq.ip || "",
+          version_sistema_operativo: eq.version_sistema_operativo || "",
+          version_office: eq.version_office || "",
           id_equipo: eq.id_equipo,
-          id_propietario: eq.cod_ti_propietario?.toString() ?? "", // <-- AGREGA ESTA LÍNEA
+          id_propietario: eq.cod_ti_propietario?.toString() ?? "",
+          // Usar estado real basado en préstamos activos
+          estadoPrestamo: equiposEnPrestamo.has(eq.id_equipo) ? "ACTIVO" : "DISPONIBLE"
         }));
+        
         // Filtra por propietario SIEMPRE usando string
         if (selectedPropietario !== "TODOS") {
           equipos = equipos.filter(eq => eq.id_propietario === selectedPropietario);
         }
         setEquiposFiltrados(equipos);
         setTotalEquipos(equipos.length);
-        console.log(equipos);
+        console.log("Equipos cargados con estados reales:", equipos.length);
+      })
+      .catch(error => {
+        console.error("Error al cargar equipos:", error);
+        setEquiposFiltrados([]);
+        setTotalEquipos(0);
       });
   }, [selectedPropietario, refresh]);
 

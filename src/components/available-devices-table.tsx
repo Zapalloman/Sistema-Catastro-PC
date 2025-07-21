@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ChevronLeft, ChevronRight, Search, Plus } from "lucide-react"
-import { AddDeviceModal } from "./add-device-modal" // Debes crear este componente
+import { ChevronLeft, ChevronRight, Search, Plus, Eye } from "lucide-react" // <-- AGREGAR Eye AQUÍ
+import { AddDeviceModal } from "./add-device-modal"
+import { EquipmentDetailModal } from "./equipment-detail-modal"
 
 export function AvailableDevicesTable({ deviceType }: { deviceType: string }) {
   const [equipos, setEquipos] = useState<any[]>([])
@@ -16,15 +17,22 @@ export function AvailableDevicesTable({ deviceType }: { deviceType: string }) {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [selectedEquipment, setSelectedEquipment] = useState(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
   useEffect(() => {
     setLoading(true)
     let url = "http://localhost:3000/api/equipos/disponibles"
-    if (deviceType && deviceType !== "TODOS") url += `?categoria=${deviceType}`
+    if (deviceType && deviceType !== "TODOS") {
+      url += `?categoria=${encodeURIComponent(deviceType)}`
+    }
+    
+    console.log("Cargando equipos disponibles con URL:", url); // Debug log
+    
     fetch(url)
       .then(res => res.json())
       .then(data => {
-        // ...mapeo...
+        console.log("Equipos disponibles recibidos:", data); // Debug log
         setEquipos(Array.isArray(data) ? data : [])
       })
       .catch(() => setError("No se pudo cargar la lista de equipos disponibles"))
@@ -35,16 +43,42 @@ export function AvailableDevicesTable({ deviceType }: { deviceType: string }) {
   const filteredData = equipos.filter(eq =>
     (eq.nombre_pc || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
     (eq.numero_serie || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (eq.categoria || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (eq.categoria?.desc_tipo || eq.categoria || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
     (eq.almacenamiento || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (eq.marca?.nombre || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (eq.ubicacion?.nombre || "").toLowerCase().includes(searchTerm.toLowerCase())
+    (eq.marca?.des_ti_marca || eq.marca?.nombre || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (eq.ubicacion?.des_ti_ubicacion || eq.ubicacion?.nombre || "").toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   // Paginación
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage)
+
+  const handleViewDetails = (equipment: any) => {
+    // Mapear los datos al formato esperado por el modal
+    const mappedEquipment = {
+      ...equipment,
+      serie: equipment.numero_serie,
+      nombrePC: equipment.nombre_pc,
+      modeloPC: equipment.modelo,
+      categoria: equipment.categoria?.desc_tipo || equipment.categoria,
+      marca: equipment.marca?.des_ti_marca || equipment.marca?.nombre,
+      ubicacion: equipment.ubicacion?.des_ti_ubicacion || equipment.ubicacion?.nombre,
+      propietario: equipment.propietario?.nombre,
+      fechaAdquisicion: equipment.fecha_adquisicion,
+      llave_inventario: equipment.llave_inventario,
+      disco: equipment.almacenamiento,
+      ram: equipment.memoria_ram,
+      procesador: equipment.procesador,
+      version_sistema_operativo: equipment.version_sistema_operativo,
+      version_office: equipment.version_office,
+      ip: equipment.ip,
+      // Como está en la tabla de disponibles, siempre es DISPONIBLE
+      estadoPrestamo: "DISPONIBLE"
+    }
+    setSelectedEquipment(mappedEquipment)
+    setIsDetailModalOpen(true)
+  }
 
   if (loading) return <div>Cargando...</div>
   if (error) return <div>{error}</div>
@@ -73,38 +107,42 @@ export function AvailableDevicesTable({ deviceType }: { deviceType: string }) {
           <TableHeader>
             <TableRow className="bg-gray-100">
               <TableHead className="font-semibold text-gray-700">Nombre PC</TableHead>
-              <TableHead className="font-semibold text-gray-700">Llave de Inventario</TableHead>
               <TableHead className="font-semibold text-gray-700">Serie</TableHead>
-              <TableHead className="font-semibold text-gray-700">Tipo</TableHead>
+              <TableHead className="font-semibold text-gray-700">Modelo</TableHead>
               <TableHead className="font-semibold text-gray-700">Capacidad</TableHead>
+              <TableHead className="font-semibold text-gray-700">Categoría</TableHead>
               <TableHead className="font-semibold text-gray-700">Marca</TableHead>
               <TableHead className="font-semibold text-gray-700">Ubicación</TableHead>
-              <TableHead className="font-semibold text-gray-700">Estado</TableHead>
+              <TableHead className="font-semibold text-gray-700">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                  No hay dispositivos disponibles para los criterios seleccionados
+                  No hay equipos disponibles para los criterios seleccionados.
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedData.map((eq, idx) => (
-                <TableRow key={eq.id_equipo + '-' + idx}>
-                  <TableCell>{eq.nombre_pc}</TableCell>
+              paginatedData.map((equipo) => (
+                <TableRow key={equipo.id_equipo} className="hover:bg-gray-50">
+                  <TableCell className="font-medium">{equipo.nombre_pc || "-"}</TableCell>
+                  <TableCell className="font-mono text-sm">{equipo.numero_serie || "-"}</TableCell>
+                  <TableCell>{equipo.modelo || "-"}</TableCell>
+                  <TableCell>{equipo.almacenamiento || "-"}</TableCell>
+                  <TableCell>{equipo.categoria?.desc_tipo || equipo.categoria || "-"}</TableCell>
+                  <TableCell>{equipo.marca?.des_ti_marca || equipo.marca?.nombre || "-"}</TableCell>
+                  <TableCell>{equipo.ubicacion?.des_ti_ubicacion || equipo.ubicacion?.nombre || "-"}</TableCell>
                   <TableCell>
-                    {eq.llave_inventario ? eq.llave_inventario : ""}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">{eq.numero_serie}</TableCell>
-                  <TableCell>{eq.categoria?.desc_tipo || eq.categoria?.nombre || "-"}</TableCell>
-                  <TableCell>{eq.almacenamiento}</TableCell>
-                  <TableCell>{eq.marca?.nombre || "-"}</TableCell>
-                  <TableCell>{eq.ubicacion?.nombre || "-"}</TableCell>
-                  <TableCell>
-                    <Badge variant="default" className="bg-blue-500">
-                      DISPONIBLE
-                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500"
+                      onClick={() => handleViewDetails(equipo)}
+                      title="Ver detalles"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -154,15 +192,25 @@ export function AvailableDevicesTable({ deviceType }: { deviceType: string }) {
         </div>
       </div>
 
-      {/* Modal para agregar dispositivo */}
-      <AddDeviceModal open={showAddModal} onClose={() => setShowAddModal(false)} onDeviceAdded={() => {
-        setLoading(true)
-        fetch("http://localhost:3000/api/equipos/disponibles")
-          .then(res => res.json())
-          .then(data => setEquipos(Array.isArray(data) ? data : []))
-          .catch(() => setError("No se pudo cargar la lista de equipos disponibles"))
-          .finally(() => setLoading(false))
-      }} />
+      {/* Modal de detalles del equipo */}
+      <EquipmentDetailModal
+        equipment={selectedEquipment}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+      />
+
+      {/* Modal agregar dispositivo (si existe) */}
+      {showAddModal && (
+        <AddDeviceModal
+          open={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onAdded={() => {
+            setShowAddModal(false)
+            // Recargar datos
+            window.location.reload()
+          }}
+        />
+      )}
     </div>
   )
 }

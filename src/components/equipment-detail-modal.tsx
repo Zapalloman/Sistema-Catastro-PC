@@ -59,54 +59,40 @@ export function EquipmentDetailModal({ equipment, isOpen, onClose }: EquipmentDe
 
         <div className="space-y-6">
           {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium text-gray-600">Nombre PC</label>
-                <p className="text-lg font-semibold">{equipment.nombrePC}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Serie</label>
-                <p className="font-mono text-sm bg-gray-100 p-2 rounded">{equipment.serie}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Propietario</label>
-                <p className="text-base">{equipment.propietario}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Estado</label>
-                <div className="mt-1">
-                  <Badge variant={equipment.estado === "ACTIVO" ? "default" : "secondary"} className="bg-green-500">
-                    {equipment.estado}
-                  </Badge>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <div className="text-xs text-gray-500">Serie</div>
+              <div className="font-semibold">{equipment?.serie ?? "-"}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Nombre PC</div>
+              <div className="font-semibold">{equipment?.nombrePC ?? "-"}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Estado de Préstamo</div>
+              <div className="font-semibold">
+                <Badge
+                  variant="default"
+                  className={
+                    equipment?.estadoPrestamo === "DISPONIBLE" ? "bg-green-500 hover:bg-green-600" :
+                    equipment?.estadoPrestamo === "ACTIVO" ? "bg-blue-500 hover:bg-blue-600" :
+                    "bg-red-500 hover:bg-red-600"
+                  }
+                >
+                  {equipment?.estadoPrestamo || "DISPONIBLE"}
+                </Badge>
               </div>
             </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium text-gray-600">Modelo PC</label>
-                <p className="text-base">{equipment.modeloPC}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Marca</label>
-                <p className="text-base">{equipment.marca}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Fecha de Adquisición</label>
-                <p className="text-base">{formatFecha(equipment.fechaAdquisicion)}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Ubicación</label>
-                <p className="text-base">{equipment.ubicacion}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Categoría</label>
-                <p className="text-base">{equipment.categoria}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Llave de Inventario</label>
-                <p className="text-base">{equipment.llave_inventario}</p>
+            <div>
+              <div className="text-xs text-gray-500">Propietario</div>
+              <div className="font-semibold">{equipment.propietario}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500">Estado</div>
+              <div className="mt-1">
+                <Badge variant={equipment.estado === "ACTIVO" ? "default" : "secondary"} className="bg-green-500">
+                  {equipment.estado}
+                </Badge>
               </div>
             </div>
           </div>
