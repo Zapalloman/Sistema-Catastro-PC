@@ -93,7 +93,7 @@ export function EquipmentDetailModal({ equipment, isOpen, onClose }: EquipmentDe
                 <p className="text-base">{equipment.marca}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-600">Fecha Asignación</label>
+                <label className="text-sm font-medium text-gray-600">Fecha de Adquisición</label>
                 <p className="text-base">{formatFecha(equipment.fechaAdquisicion)}</p>
               </div>
               <div>
@@ -172,19 +172,35 @@ export function EquipmentDetailModal({ equipment, isOpen, onClose }: EquipmentDe
             </div>
           </div>
 
-          {/* Fecha de Adquisición - Nuevo campo añadido */}
-          <div className="border-t pt-4">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Monitor className="w-5 h-5" />
-              Información Adicional
-            </h3>
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-600">Fecha de Adquisición</label>
-                <p className="text-base">{formatFecha(equipment.fechaAdquisicion)}</p>
+          {/* Software Information - Solo si tiene datos */}
+          {(equipment.version_sistema_operativo || equipment.version_office) && (
+            <div className="border-t pt-4">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Monitor className="w-5 h-5" />
+                Información de Software
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {equipment.version_sistema_operativo && (
+                  <div className="flex items-center gap-2">
+                    <Monitor className="w-4 h-4 text-blue-600" />
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Sistema Operativo</label>
+                      <p className="text-sm">{equipment.version_sistema_operativo}</p>
+                    </div>
+                  </div>
+                )}
+                {equipment.version_office && (
+                  <div className="flex items-center gap-2">
+                    <Monitor className="w-4 h-4 text-green-600" />
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Versión de Office</label>
+                      <p className="text-sm">{equipment.version_office}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

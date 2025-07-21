@@ -82,6 +82,8 @@ export default function Equipos() {
           categoria: eq.nombre_categoria || "",
           llave_inventario: eq.llave_inventario || "",
           fechaAdquisicion: eq.fecha_adquisicion || "",
+          version_sistema_operativo: eq.version_sistema_operativo || "", // <-- AGREGA ESTA LÍNEA
+          version_office: eq.version_office || "", // <-- AGREGA ESTA LÍNEA
           id_equipo: eq.id_equipo,
           id_propietario: eq.cod_ti_propietario?.toString() ?? "", // <-- AGREGA ESTA LÍNEA
         }));

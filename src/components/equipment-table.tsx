@@ -44,9 +44,12 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
 
   // Fetch categories for filtering
   useEffect(() => {
-    fetch("http://localhost:3000/api/categorias")
+    fetch("http://localhost:3000/api/equipos/categorias") // <-- CAMBIAR DE /api/categorias A /api/equipos/categorias
       .then(res => res.json())
-      .then(data => setCategorias(data))
+      .then(data => {
+        const categoriasArray = Array.isArray(data) ? data : [];
+        setCategorias(categoriasArray);
+      })
       .catch(() => setError("No se pudo cargar las categorías"))
       .finally(() => setLoading(false))
   }, [])
@@ -208,7 +211,9 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
         >
           <option value="TODOS">Todos</option>
           {categorias.map(cat => (
-            <option key={cat.id_categoria} value={cat.nombre}>{cat.nombre}</option>
+            <option key={cat.id_categoria || cat.id_tipo} value={cat.nombre || cat.desc_tipo}>
+              {cat.nombre || cat.desc_tipo}
+            </option>
           ))}
         </select>
       </div>

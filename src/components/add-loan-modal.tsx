@@ -8,8 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { RutAutocomplete } from "./rut-autocomplete"
 
 interface Categoria {
-  id_categoria: number
-  nombre: string
+  id_tipo: number      // <-- CAMBIAR de id_categoria a id_tipo
+  desc_tipo: string    // <-- CAMBIAR de nombre a desc_tipo
 }
 
 interface Marca {
@@ -46,6 +46,7 @@ interface AddLoanModalProps {
 
 export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) {
   const [categorias, setCategorias] = useState<Categoria[]>([])
+  const [disponibles, setDisponibles] = useState<Equipo[]>([])
   const [selectedCategoria, setSelectedCategoria] = useState("")
   const [equipos, setEquipos] = useState<Equipo[]>([])
   const [search, setSearch] = useState("")
@@ -72,10 +73,16 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
 
   useEffect(() => {
     if (open) {
-      fetch("http://localhost:3000/api/categorias")
+      fetch("http://localhost:3000/api/equipos/categorias")
         .then((res) => res.json())
-        .then((data) => setCategorias(Array.isArray(data) ? data : data.categorias || []))
-        .catch((err) => console.error("Error fetching categorias:", err))
+        .then((data) => {
+          const categoriasArray = Array.isArray(data) ? data : []
+          setCategorias(categoriasArray)
+        })
+        .catch((err) => {
+          console.error("Error fetching categorias:", err)
+          setCategorias([])
+        })
     }
   }, [open])
 
@@ -188,7 +195,7 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
         <DialogHeader>
           <DialogTitle>Agregar Préstamo</DialogTitle>
         </DialogHeader>
-
+        
         <div className="space-y-4">
           {/* Selección de funcionarios */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -216,11 +223,14 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
                 onChange={(e) => setSelectedCategoria(e.target.value)}
               >
                 <option value="">Seleccione una categoría</option>
-                {categorias.map((cat) => (
-                  <option key={cat.id_categoria} value={cat.id_categoria.toString()}>
-                    {cat.nombre}
-                  </option>
-                ))}
+                {categorias
+                  .filter((cat) => cat && cat.desc_tipo && cat.desc_tipo !== "OTRO") // <-- USAR desc_tipo
+                  .sort((a, b) => (a.desc_tipo || "").localeCompare(b.desc_tipo || ""))
+                  .map((cat) => (
+                    <option key={cat.id_tipo} value={cat.desc_tipo}> {/* <-- USAR id_tipo y desc_tipo */}
+                      {cat.desc_tipo}  {/* <-- USAR desc_tipo */}
+                    </option>
+                  ))}
               </select>
             </div>
             <div>
@@ -278,12 +288,12 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
                         <TableCell>{eq.numero_serie}</TableCell>
                         <TableCell>{eq.modelo}</TableCell>
                         <TableCell>{eq.almacenamiento}</TableCell>
-                        <TableCell>{eq.categoria?.nombre || "-"}</TableCell>
-                        <TableCell>{eq.marca?.nombre || "-"}</TableCell>
-                        <TableCell>{eq.ubicacion?.nombre || "-"}</TableCell>
+                        <TableCell>{eq.categoria?.desc_tipo || eq.categoria?.nombre || "-"}</TableCell> {/* <-- AGREGAR desc_tipo */}
+                        <TableCell>{eq.marca?.des_ti_marca || eq.marca?.nombre || "-"}</TableCell>     {/* <-- AGREGAR des_ti_marca */}
+                        <TableCell>{eq.ubicacion?.des_ti_ubicacion || eq.ubicacion?.nombre || "-"}</TableCell> {/* <-- AGREGAR des_ti_ubicacion */}
                       </TableRow>
                     ))
-                  )}
+                  }
                 </TableBody>
               </Table>
             </div>

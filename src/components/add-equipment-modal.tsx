@@ -404,16 +404,14 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
             </div>
           )}
 
-          {/* Campos adicionales si la categoría es notebook, pc, pc normal o workstation */}
+          {/* Campos adicionales si la categoría es CPU o NOTEBOOK */}
           {form.id_categoria && (() => {
-            const cat = categorias.find(cat => cat.id_categoria === Number(form.id_categoria));
+            const cat = categorias.find(cat => cat.id_tipo === Number(form.id_categoria)); // <-- Cambia aquí
             if (!cat) return false;
-            const nombre = cat.nombre.toLowerCase();
+            const nombre = cat.desc_tipo.toLowerCase(); // <-- Cambia aquí
             return (
-              nombre.includes("notebook") ||
-              nombre === "pc" ||
-              nombre === "pc normal" ||
-              nombre.includes("workstation")
+              nombre.includes("cpu") ||
+              nombre.includes("notebook")
             );
           })() && (
             <>
@@ -436,7 +434,7 @@ export function AddEquipmentModal({ open, onClose, onAdded, propietarioOptions }
                   value={form.version_office || ""}
                   onChange={handleChange}
                   className="w-full border rounded px-2 py-1"
-                  placeholder="Ej: Office 2019, Office 365"
+                  placeholder="Ej: Office 365, Office 2019"
                 />
               </div>
             </>

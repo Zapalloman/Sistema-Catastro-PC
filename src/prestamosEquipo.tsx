@@ -8,7 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProcessLayout } from "@/components/process-layout"
 
-// Loan filter options - easily customizable for company needs
+
+
+/*
 const deviceTypes = [
 	{ value: "TODOS", label: "Todos los Dispositivos" },
 	{ value: "PC", label: "PC" },
@@ -26,16 +28,23 @@ const deviceTypes = [
 	{ value: "NOTEBOOK", label: "Notebook" },
 	{ value: "OTRO", label: "Otros" },
 ]
-
+*/
 export default function Prestamos() {
 	const [selectedFilter, setSelectedFilter] = useState("TODOS")
 	const [activeTab, setActiveTab] = useState("activos")
 	const [categorias, setCategorias] = useState([])
 
 	useEffect(() => {
-		fetch("http://localhost:3000/api/categorias")
+		fetch("http://localhost:3000/api/equipos/categorias")
 			.then(res => res.json())
-			.then(data => setCategorias(Array.isArray(data) ? data : data.categorias || []))
+			.then(data => {
+				const categoriasArray = Array.isArray(data) ? data : [];
+				setCategorias(categoriasArray);
+			})
+			.catch(err => {
+				console.error("Error fetching categorias:", err);
+				setCategorias([]);
+			})
 	}, [])
 
 	return (
@@ -68,12 +77,12 @@ export default function Prestamos() {
 								<SelectContent>
 									<SelectItem value="TODOS">Todos los Dispositivos</SelectItem>
 									<SelectItem value="OTRO">OTRO</SelectItem>
-									{[...categorias]
-										.filter(cat => cat.nombre !== "OTRO")
-										.sort((a, b) => a.nombre.localeCompare(b.nombre))
+									{categorias
+										.filter(cat => cat.desc_tipo && cat.desc_tipo !== "OTRO") // <-- USAR desc_tipo
+										.sort((a, b) => (a.desc_tipo || "").localeCompare(b.desc_tipo || "")) // <-- USAR desc_tipo
 										.map(cat => (
-											<SelectItem key={cat.id_categoria} value={cat.id_categoria.toString()}>
-												{cat.nombre}
+											<SelectItem key={cat.id_tipo} value={cat.desc_tipo}>
+												{cat.desc_tipo}
 											</SelectItem>
 										))}
 								</SelectContent>

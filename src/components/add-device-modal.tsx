@@ -40,18 +40,55 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
   const [error, setError] = useState("")
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/categorias")
-      .then(res => res.json())
-      .then(data => setCategorias(Array.isArray(data) ? data : data.categorias || []))
-    fetch("http://localhost:3000/api/marcas")
-      .then(res => res.json())
-      .then(data => setMarcas(Array.isArray(data) ? data : data.marcas || []))
-    fetch("http://localhost:3000/api/ubicaciones")
-      .then(res => res.json())
-      .then(data => setUbicaciones(Array.isArray(data) ? data : data.ubicaciones || []))
-    fetch("http://localhost:3000/api/propietarios")
-      .then(res => res.json())
-      .then(data => setPropietarios(Array.isArray(data) ? data : data.propietarios || []))
+    if (open) {
+      // Cargar categorías
+      fetch("http://localhost:3000/api/equipos/categorias")
+        .then(res => res.json())
+        .then(data => {
+          const categoriasArray = Array.isArray(data) ? data.map(cat => ({
+            id_categoria: cat.id_tipo,
+            nombre: cat.desc_tipo
+          })) : [];
+          setCategorias(categoriasArray);
+        })
+        .catch(err => console.error("Error fetching categorias:", err));
+
+      // Cargar marcas
+      fetch("http://localhost:3000/api/equipos/marcas")
+        .then(res => res.json())
+        .then(data => {
+          const marcasArray = Array.isArray(data) ? data.map(m => ({
+            id_marca: m.cod_ti_marca,
+            nombre: m.des_ti_marca
+          })) : [];
+          setMarcas(marcasArray);
+        })
+        .catch(err => console.error("Error fetching marcas:", err));
+
+      // Cargar ubicaciones
+      fetch("http://localhost:3000/api/equipos/ubicaciones")
+        .then(res => res.json())
+        .then(data => {
+          const ubicacionesArray = Array.isArray(data) ? data.map(u => ({
+            id_ubicacion: u.cod_ti_ubicacion,
+            nombre: u.des_ti_ubicacion
+          })) : [];
+          setUbicaciones(ubicacionesArray);
+        })
+        .catch(err => console.error("Error fetching ubicaciones:", err));
+
+      // Cargar propietarios
+      fetch("http://localhost:3000/api/equipos/propietarios")
+        .then(res => res.json())
+        .then(data => {
+          const propietariosArray = Array.isArray(data) ? data.map(p => ({
+            id_propietario: p.cod_ti_propietario,
+            nombre: p.des_ti_propietario
+          })) : [];
+          setPropietarios(propietariosArray);
+        })
+        .catch(err => console.error("Error fetching propietarios:", err));
+    }
   }, [open])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -119,7 +156,7 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
         return
       }
 
-      // Construye el payload, permitiendo campos vacíos
+      // CORREGIR: Usar los nombres correctos que espera el backend
       const payload = {
         nombre_pc: form.nombre_pc || null,
         numero_serie: form.numero_serie || null,
@@ -127,21 +164,28 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
         almacenamiento: form.almacenamiento || null,
         ram: form.ram || null,
         procesador: form.procesador || null,
-        id_categoria: id_categoria ? Number(id_categoria) : null,
         direccion_mac: form.direccion_mac || null,
         ip: form.ip || null,
-        id_marca: id_marca ? Number(id_marca) : null,
-        id_ubicacion: id_ubicacion ? Number(id_ubicacion) : null,
-        descripcion: form.descripcion || null,
-        id_propietario: id_propietario ? Number(id_propietario) : null,
+        // CAMBIAR ESTOS NOMBRES:
+        cod_ti_marca: id_marca ? Number(id_marca) : null,        // <-- CAMBIAR de id_marca
+        cod_ti_ubicacion: id_ubicacion ? Number(id_ubicacion) : null, // <-- CAMBIAR de id_ubicacion  
+        cod_ti_propietario: id_propietario ? Number(id_propietario) : null, // <-- CAMBIAR de id_propietario
+        id_tipo: id_categoria ? Number(id_categoria) : null,    // <-- CAMBIAR de id_categoria
+        llave_inventario: form.llave_inventario || null,
       }
+
+      console.log("Payload a enviar:", payload); // <-- AGREGAR PARA DEBUG
 
       const res = await fetch("http://localhost:3000/api/equipos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
-      if (!res.ok) throw new Error("Error al agregar dispositivo")
+      if (!res.ok) {
+        const errorData = await res.text()
+        throw new Error(`Error al agregar dispositivo: ${errorData}`)
+      }
+      
       setForm({
         nombre_pc: "",
         numero_serie: "",
@@ -166,6 +210,7 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
       onClose()
     } catch (err: any) {
       setError(err.message || "Error desconocido")
+      console.error("Error:", err)
     } finally {
       setLoading(false)
     }

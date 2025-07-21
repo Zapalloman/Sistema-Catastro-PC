@@ -97,7 +97,7 @@ export function AvailableDevicesTable({ deviceType }: { deviceType: string }) {
                     {eq.llave_inventario ? eq.llave_inventario : ""}
                   </TableCell>
                   <TableCell className="font-mono text-xs">{eq.numero_serie}</TableCell>
-                  <TableCell>{eq.categoria?.nombre || eq.categoria || "-"}</TableCell>
+                  <TableCell>{eq.categoria?.desc_tipo || eq.categoria?.nombre || "-"}</TableCell>
                   <TableCell>{eq.almacenamiento}</TableCell>
                   <TableCell>{eq.marca?.nombre || "-"}</TableCell>
                   <TableCell>{eq.ubicacion?.nombre || "-"}</TableCell>
