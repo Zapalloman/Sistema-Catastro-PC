@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Eye } from "lucide-react"
+import { Search, Eye, Check } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { ParameterDetailModal } from "./parameter-detail-modal"
 
@@ -39,7 +39,8 @@ export function ParametersTable({
     param.codigo?.toString().includes(searchTerm)
   )
 
-  const handleViewDetails = async (parametro: Parametro) => {
+  // NUEVO: Función para solo mostrar detalles en modal (botón ojo)
+  const handleViewDetailsModal = async (parametro: Parametro) => {
     setSelectedParameter(parametro)
     setLoadingRelated(true)
     setIsModalOpen(true)
@@ -54,8 +55,11 @@ export function ParametersTable({
     } finally {
       setLoadingRelated(false)
     }
+  }
 
-    // También ejecutar el callback original
+  // NUEVO: Función para solo mostrar en tabla de abajo (botón seleccionar)
+  const handleSelectParameter = (parametro: Parametro) => {
+    // Solo ejecutar el callback para mostrar en la tabla de abajo
     onParametroSelect(parametro)
   }
 
@@ -146,12 +150,24 @@ export function ParametersTable({
                   </td>
                   <td className="border border-gray-300 px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
+                      {/* BOTÓN SELECCIONAR - Muestra datos en tabla de abajo */}
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleViewDetails(param)}
+                        onClick={() => handleSelectParameter(param)}
+                        className="bg-green-50 hover:bg-green-100 text-green-600 border-green-200"
+                        title="Seleccionar y mostrar datos abajo"
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                      
+                      {/* BOTÓN OJO - Abre modal con detalles */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleViewDetailsModal(param)}
                         className="bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-200"
-                        title="Ver equipos asociados"
+                        title="Ver detalles en modal"
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
