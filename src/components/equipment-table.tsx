@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Edit, Trash2, Search, Download, ChevronLeft, ChevronRight, Eye, Monitor } from "lucide-react"
+import { Edit, Trash2, Search, Download, ChevronLeft, ChevronRight, Eye, Monitor, User } from "lucide-react"
 import { EquipmentDetailModal } from "./equipment-detail-modal"
 import * as XLSX from "xlsx"
 import { saveAs } from "file-saver"
@@ -49,6 +49,7 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
       equipment.serie.toLowerCase().includes(searchTerm.toLowerCase()) ||
       equipment.modeloPC.toLowerCase().includes(searchTerm.toLowerCase()) ||
       equipment.marca.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      equipment.usuarioAsignado.toLowerCase().includes(searchTerm.toLowerCase()) || // NUEVO: Buscar por usuario
       equipment.ip.includes(searchTerm)
 
     const matchesCategoria = selectedCategoria === "TODOS" || equipment.categoria === selectedCategoria
@@ -66,27 +67,19 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
       ...equipment,
       fechaAsignacion: equipment.fecha_asignacion || equipment.fechaAdquisicion || "",
       fechaAdquisicion: equipment.fecha_adquisicion || equipment.fechaAdquisicion || "",
-      // Usar el estado que ya viene del backend a través de equipos.tsx
       estadoPrestamo: equipment.estadoPrestamo || "DISPONIBLE"
     }
     setSelectedEquipment(enhancedEquipment)
     setIsModalOpen(true)
   }
 
-  const handleEdit = (equipment: any) => {
-    console.log("Edit equipment:", equipment)
-    // TODO: Implement edit functionality
-  }
-
-  const handleDelete = (equipment: any) => {
-    console.log("Delete equipment:", equipment)
-    // TODO: Implement delete functionality
-  }
-
   const handleExport = () => {
     console.log("Exporting data to Excel")
-    // Exporta solo los datos visibles en la tabla
-    const exportData = dataToDisplay.map(({ id_equipo, ...row }) => row) // quita id_equipo si no quieres exportarlo
+    // Incluir la nueva columna en la exportación
+    const exportData = dataToDisplay.map(({ id_equipo, ...row }) => ({
+      ...row,
+      usuarioAsignado: row.usuarioAsignado || "Sin asignar" // Mostrar "Sin asignar" en Excel si está vacío
+    }))
     const worksheet = XLSX.utils.json_to_sheet(exportData)
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, "Equipos")
@@ -108,7 +101,7 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
   const propietarioSeleccionado = equipos.find(eq => eq.id_propietario?.toString() === selectedPropietario)
   const propietarioNombre = propietarioSeleccionado ? propietarioSeleccionado.propietario : ""
 
-  // Utilidad para agrupar y contar
+  // Utilidad para agrupar y contar (sin cambios)
   function groupCount(arr, keyFn) {
     const groups = {}
     arr.forEach(item => {
@@ -121,7 +114,7 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
       .slice(0, 5)
   }
 
-  // Agrupa por versión de Windows (detecta "windows" en version_sistema_operativo)
+  // Estadísticas sin cambios
   const windowsCounts = groupCount(
     dataToDisplay.filter(eq => 
       eq.version_sistema_operativo && 
@@ -130,24 +123,22 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
     eq => eq.version_sistema_operativo
   )
 
-  // Agrupa por versión de Office
   const officeCounts = groupCount(
     dataToDisplay.filter(eq => eq.version_office), 
     eq => eq.version_office
   )
 
-  // Agrupa por marca
   const marcaCounts = groupCount(dataToDisplay, eq => eq.marca || null)
 
   return (
     <div className="space-y-4">
-      {/* Search and Controls */}
+      {/* Search and Controls - sin cambios */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="Buscar equipos..."
+              placeholder="Buscar equipos o usuarios..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 w-64"
@@ -192,7 +183,7 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
         </div>
       </div>
 
-      {/* Results Summary */}
+      {/* Results Summary - sin cambios */}
       <div className="flex items-center justify-between text-sm">
         <span className="text-gray-600">
           Mostrando {dataToDisplay.length} equipo{dataToDisplay.length !== 1 ? "s" : ""}
@@ -223,6 +214,13 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
               <TableHead className="font-semibold text-gray-700 min-w-[60px]">Categoria</TableHead>
               <TableHead className="font-semibold text-gray-700 min-w-[70px]">Propietario</TableHead>
               <TableHead className="font-semibold text-gray-700 min-w-[70px]">Ubicación</TableHead>
+              {/* NUEVA COLUMNA */}
+              <TableHead className="font-semibold text-gray-700 min-w-[120px]">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Usuario Asignado
+                </div>
+              </TableHead>
               <TableHead className="font-semibold text-gray-700 min-w-[120px]">Versión SO</TableHead>
               <TableHead className="font-semibold text-gray-700 min-w-[100px]">Versión Office</TableHead>
               <TableHead className="font-semibold text-gray-700 min-w-[50px] whitespace-nowrap text-center">Acciones</TableHead>
@@ -231,7 +229,7 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
           <TableBody>
             {paginatedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={14} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={15} className="text-center py-8 text-gray-500">
                   No se encontraron equipos para los criterios seleccionados
                 </TableCell>
               </TableRow>
@@ -255,6 +253,19 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
                   <TableCell>{equipment.categoria}</TableCell>
                   <TableCell>{equipment.propietario}</TableCell>
                   <TableCell>{equipment.ubicacion}</TableCell>
+                  {/* NUEVA CELDA */}
+                  <TableCell className="min-w-[120px]">
+                    {equipment.usuarioAsignado ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-sm font-medium text-gray-900" title={`RUT: ${equipment.usuarioAsignadoRut}`}>
+                          {equipment.usuarioAsignado}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 text-sm">-</span>
+                    )}
+                  </TableCell>
                   <TableCell>{equipment.version_sistema_operativo || "-"}</TableCell>
                   <TableCell>{equipment.version_office || "-"}</TableCell>
                   <TableCell className="min-w-[50px] whitespace-nowrap text-center">
@@ -277,7 +288,7 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
         </Table>
       </div>
 
-      {/* Pagination */}
+      {/* Pagination - sin cambios */}
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-600">
           Mostrando página {currentPage} de {totalPages}
@@ -293,7 +304,6 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
             Anterior
           </Button>
 
-          {/* Page numbers */}
           {(() => {
             const pageWindow = 5;
             let startPage = Math.max(1, currentPage - Math.floor(pageWindow / 2));

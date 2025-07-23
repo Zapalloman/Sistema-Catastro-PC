@@ -1,12 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ProcessLayout } from "./components/process-layout"
-import { EquipmentTable } from "./components/equipment-table"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Monitor, Filter, Plus } from "lucide-react"
-import { AddEquipmentModal } from "./components/add-equipment-modal"
+import { Plus, Monitor, Filter } from "lucide-react"
+import { EquipmentTable } from "@/components/equipment-table"
+import { AddEquipmentModal } from "@/components/add-equipment-modal"
+import { ProcessLayout } from "./components/process-layout" // CORREGIDO: Cambiar import
 
 function groupCount(arr, keyFn) {
   const map = new Map();
@@ -60,29 +60,24 @@ export default function Equipos() {
 
   // Carga y mapea equipos SIEMPRE
   useEffect(() => {
-    // Usar el endpoint original temporalmente hasta que arreglemos el de estados
     fetch("http://localhost:3000/api/equipos")
       .then(res => res.json())
       .then(async (data) => {
         // Obtener préstamos activos para verificar estados
-        const prestamosResponse = await fetch("http://localhost:3000/api/prestamos");
-        const prestamos = await prestamosResponse.json();
+        const prestamosRes = await fetch("http://localhost:3000/api/prestamos");
+        const prestamos = prestamosRes.ok ? await prestamosRes.json() : [];
         
-        // Crear un Set con IDs de equipos en préstamos activos
         const equiposEnPrestamo = new Set();
         prestamos.forEach(prestamo => {
-          if (prestamo.estado === "1" || prestamo.estado === 1) { // Solo préstamos activos
-            if (prestamo.equipos && Array.isArray(prestamo.equipos)) {
-              prestamo.equipos.forEach(equipo => {
-                equiposEnPrestamo.add(equipo.id_equipo);
-              });
-            }
+          if (prestamo.estado === "1" && prestamo.equipos) {
+            prestamo.equipos.forEach(eq => equiposEnPrestamo.add(eq.id_equipo));
           }
         });
 
-        let equipos = data.map(eq => ({
-          nombrePC: eq.nombre_pc || "",
+        let equipos = (Array.isArray(data) ? data : []).map(eq => ({
+          id_equipo: eq.id_equipo,
           serie: eq.numero_serie || "",
+          nombrePC: eq.nombre_pc || "",
           modeloPC: eq.modelo || "",
           disco: eq.almacenamiento || "",
           ram: eq.ram || "",
@@ -96,8 +91,11 @@ export default function Equipos() {
           ip: eq.ip || "",
           version_sistema_operativo: eq.version_sistema_operativo || "",
           version_office: eq.version_office || "",
-          id_equipo: eq.id_equipo,
           id_propietario: eq.cod_ti_propietario?.toString() ?? "",
+          // NUEVO: Información de usuario asignado
+          usuarioAsignado: eq.usuario_asignado_nombre || "", // Nombre completo o vacío
+          usuarioAsignadoRut: eq.usuario_asignado_rut || "", // RUT o vacío
+          fechaAsignacion: eq.fecha_asignacion || "",
           // Usar estado real basado en préstamos activos
           estadoPrestamo: equiposEnPrestamo.has(eq.id_equipo) ? "ACTIVO" : "DISPONIBLE"
         }));
@@ -108,7 +106,7 @@ export default function Equipos() {
         }
         setEquiposFiltrados(equipos);
         setTotalEquipos(equipos.length);
-        console.log("Equipos cargados con estados reales:", equipos.length);
+        console.log("Equipos cargados con información de asignaciones:", equipos.length);
       })
       .catch(error => {
         console.error("Error al cargar equipos:", error);
@@ -206,7 +204,7 @@ export default function Equipos() {
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <EquipmentTable
             equipos={equiposFiltrados}
-            selectedPropietario={selectedPropietario} // <-- AGREGA ESTA LÍNEA
+            selectedPropietario={selectedPropietario}
             refresh={refresh}
             onCountChange={setTotalEquipos}
           />
