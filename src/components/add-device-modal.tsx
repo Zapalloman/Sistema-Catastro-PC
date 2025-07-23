@@ -15,8 +15,9 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
   const [ubicaciones, setUbicaciones] = useState<{ id_ubicacion: number, nombre: string }[]>([])
   const [propietarios, setPropietarios] = useState<{ id_propietario: number, nombre: string }[]>([])
   const [categorias, setCategorias] = useState<any[]>([])
-  const [redes, setRedes] = useState<any[]>([]) // NUEVO
-  const [dominios, setDominios] = useState<any[]>([]) // NUEVO
+  const [redes, setRedes] = useState<any[]>([])
+  const [dominios, setDominios] = useState<any[]>([])
+  const [departamentos, setDepartamentos] = useState<any[]>([]) // NUEVO
 
   // Estado del formulario
   const [form, setForm] = useState({
@@ -31,7 +32,6 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
     id_propietario: "",
     nueva_marca: "",
     nueva_ubicacion: "",
-    id_propietario: "",
     nuevo_propietario: "",
     descripcion: "",
     llave_inventario: "",
@@ -39,8 +39,9 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
     fecha_adquisicion: "",
     version_sistema_operativo: "",
     version_office: "",
-    cod_ti_red: "", // NUEVO
-    cod_ti_dominio: "", // NUEVO
+    cod_ti_red: "",
+    cod_ti_dominio: "",
+    cod_ti_departamento: "", // NUEVO
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -80,17 +81,26 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
         })) : []))
         .catch(err => console.error("Error fetching propietarios:", err))
 
-      // NUEVO: Cargar redes
+      // Cargar redes
       fetch("http://localhost:3000/api/parametros-generales/RED")
         .then(res => res.json())
         .then(data => setRedes(Array.isArray(data) ? data : []))
         .catch(() => setRedes([]))
 
-      // NUEVO: Cargar dominios
+      // Cargar dominios
       fetch("http://localhost:3000/api/parametros-generales/DOMINIO_RED")
         .then(res => res.json())
         .then(data => setDominios(Array.isArray(data) ? data : []))
         .catch(() => setDominios([]))
+
+      // NUEVO: Cargar departamentos
+      fetch("http://localhost:3000/api/equipos/departamentos")
+        .then(res => res.json())
+        .then(data => setDepartamentos(Array.isArray(data) ? data.map(d => ({
+          cod_ti_departamento: d.cod_ti_departamento,
+          nombre: d.des_ti_departamento
+        })) : []))
+        .catch(() => setDepartamentos([]))
     }
   }, [open])
 
@@ -128,9 +138,11 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
         fecha_adquisicion: form.fecha_adquisicion || null,
         version_sistema_operativo: form.version_sistema_operativo || null,
         version_office: form.version_office || null,
-        // NUEVO: Solo agregar red y dominio si es CPU o NOTEBOOK
+        // Solo agregar red y dominio si es CPU o NOTEBOOK
         cod_ti_red: isCpuOrNotebook() && form.cod_ti_red ? Number(form.cod_ti_red) : null,
         cod_ti_dominio: isCpuOrNotebook() && form.cod_ti_dominio ? Number(form.cod_ti_dominio) : null,
+        // NUEVO: Agregar departamento
+        cod_ti_departamento: form.cod_ti_departamento ? Number(form.cod_ti_departamento) : null,
       }
 
       const res = await fetch("http://localhost:3000/api/equipos", {
@@ -165,6 +177,7 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
         version_office: "",
         cod_ti_red: "",
         cod_ti_dominio: "",
+        cod_ti_departamento: "", // NUEVO
       })
       
       if (onDeviceAdded) onDeviceAdded()
@@ -228,7 +241,25 @@ export function AddDeviceModal({ open, onClose, onDeviceAdded }: {
               </select>
             </div>
 
-            {/* NUEVO: Red y Dominio - Solo para CPU y NOTEBOOK */}
+            {/* NUEVO: Departamento */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Departamento</label>
+              <select
+                name="cod_ti_departamento"
+                value={form.cod_ti_departamento}
+                onChange={handleChange}
+                className="border rounded px-2 py-2 text-gray-700 w-full"
+              >
+                <option value="">Seleccione un departamento...</option>
+                {departamentos.map(dept => (
+                  <option key={dept.cod_ti_departamento} value={dept.cod_ti_departamento}>
+                    {dept.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Red y Dominio - Solo para CPU y NOTEBOOK */}
             {isCpuOrNotebook() && (
               <>
                 <div>
