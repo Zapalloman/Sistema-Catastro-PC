@@ -112,11 +112,12 @@ export function EquipmentDetailModal({ equipment, isOpen, onClose }: EquipmentDe
                     <p className="text-sm">{equipment.procesador}</p>
                   </div>
                 </div>
+                
                 <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-orange-600" />
+                  <Monitor className="w-4 h-4 text-purple-600" />
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Velocidad</label>
-                    <p className="text-sm">{equipment.velocidad}</p>
+                    <label className="text-sm font-medium text-gray-600">RAM</label>
+                    <p className="text-sm">{equipment.ram}</p>
                   </div>
                 </div>
               </div>
@@ -129,11 +130,12 @@ export function EquipmentDetailModal({ equipment, isOpen, onClose }: EquipmentDe
                     <p className="text-sm">{equipment.disco}</p>
                   </div>
                 </div>
+                
                 <div className="flex items-center gap-2">
-                  <Monitor className="w-4 h-4 text-purple-600" />
+                  <Monitor className="w-4 h-4 text-blue-600" />
                   <div>
-                    <label className="text-sm font-medium text-gray-600">RAM</label>
-                    <p className="text-sm">{equipment.ram}</p>
+                    <label className="text-sm font-medium text-gray-600">Modelo</label>
+                    <p className="text-sm">{equipment.modeloPC}</p>
                   </div>
                 </div>
               </div>

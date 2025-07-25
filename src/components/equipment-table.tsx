@@ -65,6 +65,8 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
   const handleViewDetails = (equipment: any) => {
     const enhancedEquipment = {
       ...equipment,
+      // CORREGIR: Mapear direccion_mac a mac para el modal
+      mac: equipment.direccion_mac || equipment.mac || "", 
       fechaAsignacion: equipment.fecha_asignacion || equipment.fechaAdquisicion || "",
       fechaAdquisicion: equipment.fecha_adquisicion || equipment.fechaAdquisicion || "",
       estadoPrestamo: equipment.estadoPrestamo || "DISPONIBLE"

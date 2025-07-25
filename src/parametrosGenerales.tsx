@@ -22,6 +22,7 @@ export default function ParametrosGenerales() {
     const [parametros, setParametros] = useState([])
     const [equiposAsociados, setEquiposAsociados] = useState([])
     const [selectedParametroId, setSelectedParametroId] = useState(null)
+    const [selectedParametroNombre, setSelectedParametroNombre] = useState("") // NUEVO: Guardar el nombre del parámetro seleccionado
     const [loading, setLoading] = useState(false)
     const [refresh, setRefresh] = useState(0)
 
@@ -66,6 +67,29 @@ export default function ParametrosGenerales() {
     const handleParametroSelect = (parametro: any) => {
         if (parametro && parametro.codigo) {
             loadEquiposAsociados(selectedParameter, parametro.codigo)
+            setSelectedParametroNombre(parametro.descripcion) // NUEVO: Guardar el nombre/descripción del parámetro
+        }
+    }
+
+    // NUEVO: Función para generar el título dinámico
+    const getTituloDinamico = () => {
+        if (!selectedParametroNombre) return ""
+        
+        switch (selectedParameter) {
+            case 'CARGO':
+                return `Personas y Equipos del Cargo: ${selectedParametroNombre}`
+            case 'UBICACION':
+                return `Equipos de la Ubicación: ${selectedParametroNombre}`
+            case 'DEPARTAMENTO':
+                return `Equipos del Departamento: ${selectedParametroNombre}`
+            case 'RED':
+                return `Equipos de la Red: ${selectedParametroNombre}`
+            case 'DOMINIO_RED':
+                return `Equipos del Dominio: ${selectedParametroNombre}`
+            case 'MARCA':
+                return `Equipos de la Marca: ${selectedParametroNombre}`
+            default:
+                return `Equipos Asociados a: ${selectedParametroNombre}`
         }
     }
 
@@ -250,13 +274,34 @@ export default function ParametrosGenerales() {
                                 )}
                             </div>
 
-                            {/* Tabla de equipos asociados */}
+                            {/* Tabla de equipos asociados - Versión alternativa */}
                             {equiposAsociados.length > 0 && selectedParametroId && (
                                 <div className="bg-white rounded-xl shadow-lg border border-gray-100">
                                     <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-xl">
                                         <h3 className="font-semibold flex items-center gap-3">
                                             <Filter className="w-5 h-5" />
-                                            Equipos/Personas Asociadas - {parameterOptions.find(p => p.value === selectedParameter)?.label}
+                                            {/* ACTUALIZADO: Título dinámico con diseño mejorado */}
+                                            <span className="text-lg">
+                                                {(() => {
+                                                    const baseText = selectedParameter === 'CARGO' ? 'Personas y Equipos del Cargo' :
+                                                                   selectedParameter === 'UBICACION' ? 'Equipos de la Ubicación' :
+                                                                   selectedParameter === 'DEPARTAMENTO' ? 'Equipos del Departamento' :
+                                                                   selectedParameter === 'RED' ? 'Equipos de la Red' :
+                                                                   selectedParameter === 'DOMINIO_RED' ? 'Equipos del Dominio' :
+                                                                   selectedParameter === 'MARCA' ? 'Equipos de la Marca' :
+                                                                   'Equipos Asociados a';
+                                                    
+                                                    return (
+                                                        <>
+                                                            {baseText}:{' '}
+                                                            <span className="inline-flex items-center px-3 py-1 ml-2 bg-white/20 backdrop-blur-sm rounded-lg border border-white/30 text-yellow-200 font-bold text-lg shadow-lg">
+                                                                <span className="w-2 h-2 bg-yellow-300 rounded-full mr-2 animate-pulse"></span>
+                                                                {selectedParametroNombre}
+                                                            </span>
+                                                        </>
+                                                    );
+                                                })()}
+                                            </span>
                                         </h3>
                                     </div>
                                     <div className="p-6">

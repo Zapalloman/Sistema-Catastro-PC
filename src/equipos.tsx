@@ -89,14 +89,15 @@ export default function Equipos() {
           fechaAdquisicion: eq.fecha_adquisicion || "",
           llave_inventario: eq.llave_inventario || "",
           ip: eq.ip || "",
+          // AGREGAR: Mapear la dirección MAC correctamente
+          direccion_mac: eq.direccion_mac || "",
+          mac: eq.direccion_mac || "", // Para compatibilidad con el modal
           version_sistema_operativo: eq.version_sistema_operativo || "",
           version_office: eq.version_office || "",
           id_propietario: eq.cod_ti_propietario?.toString() ?? "",
-          // NUEVO: Información de usuario asignado
-          usuarioAsignado: eq.usuario_asignado_nombre || "", // Nombre completo o vacío
-          usuarioAsignadoRut: eq.usuario_asignado_rut || "", // RUT o vacío
+          usuarioAsignado: eq.usuario_asignado_nombre || "",
+          usuarioAsignadoRut: eq.usuario_asignado_rut || "",
           fechaAsignacion: eq.fecha_asignacion || "",
-          // Usar estado real basado en préstamos activos
           estadoPrestamo: equiposEnPrestamo.has(eq.id_equipo) ? "ACTIVO" : "DISPONIBLE"
         }));
         
