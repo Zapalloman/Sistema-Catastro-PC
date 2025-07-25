@@ -169,6 +169,7 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
   }
 
   const handleClose = () => {
+    console.log("Cerrando modal y limpiando estado")
     setSelectedEquipos([])
     setRutRevisor("")
     setRutEntrega("")
@@ -180,35 +181,55 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
     setDistribucion("")
     setSelectedCategoria("")
     setSearch("")
+    setEquipos([])
     onClose()
   }
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent 
-        className="w-screen max-w-none h-[90vh] mx-4 p-8 overflow-y-auto"
+        className="w-screen max-w-none h-[90vh] mx-4 p-0"
         style={{ width: 'calc(100vw - 2rem)', maxWidth: 'none' }}
       >
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-gray-900 mb-4">Agregar Préstamo de Equipos</DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-6">
+        <div className="h-full flex flex-col">
+          <DialogHeader className="p-8 pb-4 border-b bg-white sticky top-0 z-10">
+            <DialogTitle className="text-xl font-bold text-gray-900">Agregar Préstamo de Equipos</DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto p-8 pt-6 space-y-6">
           {/* Funcionarios - Una sola fila horizontal */}
           <div className="bg-gray-50 p-6 rounded-lg">
             <h3 className="text-lg font-semibold mb-4 text-gray-800">Información de Funcionarios</h3>
             <div className="grid grid-cols-3 gap-8">
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-700">Funcionario que revisa *</label>
-                <RutAutocomplete value={rutRevisor} onChange={setRutRevisor} />
+                <RutAutocomplete 
+                  value={rutRevisor} 
+                  onChange={setRutRevisor}
+                  onUserSelected={(user) => {
+                    console.log("Usuario revisor seleccionado:", user)
+                  }}
+                />
               </div>
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-700">Funcionario que entrega *</label>
-                <RutAutocomplete value={rutEntrega} onChange={setRutEntrega} />
+                <RutAutocomplete 
+                  value={rutEntrega} 
+                  onChange={setRutEntrega}
+                  onUserSelected={(user) => {
+                    console.log("Usuario entrega seleccionado:", user)
+                  }}
+                />
               </div>
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-700">Responsable de la unidad *</label>
-                <RutAutocomplete value={rutResponsable} onChange={setRutResponsable} />
+                <RutAutocomplete 
+                  value={rutResponsable} 
+                  onChange={setRutResponsable}
+                  onUserSelected={(user) => {
+                    console.log("Usuario responsable seleccionado:", user)
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -448,6 +469,7 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
             >
               {loading ? "Generando préstamo..." : "Generar Préstamo"}
             </Button>
+          </div>
           </div>
         </div>
       </DialogContent>
