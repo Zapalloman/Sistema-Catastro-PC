@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { RutAutocomplete } from "./rut-autocomplete"
+import { Users, X, Filter, Search, Download } from "lucide-react"
 
 interface Categoria {
   id_tipo: number
@@ -187,22 +188,40 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DialogContent 
-        className="w-screen max-w-none h-[90vh] mx-4 p-0"
-        style={{ width: 'calc(100vw - 2rem)', maxWidth: 'none' }}
-      >
-        <div className="h-full flex flex-col">
-          <DialogHeader className="p-8 pb-4 border-b bg-white sticky top-0 z-10">
-            <DialogTitle className="text-xl font-bold text-gray-900">Agregar Préstamo de Equipos</DialogTitle>
-          </DialogHeader>
-          
-          <div className="flex-1 overflow-y-auto p-8 pt-6 space-y-6">
-          {/* Funcionarios - Una sola fila horizontal */}
-          <div className="bg-gray-50 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">Información de Funcionarios</h3>
-            <div className="grid grid-cols-3 gap-8">
+      <DialogContent className="max-w-[98vw] max-h-[96vh] w-full h-full p-0 overflow-hidden">
+        <DialogHeader className="shrink-0 border-b bg-gradient-to-r from-green-600 to-green-800 text-white px-4 py-3 rounded-t-lg m-0">
+          <DialogTitle className="flex items-center justify-between w-full text-white">
+            <div className="flex items-center gap-3">
+              <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                <Users className="w-5 h-5" />
+              </div>
               <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">Funcionario que revisa *</label>
+                <h1 className="text-lg font-bold">Sistema de Préstamos de Equipos IGM</h1>
+                <p className="text-green-100 text-xs font-normal mt-0.5">
+                  Gestión integral de préstamos y documentación automática
+                </p>
+              </div>
+            </div>
+            
+            <Button 
+              variant="ghost" 
+              onClick={handleClose}
+              className="text-white hover:bg-white/20 p-2 h-auto"
+              disabled={loading}
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </DialogTitle>
+        </DialogHeader>
+
+          {/* CONTENIDO CON SCROLL */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+          {/* Funcionarios - Una sola fila horizontal */}
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <h3 className="text-base font-semibold mb-2 text-gray-800">Información de Funcionarios</h3>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Funcionario que revisa *</label>
                 <RutAutocomplete 
                   value={rutRevisor} 
                   onChange={setRutRevisor}
@@ -212,7 +231,7 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
                 />
               </div>
               <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">Funcionario que entrega *</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Funcionario que entrega *</label>
                 <RutAutocomplete 
                   value={rutEntrega} 
                   onChange={setRutEntrega}
@@ -222,7 +241,7 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
                 />
               </div>
               <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">Responsable de la unidad *</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Responsable de la unidad *</label>
                 <RutAutocomplete 
                   value={rutResponsable} 
                   onChange={setRutResponsable}
@@ -235,13 +254,13 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
           </div>
 
           {/* Selección de Equipos - Layout horizontal */}
-          <div className="bg-gray-50 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">Selección de Equipos</h3>
-            <div className="grid grid-cols-2 gap-8 mb-6">
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <h3 className="text-base font-semibold mb-2 text-gray-800">Selección de Equipos</h3>
+            <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">Categoría *</label>
+                <label className="block mb-1 text-sm font-medium text-gray-700">Categoría *</label>
                 <select
-                  className="border rounded px-4 py-3 w-full text-base focus:ring-2 focus:ring-blue-500"
+                  className="border rounded px-3 py-2 w-full text-sm focus:ring-2 focus:ring-blue-500"
                   value={selectedCategoria}
                   onChange={(e) => setSelectedCategoria(e.target.value)}
                 >
@@ -267,33 +286,33 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
               </div>
             </div>
 
-            {/* Tabla de equipos - Mucho más amplia */}
+            {/* Tabla de equipos - Compacta */}
             {selectedCategoria && (
-              <div className="border rounded-lg bg-white max-h-80 overflow-y-auto">
+              <div className="border rounded-lg bg-white max-h-60 overflow-y-auto">
                 <Table>
                   <TableHeader className="sticky top-0 bg-gray-100">
                     <TableRow>
-                      <TableHead className="w-20 text-center">Seleccionar</TableHead>
-                      <TableHead className="min-w-[180px]">Nombre PC</TableHead>
-                      <TableHead className="min-w-[160px]">Serie</TableHead>
-                      <TableHead className="min-w-[200px]">Modelo</TableHead>
-                      <TableHead className="min-w-[140px]">Capacidad</TableHead>
-                      <TableHead className="min-w-[120px]">Categoría</TableHead>
-                      <TableHead className="min-w-[160px]">Marca</TableHead>
-                      <TableHead className="min-w-[160px]">Ubicación</TableHead>
+                      <TableHead className="w-16 text-center text-xs">Sel.</TableHead>
+                      <TableHead className="min-w-[140px] text-xs">Nombre PC</TableHead>
+                      <TableHead className="min-w-[120px] text-xs">Serie</TableHead>
+                      <TableHead className="min-w-[150px] text-xs">Modelo</TableHead>
+                      <TableHead className="min-w-[100px] text-xs">Capacidad</TableHead>
+                      <TableHead className="min-w-[100px] text-xs">Categoría</TableHead>
+                      <TableHead className="min-w-[120px] text-xs">Marca</TableHead>
+                      <TableHead className="min-w-[120px] text-xs">Ubicación</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredEquipos.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                        <TableCell colSpan={8} className="text-center py-4 text-gray-500 text-sm">
                           {equipos.length === 0 ? "No hay dispositivos disponibles para esta categoría" : "No se encontraron dispositivos con ese criterio de búsqueda"}
                         </TableCell>
                       </TableRow>
                     ) : (
                       filteredEquipos.map((eq) => (
                         <TableRow key={eq.id_equipo} className="hover:bg-gray-50">
-                          <TableCell className="text-center">
+                          <TableCell className="text-center py-2">
                             <input
                               type="checkbox"
                               checked={selectedEquipos.includes(eq.id_equipo)}
@@ -304,14 +323,14 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
                                   setSelectedEquipos(selectedEquipos.filter((id) => id !== eq.id_equipo))
                                 }
                               }}
-                              className="w-5 h-5"
+                              className="w-4 h-4"
                             />
                           </TableCell>
-                          <TableCell className="font-medium text-base">{eq.nombre_pc || "-"}</TableCell>
-                          <TableCell className="font-mono">{eq.numero_serie || "-"}</TableCell>
-                          <TableCell className="text-base">{eq.modelo || "-"}</TableCell>
-                          <TableCell className="text-base">{eq.almacenamiento || "-"}</TableCell>
-                          <TableCell className="text-base">{eq.categoria?.desc_tipo || "-"}</TableCell>
+                          <TableCell className="font-medium text-sm py-2">{eq.nombre_pc || "-"}</TableCell>
+                          <TableCell className="font-mono text-sm py-2">{eq.numero_serie || "-"}</TableCell>
+                          <TableCell className="text-sm py-2">{eq.modelo || "-"}</TableCell>
+                          <TableCell className="text-sm py-2">{eq.almacenamiento || "-"}</TableCell>
+                          <TableCell className="text-sm py-2">{eq.categoria?.desc_tipo || "-"}</TableCell>
                           <TableCell className="text-base">{eq.marca?.des_ti_marca || eq.marca?.nombre || "-"}</TableCell>
                           <TableCell className="text-base">{eq.ubicacion?.des_ti_ubicacion || eq.ubicacion?.nombre || "-"}</TableCell>
                         </TableRow>
@@ -323,25 +342,25 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
             )}
             
             {selectedEquipos.length > 0 && (
-              <div className="mt-4 text-base text-green-600 font-medium">
+              <div className="mt-2 text-sm text-green-600 font-medium">
                 {selectedEquipos.length} equipo(s) seleccionado(s)
               </div>
             )}
           </div>
 
           {/* Información del Préstamo e Firmas - Layout más horizontal */}
-          <div className="grid grid-cols-2 gap-10">
+          <div className="grid grid-cols-2 gap-6">
             {/* Información del Préstamo */}
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-6 text-gray-800">Información del Préstamo</h3>
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <h3 className="text-base font-semibold mb-2 text-gray-800">Información del Préstamo</h3>
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">Cargo del préstamo *</label>
+                    <label className="block mb-1 text-sm font-medium text-gray-700">Cargo del préstamo *</label>
                     <select
                       value={cargoPrestamo}
                       onChange={(e) => setCargoPrestamo(e.target.value)}
-                      className="border rounded px-4 py-3 w-full text-base focus:ring-2 focus:ring-blue-500"
+                      className="border rounded px-3 py-2 w-full text-sm focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Seleccione...</option>
                       <option value="FISCAL">Fiscal</option>
@@ -349,22 +368,22 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
                     </select>
                   </div>
                   <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">Distribución</label>
+                    <label className="block mb-1 text-sm font-medium text-gray-700">Distribución</label>
                     <Input
                       value={distribucion}
                       onChange={(e) => setDistribucion(e.target.value)}
                       placeholder="Ej: 3 copias: Original - Triplicado - Archivo"
-                      className="w-full text-base py-3"
+                      className="w-full text-sm py-2"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">Motivo del préstamo</label>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">Motivo del préstamo</label>
                   <textarea
                     value={motivo}
                     onChange={(e) => setMotivo(e.target.value)}
-                    className="w-full border rounded px-4 py-3 text-base focus:ring-2 focus:ring-blue-500"
-                    rows={5}
+                    className="w-full border rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                    rows={3}
                     placeholder="Describa el motivo del préstamo..."
                   />
                 </div>
@@ -372,86 +391,89 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
             </div>
 
             {/* Firmas */}
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-6 text-gray-800">Firmas del Documento</h3>
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <h3 className="text-base font-semibold mb-2 text-gray-800">Firmas del Documento</h3>
               
-              {/* Firma 1 */}
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-700 mb-4">Primera Firma</h4>
-                <div className="space-y-4">
-                  <Input
-                    value={firma1.nombre}
-                    onChange={(e) => setFirma1({...firma1, nombre: e.target.value})}
-                    placeholder="Nombre completo"
-                    className="text-base py-3"
-                  />
-                  <div className="grid grid-cols-2 gap-4">
+              {/* Firmas en layout horizontal */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Firma 1 */}
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-1 text-sm">Primera Firma</h4>
+                  <div className="space-y-1">
                     <Input
-                      value={firma1.cargoMilitar}
-                      onChange={(e) => setFirma1({...firma1, cargoMilitar: e.target.value})}
-                      placeholder="Cargo militar"
-                      className="text-base py-3"
+                      value={firma1.nombre}
+                      onChange={(e) => setFirma1({...firma1, nombre: e.target.value})}
+                      placeholder="Nombre completo"
+                      className="text-xs py-1"
                     />
-                    <Input
-                      value={firma1.cargoDepto}
-                      onChange={(e) => setFirma1({...firma1, cargoDepto: e.target.value})}
-                      placeholder="Cargo departamento"
-                      className="text-base py-3"
-                    />
+                    <div className="grid grid-cols-2 gap-1">
+                      <Input
+                        value={firma1.cargoMilitar}
+                        onChange={(e) => setFirma1({...firma1, cargoMilitar: e.target.value})}
+                        placeholder="Cargo militar"
+                        className="text-sm py-2"
+                      />
+                      <Input
+                        value={firma1.cargoDepto}
+                        onChange={(e) => setFirma1({...firma1, cargoDepto: e.target.value})}
+                        placeholder="Cargo departamento"
+                        className="text-sm py-2"
+                      />
+                    </div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={firma1.subrogante}
+                        onChange={(e) => setFirma1({...firma1, subrogante: e.target.checked})}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm text-gray-600">Subrogante</span>
+                    </label>
                   </div>
-                  <label className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={firma1.subrogante}
-                      onChange={(e) => setFirma1({...firma1, subrogante: e.target.checked})}
-                      className="w-5 h-5"
-                    />
-                    <span className="text-base text-gray-600">Subrogante</span>
-                  </label>
                 </div>
-              </div>
 
-              {/* Firma 2 */}
-              <div>
-                <h4 className="font-medium text-gray-700 mb-4">Segunda Firma</h4>
-                <div className="space-y-4">
-                  <Input
-                    value={firma2.nombre}
-                    onChange={(e) => setFirma2({...firma2, nombre: e.target.value})}
-                    placeholder="Nombre completo"
-                    className="text-base py-3"
-                  />
-                  <div className="grid grid-cols-2 gap-4">
+                {/* Firma 2 */}
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-2 text-sm">Segunda Firma</h4>
+                  <div className="space-y-2">
                     <Input
-                      value={firma2.cargoMilitar}
-                      onChange={(e) => setFirma2({...firma2, cargoMilitar: e.target.value})}
-                      placeholder="Cargo militar"
-                      className="text-base py-3"
+                      value={firma2.nombre}
+                      onChange={(e) => setFirma2({...firma2, nombre: e.target.value})}
+                      placeholder="Nombre completo"
+                      className="text-sm py-2"
                     />
-                    <Input
-                      value={firma2.cargoDepto}
-                      onChange={(e) => setFirma2({...firma2, cargoDepto: e.target.value})}
-                      placeholder="Cargo departamento"
-                      className="text-base py-3"
-                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        value={firma2.cargoMilitar}
+                        onChange={(e) => setFirma2({...firma2, cargoMilitar: e.target.value})}
+                        placeholder="Cargo militar"
+                        className="text-sm py-2"
+                      />
+                      <Input
+                        value={firma2.cargoDepto}
+                        onChange={(e) => setFirma2({...firma2, cargoDepto: e.target.value})}
+                        placeholder="Cargo departamento"
+                        className="text-sm py-2"
+                      />
+                    </div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={firma2.subrogante}
+                        onChange={(e) => setFirma2({...firma2, subrogante: e.target.checked})}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm text-gray-600">Subrogante</span>
+                    </label>
                   </div>
-                  <label className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={firma2.subrogante}
-                      onChange={(e) => setFirma2({...firma2, subrogante: e.target.checked})}
-                      className="w-5 h-5"
-                    />
-                    <span className="text-base text-gray-600">Subrogante</span>
-                  </label>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Botones de acción */}
-          <div className="flex justify-end gap-6 pt-6 border-t border-gray-200">
-            <Button variant="outline" onClick={handleClose} disabled={loading} size="lg">
+          <div className="flex justify-end gap-4 pt-3 border-t border-gray-200">
+            <Button variant="outline" onClick={handleClose} disabled={loading}>
               Cancelar
             </Button>
             <Button
@@ -465,13 +487,12 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
                 loading
               }
               className="bg-teal-600 hover:bg-teal-700"
-              size="lg"
             >
               {loading ? "Generando préstamo..." : "Generar Préstamo"}
             </Button>
           </div>
-          </div>
-        </div>
+          
+          </div> {/* Fin contenido con scroll */}
       </DialogContent>
     </Dialog>
   )

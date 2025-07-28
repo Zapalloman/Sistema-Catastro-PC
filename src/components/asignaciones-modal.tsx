@@ -230,28 +230,24 @@ export function AsignacionesModal({ open, onClose }: {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/50">
+    <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-2">
       <div 
-        className="fixed inset-0 w-full h-full bg-white flex flex-col"
+        className="bg-white rounded-lg shadow-2xl flex flex-col w-full h-full max-w-none overflow-hidden"
         style={{ 
-          margin: 0,
-          padding: 0,
-          width: '100vw',
-          height: '100vh',
-          maxWidth: 'none',
-          maxHeight: 'none'
+          width: '98vw',
+          height: '96vh'
         }}
       >
-        {/* HEADER FIJO - OCUPA TODO EL ANCHO */}
-        <div className="w-full shrink-0 border-b bg-gradient-to-r from-blue-600 to-blue-800 text-white px-8 py-6">
+        {/* HEADER COMPACTO */}
+        <div className="w-full shrink-0 border-b bg-gradient-to-r from-blue-600 to-blue-800 text-white px-4 py-3 rounded-t-lg">
           <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-6">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                <Users className="w-8 h-8" />
+            <div className="flex items-center gap-3">
+              <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                <Users className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold">Sistema de Asignaciones de Equipos IGM</h1>
-                <p className="text-blue-100 text-lg font-normal mt-1">
+                <h1 className="text-lg font-bold">Sistema de Asignaciones de Equipos IGM</h1>
+                <p className="text-blue-100 text-xs font-normal mt-0.5">
                   Gestión integral de asignaciones y documentación automática
                 </p>
               </div>
@@ -259,56 +255,56 @@ export function AsignacionesModal({ open, onClose }: {
             <Button 
               variant="ghost" 
               onClick={onClose}
-              className="text-white hover:bg-white/20 p-3 h-auto text-3xl"
+              className="text-white hover:bg-white/20 p-1.5 h-auto text-lg"
             >
               ×
             </Button>
           </div>
         </div>
 
-        {/* CONTENIDO PRINCIPAL - EXPANSIÓN TOTAL */}
-        <div className="flex-1 bg-gray-50 w-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 120px)' }}>
+        {/* CONTENIDO PRINCIPAL - RESPONSIVO */}
+        <div className="flex-1 bg-gray-50 w-full overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col w-full">
-            {/* TABS NAVIGATION - ANCHO COMPLETO */}
-            <div className="shrink-0 bg-white border-b shadow-sm w-full sticky top-0 z-10">
-              <div className="px-8 py-4 w-full">
-                <TabsList className="grid w-full max-w-2xl grid-cols-3 h-12 text-lg">
-                  <TabsTrigger value="asignar" className="flex items-center gap-3 text-base font-medium py-3">
-                    <FileText className="w-5 h-5" />
+            {/* TABS NAVIGATION - COMPACTO */}
+            <div className="shrink-0 bg-white border-b shadow-sm w-full">
+              <div className="px-4 py-2 w-full">
+                <TabsList className="grid w-full max-w-xl grid-cols-3 h-8 text-sm">
+                  <TabsTrigger value="asignar" className="flex items-center gap-1.5 text-xs font-medium py-1.5">
+                    <FileText className="w-3.5 h-3.5" />
                     Nueva Asignación
                   </TabsTrigger>
-                  <TabsTrigger value="activas" className="flex items-center gap-3 text-base font-medium py-3">
-                    <CheckCircle className="w-5 h-5" />
+                  <TabsTrigger value="activas" className="flex items-center gap-1.5 text-xs font-medium py-1.5">
+                    <CheckCircle className="w-3.5 h-3.5" />
                     Activas ({asignacionesActivas.length})
                   </TabsTrigger>
-                  <TabsTrigger value="historial" className="flex items-center gap-3 text-base font-medium py-3">
-                    <Clock className="w-5 h-5" />
+                  <TabsTrigger value="historial" className="flex items-center gap-1.5 text-xs font-medium py-1.5">
+                    <Clock className="w-3.5 h-3.5" />
                     Historial ({historialAsignaciones.length})
                   </TabsTrigger>
                 </TabsList>
               </div>
             </div>
 
-            {/* TAB: Nueva Asignación - LAYOUT SÚPER EXPANDIDO */}
+            {/* TAB: Nueva Asignación - LAYOUT COMPACTO */}
             <TabsContent value="asignar" className="flex-1 overflow-hidden m-0 w-full">
-              <div className="h-full w-full p-8">
-                <div className="grid grid-cols-12 gap-8 h-full w-full">
+              <div className="h-full w-full p-3">
+                <div className="grid grid-cols-12 gap-3 h-full w-full">
                   
                   {/* COLUMNA IZQUIERDA: Usuario y Equipos (8 columnas - 66%) */}
-                  <div className="col-span-8 space-y-6 h-full flex flex-col">
+                  <div className="col-span-8 space-y-3 h-full flex flex-col">
                     
-                    {/* Card de Usuario - EXPANDIDA */}
-                    <Card className="shadow-xl border-0 shrink-0">
-                      <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-t-lg py-4">
-                        <CardTitle className="flex items-center gap-4 text-indigo-900 text-xl">
-                          <User className="w-6 h-6" />
+                    {/* Card de Usuario - COMPACTA */}
+                    <Card className="shadow-lg border-0 shrink-0">
+                      <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-t-lg py-2">
+                        <CardTitle className="flex items-center gap-2 text-indigo-900 text-base">
+                          <User className="w-4 h-4" />
                           Selección de Usuario Destinatario
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="p-6">
-                        <div className="grid grid-cols-3 gap-8">
+                      <CardContent className="p-3">
+                        <div className="grid grid-cols-3 gap-3">
                           <div className="col-span-2">
-                            <label className="block text-base font-semibold mb-3 text-gray-700">Usuario Destinatario:</label>
+                            <label className="block text-xs font-semibold mb-1.5 text-gray-700">Usuario Destinatario:</label>
                             <RutAutocomplete 
                               value={selectedUser} 
                               onChange={setSelectedUser}
@@ -323,8 +319,8 @@ export function AsignacionesModal({ open, onClose }: {
                             />
                             {/* Mostrar datos del usuario seleccionado */}
                             {selectedUserData && (
-                              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                                <div className="text-sm">
+                              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                                <div className="text-xs">
                                   <div><strong>Nombre:</strong> {selectedUserData.nombres} {selectedUserData.apaterno} {selectedUserData.amaterno}</div>
                                   <div><strong>Grado:</strong> {selectedUserData.grado || 'No especificado'}</div>
                                   <div><strong>Cargo:</strong> {selectedUserData.cargo || 'No especificado'}</div>
@@ -334,7 +330,7 @@ export function AsignacionesModal({ open, onClose }: {
                             )}
                           </div>
                           <div className="col-span-1 flex items-end">
-                            <Badge variant="secondary" className="py-3 px-5 bg-emerald-100 text-emerald-800 text-base">
+                            <Badge variant="secondary" className="py-2 px-3 bg-emerald-100 text-emerald-800 text-sm">
                               {selectedEquipos.length} equipo(s) seleccionado(s)
                             </Badge>
                           </div>
@@ -344,30 +340,30 @@ export function AsignacionesModal({ open, onClose }: {
 
                     {/* Card de Equipos - MÁXIMA EXPANSIÓN */}
                     <Card className="shadow-xl border-0 flex-1 flex flex-col overflow-hidden">
-                      <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-t-lg shrink-0 py-4">
+                      <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-t-lg shrink-0 py-2">
                         <div className="flex items-center justify-between">
-                          <CardTitle className="flex items-center gap-4 text-emerald-900 text-xl">
-                            <Monitor className="w-6 h-6" />
+                          <CardTitle className="flex items-center gap-3 text-emerald-900 text-base">
+                            <Monitor className="w-4 h-4" />
                             Equipos Disponibles para Asignación
                           </CardTitle>
-                          <Badge variant="secondary" className="py-2 px-4 bg-emerald-100 text-emerald-800 text-lg">
+                          <Badge variant="secondary" className="py-1 px-3 bg-emerald-100 text-emerald-800 text-sm">
                             {selectedEquipos.length} de {filteredEquipos.length} seleccionados
                           </Badge>
                         </div>
                         {/* Buscador y filtros integrados en el header */}
-                        <div className="mt-4 flex gap-4">
+                        <div className="mt-2 flex gap-3">
                           <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <Input
                               placeholder="Buscar equipos por nombre, serie o modelo..."
                               value={searchEquipos}
                               onChange={(e) => setSearchEquipos(e.target.value)}
-                              className="pl-12 h-12 text-base bg-white"
+                              className="pl-10 h-8 text-sm bg-white"
                             />
                           </div>
-                          <div className="w-64">
+                          <div className="w-48">
                             <Select value={selectedCategoriaEquipo} onValueChange={setSelectedCategoriaEquipo}>
-                              <SelectTrigger className="h-12 text-base bg-white">
+                              <SelectTrigger className="h-8 text-sm bg-white">
                                 <SelectValue placeholder="Filtrar por tipo..." />
                               </SelectTrigger>
                               <SelectContent className="z-[10000]">
@@ -386,12 +382,12 @@ export function AsignacionesModal({ open, onClose }: {
                         </div>
                       </CardHeader>
                       <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
-                        {/* Tabla expandida al máximo */}
+                        {/* Tabla expandida al máximo con scroll */}
                         <div className="flex-1 overflow-auto">
                           <Table>
-                            <TableHeader className="sticky top-0 bg-gray-100">
+                            <TableHeader className="sticky top-0 bg-gray-100 z-10">
                               <TableRow>
-                                <TableHead className="w-16 text-center">
+                                <TableHead className="w-12 text-center text-xs">
                                   <input
                                     type="checkbox"
                                     checked={selectedEquipos.length === filteredEquipos.length && filteredEquipos.length > 0}
@@ -402,14 +398,14 @@ export function AsignacionesModal({ open, onClose }: {
                                         setSelectedEquipos([])
                                       }
                                     }}
-                                    className="w-5 h-5"
+                                    className="w-4 h-4"
                                   />
                                 </TableHead>
-                                <TableHead className="font-semibold text-base">Nombre PC</TableHead>
-                                <TableHead className="font-semibold text-base">Serie</TableHead>
-                                <TableHead className="font-semibold text-base">Modelo</TableHead>
-                                <TableHead className="font-semibold text-base">Categoría</TableHead>
-                                <TableHead className="font-semibold text-base">Estado</TableHead>
+                                <TableHead className="font-semibold text-xs">Nombre PC</TableHead>
+                                <TableHead className="font-semibold text-xs">Serie</TableHead>
+                                <TableHead className="font-semibold text-xs">Modelo</TableHead>
+                                <TableHead className="font-semibold text-xs">Categoría</TableHead>
+                                <TableHead className="font-semibold text-xs">Estado</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -426,19 +422,19 @@ export function AsignacionesModal({ open, onClose }: {
                                           setSelectedEquipos(selectedEquipos.filter(id => id !== eq.id_equipo))
                                         }
                                       }}
-                                      className="w-5 h-5"
+                                      className="w-4 h-4"
                                     />
                                   </TableCell>
-                                  <TableCell className="font-medium text-base">{eq.nombre_pc || "-"}</TableCell>
-                                  <TableCell className="font-mono text-base">{eq.numero_serie || "-"}</TableCell>
-                                  <TableCell className="text-base">{eq.modelo || "-"}</TableCell>
+                                  <TableCell className="font-medium text-xs">{eq.nombre_pc || "-"}</TableCell>
+                                  <TableCell className="font-mono text-xs">{eq.numero_serie || "-"}</TableCell>
+                                  <TableCell className="text-xs">{eq.modelo || "-"}</TableCell>
                                   <TableCell>
-                                    <Badge variant="outline" className="text-sm">
+                                    <Badge variant="outline" className="text-xs">
                                       {eq.categoria?.desc_tipo || "-"}
                                     </Badge>
                                   </TableCell>
                                   <TableCell>
-                                    <Badge className="bg-green-500 hover:bg-green-600 text-sm">
+                                    <Badge className="bg-green-500 hover:bg-green-600 text-xs">
                                       DISPONIBLE
                                     </Badge>
                                   </TableCell>
@@ -454,48 +450,48 @@ export function AsignacionesModal({ open, onClose }: {
                   {/* COLUMNA DERECHA: Datos del Documento (4 columnas - 33%) */}
                   <div className="col-span-4 h-full">
                     <Card className="shadow-xl border-0 h-full flex flex-col">
-                      <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-t-lg py-4 shrink-0">
-                        <CardTitle className="flex items-center gap-4 text-amber-900 text-xl">
-                          <FileText className="w-6 h-6" />
+                      <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-t-lg py-2 shrink-0">
+                        <CardTitle className="flex items-center gap-3 text-amber-900 text-base">
+                          <FileText className="w-4 h-4" />
                           Datos para Documento de Asignación
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="p-6 flex-1 overflow-auto">
-                        <div className="space-y-6">
+                      <CardContent className="p-3 flex-1 overflow-auto">
+                        <div className="space-y-3">
                           <div>
-                            <label className="block text-base font-semibold mb-2 text-gray-700">Grado *</label>
+                            <label className="block text-xs font-semibold mb-1 text-gray-700">Grado *</label>
                             <Input
                               value={grado}
                               onChange={(e) => setGrado(e.target.value)}
                               placeholder="ej: Sargento Segundo"
-                              className="h-12 text-base"
+                              className="h-8 text-xs"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-base font-semibold mb-2 text-gray-700">Sección *</label>
+                            <label className="block text-xs font-semibold mb-1 text-gray-700">Sección *</label>
                             <Input
                               value={seccion}
                               onChange={(e) => setSeccion(e.target.value)}
                               placeholder="ej: U de Cuartel"
-                              className="h-12 text-base"
+                              className="h-8 text-xs"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-base font-semibold mb-2 text-gray-700">N° DE P.T. *</label>
+                            <label className="block text-xs font-semibold mb-1 text-gray-700">N° DE P.T. *</label>
                             <Input
                               value={nDePt}
                               onChange={(e) => setNDePt(e.target.value)}
                               placeholder="ej: 2"
-                              className="h-12 text-base"
+                              className="h-8 text-xs"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-base font-semibold mb-2 text-gray-700">Ubicación *</label>
+                            <label className="block text-xs font-semibold mb-1 text-gray-700">Ubicación *</label>
                             <Select value={ubicacionTipo} onValueChange={setUbicacionTipo}>
-                              <SelectTrigger className="h-12 text-base">
+                              <SelectTrigger className="h-8 text-xs">
                                 <SelectValue placeholder="Seleccione ubicación" />
                               </SelectTrigger>
                               <SelectContent className="z-[10000]">
@@ -507,11 +503,11 @@ export function AsignacionesModal({ open, onClose }: {
 
                           {ubicacionTipo && (
                             <div>
-                              <label className="block text-base font-semibold mb-2 text-gray-700">
+                              <label className="block text-xs font-semibold mb-1 text-gray-700">
                                 {ubicacionTipo === "TORRE" ? "Piso" : "Área"} *
                               </label>
                               <Select value={ubicacionEspecifica} onValueChange={setUbicacionEspecifica}>
-                                <SelectTrigger className="h-12 text-base">
+                                <SelectTrigger className="h-8 text-xs">
                                   <SelectValue placeholder={`Seleccione ${ubicacionTipo === "TORRE" ? "piso" : "área"}`} />
                                 </SelectTrigger>
                                 <SelectContent className="z-[10000]">
@@ -526,7 +522,7 @@ export function AsignacionesModal({ open, onClose }: {
                           )}
 
                           <div>
-                            <label className="block text-base font-semibold mb-2 text-gray-700">Persona que Interviene *</label>
+                            <label className="block text-xs font-semibold mb-1 text-gray-700">Persona que Interviene *</label>
                             <RutAutocomplete 
                               value={personaInterviene} 
                               onChange={setPersonaInterviene}
@@ -538,9 +534,9 @@ export function AsignacionesModal({ open, onClose }: {
                           </div>
 
                           <div>
-                            <label className="block text-base font-semibold mb-2 text-gray-700">Distribución</label>
+                            <label className="block text-xs font-semibold mb-1 text-gray-700">Distribución</label>
                             <textarea
-                              className="w-full p-3 border rounded-lg resize-none h-20 text-base"
+                              className="w-full p-2 border rounded-lg resize-none h-16 text-xs"
                               value={distribucion}
                               onChange={(e) => setDistribucion(e.target.value)}
                               placeholder="Distribución del documento..."
@@ -548,9 +544,9 @@ export function AsignacionesModal({ open, onClose }: {
                           </div>
 
                           <div>
-                            <label className="block text-base font-semibold mb-2 text-gray-700">Nota Adicional</label>
+                            <label className="block text-xs font-semibold mb-1 text-gray-700">Nota Adicional</label>
                             <textarea
-                              className="w-full p-3 border rounded-lg resize-none h-24 text-base"
+                              className="w-full p-2 border rounded-lg resize-none h-16 text-xs"
                               value={nota}
                               onChange={(e) => setNota(e.target.value)}
                               placeholder="Observaciones o notas adicionales para el documento..."
@@ -560,12 +556,12 @@ export function AsignacionesModal({ open, onClose }: {
                           <Button 
                             onClick={handleAsignar} 
                             disabled={!selectedUser || selectedEquipos.length === 0 || loading}
-                            className="w-full h-14 text-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-xl"
-                            size="lg"
+                            className="w-full h-10 text-sm bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-xl"
+                            size="sm"
                           >
                             {loading ? (
-                              <div className="flex items-center gap-3">
-                                <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                              <div className="flex items-center gap-2">
+                                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
                                 Generando...
                               </div>
                             ) : (
@@ -580,51 +576,51 @@ export function AsignacionesModal({ open, onClose }: {
               </div>
             </TabsContent>
 
-            {/* TAB: Asignaciones Activas - EXPANDIDA */}
+            {/* TAB: Asignaciones Activas - COMPACTA */}
             <TabsContent value="activas" className="flex-1 overflow-hidden m-0 w-full">
-              <div className="h-full p-8 w-full">
-                <Card className="h-full shadow-xl border-0 w-full">
-                  <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-lg py-4">
-                    <CardTitle className="flex items-center gap-4 text-green-900 text-xl">
-                      <CheckCircle className="w-6 h-6" />
+              <div className="h-full p-3 w-full">
+                <Card className="h-full shadow-lg border-0 w-full">
+                  <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-lg py-2">
+                    <CardTitle className="flex items-center gap-2 text-green-900 text-base">
+                      <CheckCircle className="w-4 h-4" />
                       Asignaciones Activas ({asignacionesActivas.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0 h-full">
                     <div className="overflow-auto h-full">
                       <Table>
-                        <TableHeader className="sticky top-0 bg-gray-100">
+                        <TableHeader className="sticky top-0 bg-gray-100 z-10">
                           <TableRow>
-                            <TableHead className="font-semibold text-base">Usuario</TableHead>
-                            <TableHead className="font-semibold text-base">Equipo</TableHead>
-                            <TableHead className="font-semibold text-base">Modelo</TableHead>
-                            <TableHead className="font-semibold text-base">Serie</TableHead>
-                            <TableHead className="font-semibold text-base">Fecha Asignación</TableHead>
-                            <TableHead className="font-semibold text-base">Estado</TableHead>
-                            <TableHead className="font-semibold text-base">Acciones</TableHead>
+                            <TableHead className="font-semibold text-xs">Usuario</TableHead>
+                            <TableHead className="font-semibold text-xs">Equipo</TableHead>
+                            <TableHead className="font-semibold text-xs">Modelo</TableHead>
+                            <TableHead className="font-semibold text-xs">Serie</TableHead>
+                            <TableHead className="font-semibold text-xs">Fecha Asignación</TableHead>
+                            <TableHead className="font-semibold text-xs">Estado</TableHead>
+                            <TableHead className="font-semibold text-xs">Acciones</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {asignacionesActivas.map((asignacion) => (
                             <TableRow key={asignacion.id_asignacion} className="hover:bg-gray-50">
-                              <TableCell className="font-medium text-base">
+                              <TableCell className="font-medium text-xs">
                                 {asignacion.usuario_nombre || asignacion.rut_usuario}
                               </TableCell>
-                              <TableCell className="text-base">{asignacion.equipo_nombre || "-"}</TableCell>
-                              <TableCell className="text-base">{asignacion.equipo_modelo || "-"}</TableCell>
-                              <TableCell className="font-mono text-base">{asignacion.equipo_serie || "-"}</TableCell>
-                              <TableCell className="text-base">{new Date(asignacion.fecha_asignacion).toLocaleDateString('es-CL')}</TableCell>
+                              <TableCell className="text-xs">{asignacion.equipo_nombre || "-"}</TableCell>
+                              <TableCell className="text-xs">{asignacion.equipo_modelo || "-"}</TableCell>
+                              <TableCell className="font-mono text-xs">{asignacion.equipo_serie || "-"}</TableCell>
+                              <TableCell className="text-xs">{new Date(asignacion.fecha_asignacion).toLocaleDateString('es-CL')}</TableCell>
                               <TableCell>
-                                <Badge className="bg-green-500 hover:bg-green-600 text-sm">ACTIVA</Badge>
+                                <Badge className="bg-green-500 hover:bg-green-600 text-xs">ACTIVA</Badge>
                               </TableCell>
                               <TableCell>
                                 <Button
                                   size="sm"
                                   variant="destructive"
                                   onClick={() => handleEliminarAsignacion(asignacion.id_asignacion)}
-                                  className="h-10"
+                                  className="h-6 w-8 p-0"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-3 h-3" />
                                 </Button>
                               </TableCell>
                             </TableRow>
@@ -637,49 +633,59 @@ export function AsignacionesModal({ open, onClose }: {
               </div>
             </TabsContent>
 
-            {/* TAB: Historial - EXPANDIDA */}
+            {/* TAB: Historial - COMPACTA */}
             <TabsContent value="historial" className="flex-1 overflow-hidden m-0 w-full">
-              <div className="h-full p-8 w-full">
-                <Card className="h-full shadow-xl border-0 w-full">
-                  <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-lg py-4">
-                    <CardTitle className="flex items-center gap-4 text-purple-900 text-xl">
-                      <Clock className="w-6 h-6" />
+              <div className="h-full p-3 w-full">
+                <Card className="h-full shadow-lg border-0 w-full">
+                  <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-lg py-2">
+                    <CardTitle className="flex items-center gap-2 text-purple-900 text-base">
+                      <Clock className="w-4 h-4" />
                       Historial de Asignaciones ({historialAsignaciones.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0 h-full">
                     <div className="overflow-auto h-full">
                       <Table>
-                        <TableHeader className="sticky top-0 bg-gray-100">
+                        <TableHeader className="sticky top-0 bg-gray-100 z-10">
                           <TableRow>
-                            <TableHead className="font-semibold text-base">Usuario</TableHead>
-                            <TableHead className="font-semibold text-base">Equipo</TableHead>
-                            <TableHead className="font-semibold text-base">Modelo</TableHead>
-                            <TableHead className="font-semibold text-base">Serie</TableHead>
-                            <TableHead className="font-semibold text-base">Fecha Asignación</TableHead>
-                            <TableHead className="font-semibold text-base">Duración</TableHead>
-                            <TableHead className="font-semibold text-base">Estado</TableHead>
+                            <TableHead className="font-semibold text-xs">Usuario</TableHead>
+                            <TableHead className="font-semibold text-xs">Equipo</TableHead>
+                            <TableHead className="font-semibold text-xs">Modelo</TableHead>
+                            <TableHead className="font-semibold text-xs">Serie</TableHead>
+                            <TableHead className="font-semibold text-xs">Fecha Asignación</TableHead>
+                            <TableHead className="font-semibold text-xs">Fecha Liberación</TableHead>
+                            <TableHead className="font-semibold text-xs">Duración</TableHead>
+                            <TableHead className="font-semibold text-xs">Estado</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {historialAsignaciones.map((registro) => (
                             <TableRow key={registro.id_asignacion} className="hover:bg-gray-50">
-                              <TableCell className="font-medium text-base">
+                              <TableCell className="font-medium text-xs">
                                 {registro.usuario_nombre || registro.rut_usuario}
                               </TableCell>
-                              <TableCell className="text-base">{registro.equipo_nombre || "-"}</TableCell>
-                              <TableCell className="text-base">{registro.equipo_modelo || "-"}</TableCell>
-                              <TableCell className="font-mono text-base">{registro.equipo_serie || "-"}</TableCell>
-                              <TableCell className="text-base">{new Date(registro.fecha_asignacion).toLocaleDateString('es-CL')}</TableCell>
+                              <TableCell className="text-xs">{registro.equipo_nombre || "-"}</TableCell>
+                              <TableCell className="text-xs">{registro.equipo_modelo || "-"}</TableCell>
+                              <TableCell className="font-mono text-xs">{registro.equipo_serie || "-"}</TableCell>
+                              <TableCell className="text-xs">{new Date(registro.fecha_asignacion).toLocaleDateString('es-CL')}</TableCell>
+                              <TableCell className="text-xs">
+                                {registro.fecha_liberacion ? (
+                                  <span className="text-red-600">
+                                    {new Date(registro.fecha_liberacion).toLocaleDateString('es-CL')}
+                                  </span>
+                                ) : (
+                                  <span className="text-green-600 font-medium">-</span>
+                                )}
+                              </TableCell>
                               <TableCell>
-                                <Badge variant="outline" className="text-sm">
+                                <Badge variant="outline" className="text-xs">
                                   {registro.duracion_dias || 0} días
                                 </Badge>
                               </TableCell>
                               <TableCell>
                                 <Badge 
                                   variant={registro.activa ? "default" : "secondary"} 
-                                  className={registro.activa ? "bg-green-500" : "bg-gray-500"}
+                                  className={`text-xs ${registro.activa ? "bg-green-500" : "bg-gray-500"}`}
                                 >
                                   {registro.activa ? "ACTIVA" : "FINALIZADA"}
                                 </Badge>
