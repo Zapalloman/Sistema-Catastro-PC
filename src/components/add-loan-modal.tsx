@@ -188,7 +188,15 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DialogContent className="max-w-[98vw] max-h-[96vh] w-full h-full p-0 overflow-hidden">
+      <DialogContent 
+        className="p-0 overflow-hidden border-0 shadow-2xl"
+        style={{ 
+          width: '98vw',
+          height: '96vh',
+          maxWidth: '98vw',
+          maxHeight: '96vh'
+        }}
+      >
         <DialogHeader className="shrink-0 border-b bg-gradient-to-r from-green-600 to-green-800 text-white px-4 py-3 rounded-t-lg m-0">
           <DialogTitle className="flex items-center justify-between w-full text-white">
             <div className="flex items-center gap-3">
@@ -215,7 +223,7 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
         </DialogHeader>
 
           {/* CONTENIDO CON SCROLL */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Funcionarios - Una sola fila horizontal */}
           <div className="bg-gray-50 p-3 rounded-lg">
             <h3 className="text-base font-semibold mb-2 text-gray-800">Información de Funcionarios</h3>
