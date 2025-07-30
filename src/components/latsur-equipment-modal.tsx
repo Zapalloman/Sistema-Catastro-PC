@@ -100,10 +100,12 @@ export function LatsurEquipmentModal({ equipment, isOpen, onClose }: LatsurEquip
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Llave Inventario</label>
-                    <p className="font-mono text-sm bg-white p-2 rounded border">{equipment.llave_inventario}</p>
+                    <p className="font-mono text-sm bg-white p-2 rounded border">
+                      {equipment.llave_inventario || "No asignada"}
+                    </p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Nombre PC</label>
+                    <label className="text-sm font-medium text-gray-600">Nombre</label>
                     <p className="text-base">{equipment.nombre_pc}</p>
                   </div>
                   <div>

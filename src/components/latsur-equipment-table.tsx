@@ -25,6 +25,7 @@ import {
   Settings
 } from "lucide-react"
 import { LatsurEquipmentModal } from "./latsur-equipment-modal"
+import { AddLatsurEquipmentModal } from "./add-latsur-equipment-modal"
 
 interface LatsurEquipment {
   id_equipo: number
@@ -64,6 +65,7 @@ export function LatsurEquipmentTable() {
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [selectedEquipment, setSelectedEquipment] = useState<LatsurEquipment | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
   // Cargar equipos
   useEffect(() => {
@@ -173,8 +175,31 @@ export function LatsurEquipmentTable() {
   }
 
   const handleAddEquipment = () => {
-    console.log("Add new equipment")
-    // TODO: Implement add functionality
+    setIsAddModalOpen(true)
+  }
+
+  const handleEquipmentAdded = () => {
+    // Refrescar la lista de equipos
+    const loadEquipos = async () => {
+      try {
+        setLoading(true)
+        let url = "http://localhost:3000/api/equipos-latsur"
+        if (activeFilter !== "TODOS") {
+          url += `/categoria/${activeFilter}`
+        }
+        
+        const response = await fetch(url)
+        const data = await response.json()
+        setEquipos(Array.isArray(data) ? data : [])
+      } catch (error) {
+        console.error("Error al cargar equipos LATSUR:", error)
+        setError("No se pudieron cargar los equipos")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadEquipos()
   }
 
   const handleExport = () => {
@@ -355,11 +380,15 @@ export function LatsurEquipmentTable() {
             ) : (
               paginatedEquipos.map((equipo) => (
                 <TableRow 
-                  key={equipo.id_equipo} 
-                  className="hover:bg-gradient-to-r hover:from-gray-50 hover:to-slate-50 transition-all duration-200"
+                  key={equipo.id_equipo}
+                  className="hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 transition-all duration-200"
                 >
-                  <TableCell className="font-mono text-sm font-semibold">{equipo.llave_inventario || "-"}</TableCell>
-                  <TableCell className="font-medium">{equipo.nombre_pc || "-"}</TableCell>
+                  <TableCell className="font-medium text-cyan-700">
+                    {equipo.llave_inventario || "-"}
+                  </TableCell>
+                  <TableCell className="font-semibold">
+                    {equipo.nombre_pc || "-"}
+                  </TableCell>
                   <TableCell className="font-semibold">{equipo.marca || "-"}</TableCell>
                   <TableCell>{equipo.modelo || "-"}</TableCell>
                   <TableCell className="font-mono text-xs">{equipo.numero_serie || "-"}</TableCell>
@@ -467,6 +496,13 @@ export function LatsurEquipmentTable() {
         equipment={selectedEquipment}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+
+      {/* Add Equipment Modal */}
+      <AddLatsurEquipmentModal
+        open={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onEquipmentAdded={handleEquipmentAdded}
       />
     </div>
   )

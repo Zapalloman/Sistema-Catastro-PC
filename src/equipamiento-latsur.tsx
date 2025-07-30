@@ -25,21 +25,8 @@ export default function EquipamientoLatsur() {
           <LatsurEquipmentTable />
         </div>
 
-        {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-6 border border-blue-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-blue-900 mb-2">Total Equipos</h3>
-                <p className="text-3xl font-bold text-blue-600">5</p>
-                <p className="text-sm text-blue-700">Equipos LATSUR</p>
-              </div>
-              <HardDrive className="w-8 h-8 text-blue-500" />
-            </div>
-         
-          
-          </div>
-        </div>
+       
+        
 
         {/* Information Panel *
         <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg p-6 border border-cyan-200">

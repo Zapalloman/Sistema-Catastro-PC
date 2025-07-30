@@ -103,58 +103,54 @@ export function AsignacionesModal({ open, onClose }: {
 
     // Validar campos obligatorios para el documento
     if (!grado || !seccion || !nDePt || !ubicacionTipo || !ubicacionEspecifica || !personaInterviene) {
-      alert("Complete todos los campos obligatorios para generar el documento")
+      alert("Por favor complete todos los campos obligatorios para el documento")
       return
     }
 
+    setLoading(true)
+    
     try {
-      setLoading(true)
-
-      // 1. Crear asignaciones individuales
-      for (const equipoId of selectedEquipos) {
-        await fetch("http://localhost:3000/api/asignaciones", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id_equipo: equipoId,
-            rut_usuario: selectedUser
-          })
-        })
+      // Preparar datos incluyendo información de ubicación
+      const datosAsignacion = {
+        usuario_rut: selectedUser,
+        equipos_ids: selectedEquipos,
+        grado: grado,
+        seccion: seccion,
+        n_de_pt: nDePt,
+        ubicacion_tipo: ubicacionTipo, // "TORRE" o "TALLERES"
+        ubicacion_especifica: ubicacionEspecifica, // "2º PISO", "SALA A", etc.
+        persona_interviene_rut: personaInterviene,
+        distribucion: distribucion,
+        nota: nota,
+        
+        // Datos adicionales del usuario
+        usuario_datos: selectedUserData,
+        persona_interviene_datos: personaIntervieneData
       }
 
-      // 2. Generar documento Word
+      console.log("Enviando datos de asignación con ubicación:", datosAsignacion)
+
       const response = await fetch("http://localhost:3000/api/asignaciones/generar-documento", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rut_usuario: selectedUser,
-          equipos_ids: selectedEquipos,
-          grado: selectedUserData?.grado || grado,
-          seccion,
-          n_de_pt: nDePt,
-          ubicacion_tipo: ubicacionTipo,
-          ubicacion_especifica: ubicacionEspecifica,
-          persona_interviene: personaInterviene,
-          persona_interviene_datos: personaIntervieneData, // NUEVO: Datos completos de la persona que interviene
-          usuario_datos: selectedUserData, // NUEVO: Datos completos del usuario destinatario
-          distribucion,
-          nota
-        })
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(datosAsignacion),
       })
 
       if (response.ok) {
-        // Descargar documento automáticamente
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
+        a.style.display = 'none'
         a.href = url
-        a.download = `asignacion_${selectedUser}_${new Date().toISOString().split('T')[0]}.docx`
+        a.download = `Asignacion_${selectedUser}_${new Date().getTime()}.docx`
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
 
-        alert("Asignación creada y documento generado correctamente")
+        alert("Asignación creada, ubicación actualizada y documento generado correctamente")
         
         // Recargar datos
         fetch("http://localhost:3000/api/asignaciones")
@@ -167,7 +163,7 @@ export function AsignacionesModal({ open, onClose }: {
 
         // Limpiar formulario
         setSelectedUser("")
-        setSelectedUserData(null) // NUEVO: Limpiar datos del usuario
+        setSelectedUserData(null)
         setSelectedEquipos([])
         setGrado("")
         setSeccion("")
