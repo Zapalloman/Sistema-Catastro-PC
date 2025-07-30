@@ -11,21 +11,21 @@ const processData = [
   {
     title: "Asignación",
     description:
-      "Asignar dispositivos y equipos a empleados o departamentos específicos.",
+      "Asignar dispositivos y equipos a empleados. Ve las asignaciones activas y el historial.",
     icon: <UserPlus />,
     color: "blue" as const,
   },
   {
-    title: "Cambio",
+    title: "Bajas",
     description:
-      "Procesar cambios de dispositivos existentes. Actualizar especificaciones, reparaciones o modificaciones de equipos asignados.",
+      "Dar de baja dispositivos y equipos que ya no están en uso. Gestiona la eliminación definitiva del inventario y actualiza registros.",
     icon: <RefreshCw />,
     color: "green" as const,
   },
   {
-    title: "Traspaso",
+    title: "Devolución Arriendo",
     description:
-      "Transferir dispositivos entre empleados o departamentos. Gestiona el movimiento interno de equipos y actualiza registros.",
+      "Procesar la devolución de equipos en arriendo. Gestiona el retorno de dispositivos arrendados y actualiza el estado del contrato.",
     icon: <ArrowRightLeft />,
     color: "orange" as const,
   },
@@ -46,11 +46,11 @@ export default function Procesos() {
       case "Asignación":
         setShowAsignaciones(true)
         break
-      case "Cambio":
-        alert("Módulo de Cambios - Próximamente disponible")
+      case "Bajas":
+        alert("Módulo de Bajas - Próximamente disponible")
         break
-      case "Traspaso":
-        alert("Módulo de Traspasos - Próximamente disponible") 
+      case "Devolución Arriendo":
+        alert("Módulo de Devolución Arriendo - Próximamente disponible") 
         break
       case "Recibo":
         alert("Módulo de Recibos - Próximamente disponible")
@@ -96,14 +96,14 @@ export default function Procesos() {
               <div className="text-xs text-blue-600 mt-1">+3 esta semana</div>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-3xl font-bold text-green-600 mb-2">5</div>
-              <div className="text-sm text-green-700 font-medium">Cambios Pendientes</div>
-              <div className="text-xs text-green-600 mt-1">-2 desde ayer</div>
+              <div className="text-3xl font-bold text-green-600 mb-2">3</div>
+              <div className="text-sm text-green-700 font-medium">Bajas Pendientes</div>
+              <div className="text-xs text-green-600 mt-1">-1 desde ayer</div>
             </div>
             <div className="text-center p-4 bg-orange-50 rounded-lg">
               <div className="text-3xl font-bold text-orange-600 mb-2">2</div>
-              <div className="text-sm text-orange-700 font-medium">Traspasos en Proceso</div>
-              <div className="text-xs text-orange-600 mt-1">En revisión</div>
+              <div className="text-sm text-orange-700 font-medium">Devoluciones Arriendo</div>
+              <div className="text-xs text-orange-600 mt-1">En proceso</div>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <div className="text-3xl font-bold text-purple-600 mb-2">8</div>

@@ -1,266 +1,281 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {
+import { 
+  Eye, 
+  Search, 
+  ChevronLeft, 
+  ChevronRight, 
+  Plus, 
+  Download,
   Edit,
   Trash2,
-  Search,
-  Download,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Monitor,
-  Printer,
-  Zap,
-  Wifi,
-  Glasses,
-  Mouse,
-  Laptop,
+  Monitor, 
+  Printer, 
+  Laptop, 
   HardDrive,
+  Cpu,
+  Server,
+  Zap,
+  Settings
 } from "lucide-react"
 import { LatsurEquipmentModal } from "./latsur-equipment-modal"
 
-// Sample LATSUR equipment data
-const sampleLatsurEquipment = [
-  {
-    id: "LATSUR-WS-001",
-    tipo: "Workstation",
-    modelo: "Dell Precision 7760",
-    serie: "LATSUR-WS-001-2024",
-    marca: "Dell",
-    estado: "OPERATIVO",
-    ubicacion: "Laboratorio LATSUR - Estación 1",
-    fechaInstalacion: "15/01/2024",
-    responsable: "Dr. Carlos Mendoza",
-    especificaciones: {
-      procesador: "Intel Xeon W-11955M",
-      ram: "64GB DDR4",
-      almacenamiento: "2TB NVMe SSD",
-      tarjeta_grafica: "NVIDIA RTX A4000",
-      sistema_operativo: "Windows 11 Pro",
-    },
-    dispositivosRelacionados: [
-      {
-        id: "LATSUR-UPS-001",
-        tipo: "UPS",
-        modelo: "APC Smart-UPS 1500VA",
-        serie: "UPS-001-2024",
-        relacion: "Alimentación",
-      },
-      {
-        id: "LATSUR-MON-001",
-        tipo: "Monitor",
-        modelo: 'Dell UltraSharp 32"',
-        serie: "MON-001-2024",
-        relacion: "Display Principal",
-      },
-      {
-        id: "LATSUR-MON-002",
-        tipo: "Monitor",
-        modelo: 'Dell UltraSharp 24"',
-        serie: "MON-002-2024",
-        relacion: "Display Secundario",
-      },
-    ],
-  },
-  {
-    id: "LATSUR-WS-002",
-    tipo: "Workstation",
-    modelo: "HP Z6 G4",
-    serie: "LATSUR-WS-002-2024",
-    marca: "HP",
-    estado: "OPERATIVO",
-    ubicacion: "Laboratorio LATSUR - Estación 2",
-    fechaInstalacion: "20/01/2024",
-    responsable: "Ing. María González",
-    especificaciones: {
-      procesador: "Intel Xeon Silver 4214",
-      ram: "32GB DDR4",
-      almacenamiento: "1TB NVMe SSD + 2TB HDD",
-      tarjeta_grafica: "NVIDIA Quadro RTX 4000",
-      sistema_operativo: "Ubuntu 22.04 LTS",
-    },
-    dispositivosRelacionados: [
-      {
-        id: "LATSUR-UPS-002",
-        tipo: "UPS",
-        modelo: "APC Smart-UPS 1000VA",
-        serie: "UPS-002-2024",
-        relacion: "Alimentación",
-      },
-      { id: "LATSUR-MON-003", tipo: "Monitor", modelo: "HP Z27", serie: "MON-003-2024", relacion: "Display Principal" },
-    ],
-  },
-  {
-    id: "LATSUR-IMP-001",
-    tipo: "Impresora",
-    modelo: "HP LaserJet Pro M404dn",
-    serie: "LATSUR-IMP-001-2024",
-    marca: "HP",
-    estado: "OPERATIVO",
-    ubicacion: "Laboratorio LATSUR - Área Común",
-    fechaInstalacion: "10/02/2024",
-    responsable: "Técnico Juan Pérez",
-    especificaciones: {
-      tipo_impresion: "Láser Monocromático",
-      velocidad: "38 ppm",
-      resolucion: "1200 x 1200 dpi",
-      conectividad: "Ethernet, USB",
-      capacidad_papel: "250 hojas",
-    },
-    dispositivosRelacionados: [],
-  },
-  {
-    id: "LATSUR-3DG-001",
-    tipo: "Gafas 3D",
-    modelo: "NVIDIA 3D Vision 2",
-    serie: "LATSUR-3DG-001-2024",
-    marca: "NVIDIA",
-    estado: "OPERATIVO",
-    ubicacion: "Laboratorio LATSUR - Estación 1",
-    fechaInstalacion: "15/01/2024",
-    responsable: "Dr. Carlos Mendoza",
-    especificaciones: {
-      tipo: "Activas con IR",
-      frecuencia: "120Hz",
-      bateria: "Recargable Li-ion",
-      compatibilidad: "NVIDIA Quadro/GeForce",
-      alcance: "6 metros",
-    },
-    dispositivosRelacionados: [
-      {
-        id: "LATSUR-WS-001",
-        tipo: "Workstation",
-        modelo: "Dell Precision 7760",
-        serie: "LATSUR-WS-001-2024",
-        relacion: "Estación Principal",
-      },
-    ],
-  },
-  {
-    id: "LATSUR-3DM-001",
-    tipo: "Mouse 3D",
-    modelo: "3Dconnexion SpaceMouse Pro",
-    serie: "LATSUR-3DM-001-2024",
-    marca: "3Dconnexion",
-    estado: "OPERATIVO",
-    ubicacion: "Laboratorio LATSUR - Estación 1",
-    fechaInstalacion: "15/01/2024",
-    responsable: "Dr. Carlos Mendoza",
-    especificaciones: {
-      grados_libertad: "6 DOF",
-      conectividad: "USB",
-      botones: "15 botones programables",
-      software: "3DxWare 10",
-      compatibilidad: "CAD/3D Software",
-    },
-    dispositivosRelacionados: [
-      {
-        id: "LATSUR-WS-001",
-        tipo: "Workstation",
-        modelo: "Dell Precision 7760",
-        serie: "LATSUR-WS-001-2024",
-        relacion: "Estación Principal",
-      },
-    ],
-  },
-]
+interface LatsurEquipment {
+  id_equipo: number
+  llave_inventario: string
+  nombre_pc: string
+  modelo: string
+  numero_serie: string
+  almacenamiento: string
+  ram: string
+  procesador: string
+  version_sistema_operativo: string
+  version_office: string
+  observaciones: string
+  fecha_ingreso: Date
+  marca: string
+  categoria: string
+  idcategoria: number
+  cod_ti_marca: number
+  activo: boolean
+}
 
-const equipmentTypes = [
-  { value: "TODOS", label: "Todos los Equipos", icon: Monitor, count: 5 },
-  { value: "Workstation", label: "Workstations", icon: Monitor, count: 2 },
-  { value: "Impresora", label: "Impresoras", icon: Printer, count: 1 },
-  { value: "UPS", label: "UPS", icon: Zap, count: 0 },
-  { value: "KVM", label: "KVM", icon: Wifi, count: 0 },
-  { value: "Monitor", label: "Monitores", icon: Monitor, count: 0 },
-  { value: "Gafas 3D", label: "Gafas 3D", icon: Glasses, count: 1 },
-  { value: "Mouse 3D", label: "Mouse 3D", icon: Mouse, count: 1 },
-  { value: "Notebook", label: "Notebooks", icon: Laptop, count: 0 },
-  { value: "Disco Externo", label: "Discos Externos", icon: HardDrive, count: 0 },
-]
+interface LatsurCategoria {
+  idcategoria: number
+  nomcategoria: string
+  descripcion: string
+  vigente: number
+}
 
 export function LatsurEquipmentTable() {
+  const [equipos, setEquipos] = useState<LatsurEquipment[]>([])
+  const [categorias, setCategorias] = useState<LatsurCategoria[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
+  const [activeFilter, setActiveFilter] = useState("TODOS")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [activeFilter, setActiveFilter] = useState("TODOS")
-  const [selectedEquipment, setSelectedEquipment] = useState(null)
+  const [selectedEquipment, setSelectedEquipment] = useState<LatsurEquipment | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Filter data based on search term and active filter
-  const filteredData = sampleLatsurEquipment.filter((equipment) => {
-    const matchesSearch =
-      equipment.modelo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      equipment.serie.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      equipment.marca.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      equipment.responsable.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      equipment.ubicacion.toLowerCase().includes(searchTerm.toLowerCase())
+  // Cargar equipos
+  useEffect(() => {
+    const loadEquipos = async () => {
+      try {
+        setLoading(true)
+        let url = "http://localhost:3000/api/equipos-latsur"
+        if (activeFilter !== "TODOS") {
+          url += `/categoria/${activeFilter}`
+        }
+        
+        const response = await fetch(url)
+        const data = await response.json()
+        setEquipos(Array.isArray(data) ? data : [])
+      } catch (error) {
+        console.error("Error al cargar equipos LATSUR:", error)
+        setError("No se pudieron cargar los equipos")
+      } finally {
+        setLoading(false)
+      }
+    }
 
-    const matchesFilter = activeFilter === "TODOS" || equipment.tipo === activeFilter
+    loadEquipos()
+  }, [activeFilter])
 
-    return matchesSearch && matchesFilter
+  // Cargar categorías
+  useEffect(() => {
+    const loadCategorias = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/equipos-latsur/categorias")
+        const data = await response.json()
+        setCategorias(Array.isArray(data) ? data : [])
+      } catch (error) {
+        console.error("Error al cargar categorías:", error)
+      }
+    }
+
+    loadCategorias()
+  }, [])
+
+  // Crear filtros de categorías con iconos y conteo
+  const getCategoryIcon = (nomcategoria: string) => {
+    const categoriaLower = nomcategoria.toLowerCase()
+    if (categoriaLower.includes("workstation") || categoriaLower.includes("pc")) {
+      return Monitor
+    } else if (categoriaLower.includes("impresora")) {
+      return Printer
+    } else if (categoriaLower.includes("notebook") || categoriaLower.includes("laptop")) {
+      return Laptop
+    } else if (categoriaLower.includes("disco") || categoriaLower.includes("storage")) {
+      return HardDrive
+    } else if (categoriaLower.includes("ups")) {
+      return Zap
+    } else if (categoriaLower.includes("servidor")) {
+      return Server
+    } else {
+      return Cpu
+    }
+  }
+
+  const categoryFilters = [
+    { 
+      value: "TODOS", 
+      label: "Todos los Equipos", 
+      icon: Server, 
+      count: equipos.length 
+    },
+    ...categorias.map(categoria => ({
+      value: categoria.idcategoria.toString(),
+      label: categoria.nomcategoria,
+      icon: getCategoryIcon(categoria.nomcategoria),
+      count: equipos.filter(equipo => equipo.idcategoria === categoria.idcategoria).length
+    }))
+  ]
+
+  // Filtrar equipos por búsqueda
+  const filteredEquipos = equipos.filter((equipo) => {
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      (equipo.nombre_pc || "").toLowerCase().includes(searchLower) ||
+      (equipo.numero_serie || "").toLowerCase().includes(searchLower) ||
+      (equipo.modelo || "").toLowerCase().includes(searchLower) ||
+      (equipo.llave_inventario || "").toLowerCase().includes(searchLower) ||
+      (equipo.marca || "").toLowerCase().includes(searchLower) ||
+      (equipo.categoria || "").toLowerCase().includes(searchLower)
+    )
   })
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+  // Paginación
+  const totalPages = Math.ceil(filteredEquipos.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage)
+  const paginatedEquipos = filteredEquipos.slice(startIndex, startIndex + itemsPerPage)
 
-  const handleViewDetails = (equipment: any) => {
-    setSelectedEquipment(equipment)
+  const handleViewDetails = (equipo: LatsurEquipment) => {
+    setSelectedEquipment(equipo)
     setIsModalOpen(true)
   }
 
-  const handleEdit = (equipment: any) => {
-    console.log("Edit LATSUR equipment:", equipment)
+  const handleEdit = (equipo: LatsurEquipment) => {
+    console.log("Edit equipment:", equipo)
     // TODO: Implement edit functionality
   }
 
-  const handleDelete = (equipment: any) => {
-    console.log("Delete LATSUR equipment:", equipment)
+  const handleDelete = (equipo: LatsurEquipment) => {
+    console.log("Delete equipment:", equipo)
     // TODO: Implement delete functionality
   }
 
+  const handleAddEquipment = () => {
+    console.log("Add new equipment")
+    // TODO: Implement add functionality
+  }
+
   const handleExport = () => {
-    console.log("Export LATSUR equipment data to Excel")
+    console.log("Export equipment data to Excel")
     // TODO: Implement Excel export functionality
   }
 
-  const getEquipmentIcon = (tipo: string) => {
-    const equipmentType = equipmentTypes.find((t) => t.value === tipo)
-    return equipmentType ? <equipmentType.icon className="w-4 h-4" /> : <Monitor className="w-4 h-4" />
+  const getCategoryBadgeColor = (categoria: string) => {
+    const categoriaLower = categoria.toLowerCase()
+    if (categoriaLower.includes("workstation") || categoriaLower.includes("pc")) {
+      return "bg-blue-500"
+    } else if (categoriaLower.includes("impresora")) {
+      return "bg-purple-500"
+    } else if (categoriaLower.includes("notebook") || categoriaLower.includes("laptop")) {
+      return "bg-green-500"
+    } else if (categoriaLower.includes("disco") || categoriaLower.includes("storage")) {
+      return "bg-orange-500"
+    } else if (categoriaLower.includes("ups")) {
+      return "bg-yellow-500"
+    } else if (categoriaLower.includes("servidor")) {
+      return "bg-red-500"
+    } else {
+      return "bg-gray-500"
+    }
+  }
+
+  const getCategoryIconComponent = (categoria: string) => {
+    const categoriaLower = categoria.toLowerCase()
+    if (categoriaLower.includes("workstation") || categoriaLower.includes("pc")) {
+      return <Monitor className="w-4 h-4" />
+    } else if (categoriaLower.includes("impresora")) {
+      return <Printer className="w-4 h-4" />
+    } else if (categoriaLower.includes("notebook") || categoriaLower.includes("laptop")) {
+      return <Laptop className="w-4 h-4" />
+    } else if (categoriaLower.includes("disco") || categoriaLower.includes("storage")) {
+      return <HardDrive className="w-4 h-4" />
+    } else if (categoriaLower.includes("ups")) {
+      return <Zap className="w-4 h-4" />
+    } else if (categoriaLower.includes("servidor")) {
+      return <Server className="w-4 h-4" />
+    } else {
+      return <Cpu className="w-4 h-4" />
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-red-500">{error}</p>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
-      {/* Equipment Type Filters */}
-      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg p-6 text-white">
-        <h3 className="text-lg font-semibold mb-4">Filtrar por Tipo de Equipo</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {equipmentTypes.map((type) => (
+      {/* Category Filters */}
+      <div className="bg-gradient-to-r from-cyan-700 to-blue-700 rounded-lg p-6 text-white">
+        <h3 className="text-lg font-semibold mb-4">Filtrar por Categoría</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {categoryFilters.map((filter) => (
             <Button
-              key={type.value}
+              key={filter.value}
               variant="outline"
               className={`flex items-center gap-2 justify-start p-3 h-auto transition-all duration-200 ${
-                activeFilter === type.value
-                  ? "bg-white text-blue-600 border-white hover:bg-gray-100 shadow-md"
-                  : "bg-blue-500/20 border-white/40 text-white hover:bg-white/10 hover:border-white/60 backdrop-blur-sm"
+                activeFilter === filter.value
+                  ? "bg-white text-gray-700 border-white hover:bg-gray-100 shadow-md"
+                  : "bg-blue-600/20 border-white/40 text-white hover:bg-white/10 hover:border-white/60 backdrop-blur-sm"
               }`}
-              onClick={() => setActiveFilter(type.value)}
+              onClick={() => setActiveFilter(filter.value)}
             >
-              <type.icon className="w-4 h-4" />
+              <filter.icon className="w-4 h-4" />
               <div className="text-left">
-                <div className="text-sm font-medium">{type.label}</div>
-                <div className="text-xs opacity-75">{type.count} equipos</div>
+                <div className="text-sm font-medium">{filter.label}</div>
+                <div className="text-xs opacity-75">{filter.count} equipos</div>
               </div>
             </Button>
           ))}
         </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex items-center gap-4">
+        <Button onClick={handleAddEquipment} className="bg-cyan-700 hover:bg-cyan-800">
+          <Plus className="w-4 h-4 mr-2" />
+          Agregar Equipo
+        </Button>
+        <Button
+          onClick={handleExport}
+          className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Exportar Excel
+        </Button>
       </div>
 
       {/* Search and Controls */}
@@ -291,86 +306,79 @@ export function LatsurEquipmentTable() {
             <span className="text-sm text-gray-600">registros por página</span>
           </div>
         </div>
-
-        <Button
-          onClick={handleExport}
-          className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-        >
-          <Download className="w-4 h-4 mr-2" />
-          Exportar Excel
-        </Button>
       </div>
 
       {/* Results Summary */}
       <div className="flex items-center justify-between text-sm">
         <span className="text-gray-600">
-          Mostrando {filteredData.length} equipo{filteredData.length !== 1 ? "s" : ""}
-          {activeFilter !== "TODOS" && ` de tipo ${activeFilter}`}
+          Mostrando {filteredEquipos.length} equipo{filteredEquipos.length !== 1 ? "s" : ""}
+          {activeFilter !== "TODOS" && (
+            <span className="ml-1">
+              ({categoryFilters.find(c => c.value === activeFilter)?.label})
+            </span>
+          )}
         </span>
-        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+        <Badge variant="outline" className="bg-cyan-50 text-cyan-700 border-cyan-200">
           Equipamiento LATSUR
         </Badge>
       </div>
 
       {/* Table */}
       <div className="border rounded-lg overflow-hidden shadow-lg">
-        <div className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white p-4">
+        <div className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-4">
           <h3 className="font-semibold flex items-center gap-2">
-            <Monitor className="w-5 h-5" />
-            Equipamiento Laboratorio LATSUR
+            <HardDrive className="w-5 h-5" />
+            Equipos LATSUR - Instituto Geográfico Militar
           </h3>
         </div>
         <Table>
           <TableHeader>
-            <TableRow className="bg-gradient-to-r from-gray-50 to-blue-50">
-              <TableHead className="font-semibold text-gray-700">Tipo</TableHead>
-              <TableHead className="font-semibold text-gray-700">Modelo</TableHead>
-              <TableHead className="font-semibold text-gray-700">Serie</TableHead>
+            <TableRow className="bg-gradient-to-r from-gray-50 to-slate-50">
+              <TableHead className="font-semibold text-gray-700">Inventario</TableHead>
+              <TableHead className="font-semibold text-gray-700">Nombre PC</TableHead>
               <TableHead className="font-semibold text-gray-700">Marca</TableHead>
-              <TableHead className="font-semibold text-gray-700">Estado</TableHead>
-              <TableHead className="font-semibold text-gray-700">Ubicación</TableHead>
-              <TableHead className="font-semibold text-gray-700">Responsable</TableHead>
-              <TableHead className="font-semibold text-gray-700">Dispositivos Relacionados</TableHead>
+              <TableHead className="font-semibold text-gray-700">Modelo</TableHead>
+              <TableHead className="font-semibold text-gray-700">N° Serie</TableHead>
+              <TableHead className="font-semibold text-gray-700">Categoría</TableHead>
+              <TableHead className="font-semibold text-gray-700">RAM</TableHead>
+              <TableHead className="font-semibold text-gray-700">Almacenamiento</TableHead>
               <TableHead className="font-semibold text-gray-700">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedData.length === 0 ? (
+            {paginatedEquipos.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} className="text-center py-8 text-gray-500">
                   No se encontraron equipos para los criterios seleccionados
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedData.map((equipment, index) => (
-                <TableRow
-                  key={`${equipment.id}-${index}`}
-                  className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 transition-all duration-200"
+              paginatedEquipos.map((equipo) => (
+                <TableRow 
+                  key={equipo.id_equipo} 
+                  className="hover:bg-gradient-to-r hover:from-gray-50 hover:to-slate-50 transition-all duration-200"
                 >
+                  <TableCell className="font-mono text-sm font-semibold">{equipo.llave_inventario || "-"}</TableCell>
+                  <TableCell className="font-medium">{equipo.nombre_pc || "-"}</TableCell>
+                  <TableCell className="font-semibold">{equipo.marca || "-"}</TableCell>
+                  <TableCell>{equipo.modelo || "-"}</TableCell>
+                  <TableCell className="font-mono text-xs">{equipo.numero_serie || "-"}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {getEquipmentIcon(equipment.tipo)}
-                      <span className="font-medium">{equipment.tipo}</span>
+                      {getCategoryIconComponent(equipo.categoria)}
+                      <Badge variant="default" className={getCategoryBadgeColor(equipo.categoria)}>
+                        {equipo.categoria}
+                      </Badge>
                     </div>
                   </TableCell>
-                  <TableCell className="font-medium">{equipment.modelo}</TableCell>
-                  <TableCell className="font-mono text-xs">{equipment.serie}</TableCell>
-                  <TableCell>{equipment.marca}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="default"
-                      className={equipment.estado === "OPERATIVO" ? "bg-green-500" : "bg-orange-500"}
-                    >
-                      {equipment.estado}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="max-w-48 truncate" title={equipment.ubicacion}>
-                    {equipment.ubicacion}
-                  </TableCell>
-                  <TableCell>{equipment.responsable}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                      {equipment.dispositivosRelacionados.length} dispositivos
+                      {equipo.ram || "N/A"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="bg-green-50 text-green-700">
+                      {equipo.almacenamiento || "N/A"}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -378,9 +386,9 @@ export function LatsurEquipmentTable() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0"
-                        onClick={() => handleViewDetails(equipment)}
-                        title="Ver detalles y relaciones"
+                        className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white border-0"
+                        onClick={() => handleViewDetails(equipo)}
+                        title="Ver detalles completos"
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
@@ -388,7 +396,7 @@ export function LatsurEquipmentTable() {
                         size="sm"
                         variant="outline"
                         className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white border-0"
-                        onClick={() => handleEdit(equipment)}
+                        onClick={() => handleEdit(equipo)}
                         title="Editar"
                       >
                         <Edit className="w-4 h-4" />
@@ -397,7 +405,7 @@ export function LatsurEquipmentTable() {
                         size="sm"
                         variant="outline"
                         className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white border-0"
-                        onClick={() => handleDelete(equipment)}
+                        onClick={() => handleDelete(equipo)}
                         title="Eliminar"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -427,7 +435,6 @@ export function LatsurEquipmentTable() {
             Anterior
           </Button>
 
-          {/* Page numbers */}
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
             const pageNum = i + 1
             return (
@@ -436,7 +443,7 @@ export function LatsurEquipmentTable() {
                 variant={currentPage === pageNum ? "default" : "outline"}
                 size="sm"
                 onClick={() => setCurrentPage(pageNum)}
-                className={currentPage === pageNum ? "bg-gradient-to-r from-blue-500 to-cyan-500" : ""}
+                className={currentPage === pageNum ? "bg-cyan-500 hover:bg-cyan-600" : ""}
               >
                 {pageNum}
               </Button>
@@ -455,14 +462,12 @@ export function LatsurEquipmentTable() {
         </div>
       </div>
 
-      {/* Equipment Detail Modal */}
-      {isModalOpen && (
-        <LatsurEquipmentModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          equipment={selectedEquipment}
-        />
-      )}
+      {/* Modal */}
+      <LatsurEquipmentModal
+        equipment={selectedEquipment}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   )
 }

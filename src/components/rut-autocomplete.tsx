@@ -171,13 +171,6 @@ export function RutAutocomplete({ value, onChange, onUserSelected }: RutAutocomp
           ))}
         </div>
       )}
-      
-      {userDetail && (
-        <div className="mt-2 p-3 border rounded bg-gray-50 text-sm">
-          <div><b>Nombre:</b> {userDetail.nombres} {userDetail.apaterno} {userDetail.amaterno}</div>
-          <div><b>Departamento:</b> {userDetail.departamento}</div>
-        </div>
-      )}
     </div>
   )
 }

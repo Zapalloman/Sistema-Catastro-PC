@@ -3,28 +3,40 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { X, Monitor, HardDrive, Cpu, Zap, Wifi, Printer, Glasses, Mouse, Laptop } from "lucide-react"
+import { 
+  Monitor, 
+  Printer, 
+  Laptop, 
+  HardDrive,
+  Calendar,
+  Hash,
+  Tag,
+  Cpu,
+  MemoryStick,
+  Settings,
+  FileText,
+  User,
+  X
+} from "lucide-react"
 
 interface LatsurEquipment {
-  id: string
-  tipo: string
+  id_equipo: number
+  llave_inventario: string
+  nombre_pc: string
   modelo: string
-  serie: string
+  numero_serie: string
+  almacenamiento: string
+  ram: string
+  procesador: string
+  version_sistema_operativo: string
+  version_office: string
+  observaciones: string
+  fecha_ingreso: Date
   marca: string
-  estado: string
-  ubicacion: string
-  fechaInstalacion: string
-  responsable: string
-  especificaciones: Record<string, string>
-  dispositivosRelacionados: RelatedDevice[]
-}
-
-interface RelatedDevice {
-  id: string
-  tipo: string
-  modelo: string
-  serie: string
-  relacion: string
+  categoria: string
+  idcategoria: number
+  cod_ti_marca: number
+  activo: boolean
 }
 
 interface LatsurEquipmentModalProps {
@@ -33,29 +45,25 @@ interface LatsurEquipmentModalProps {
   onClose: () => void
 }
 
-const getEquipmentIcon = (tipo: string) => {
-  switch (tipo.toLowerCase()) {
-    case "workstation":
-      return <Monitor className="w-5 h-5" />
-    case "impresora":
-      return <Printer className="w-5 h-5" />
-    case "ups":
-      return <Zap className="w-5 h-5" />
-    case "kvm":
-      return <Wifi className="w-5 h-5" />
-    case "monitor":
-      return <Monitor className="w-5 h-5" />
-    case "gafas 3d":
-      return <Glasses className="w-5 h-5" />
-    case "mouse 3d":
-      return <Mouse className="w-5 h-5" />
-    case "notebook":
-      return <Laptop className="w-5 h-5" />
-    case "disco externo":
-      return <HardDrive className="w-5 h-5" />
-    default:
-      return <Cpu className="w-5 h-5" />
+const getEquipmentIcon = (categoria: string) => {
+  const categoriaLower = categoria.toLowerCase()
+  if (categoriaLower.includes("workstation") || categoriaLower.includes("pc")) {
+    return <Monitor className="w-5 h-5" />
+  } else if (categoriaLower.includes("impresora")) {
+    return <Printer className="w-5 h-5" />
+  } else if (categoriaLower.includes("notebook") || categoriaLower.includes("laptop")) {
+    return <Laptop className="w-5 h-5" />
+  } else if (categoriaLower.includes("disco") || categoriaLower.includes("storage")) {
+    return <HardDrive className="w-5 h-5" />
+  } else {
+    return <Cpu className="w-5 h-5" />
   }
+}
+
+const formatDate = (date: Date | string) => {
+  if (!date) return "No especificada"
+  const d = new Date(date)
+  return d.toLocaleDateString('es-CL')
 }
 
 export function LatsurEquipmentModal({ equipment, isOpen, onClose }: LatsurEquipmentModalProps) {
@@ -67,7 +75,7 @@ export function LatsurEquipmentModal({ equipment, isOpen, onClose }: LatsurEquip
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {getEquipmentIcon(equipment.tipo)}
+              {getEquipmentIcon(equipment.categoria)}
               Detalles del Equipo LATSUR
             </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -77,35 +85,33 @@ export function LatsurEquipmentModal({ equipment, isOpen, onClose }: LatsurEquip
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Basic Information */}
+          {/* Información Básica */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-lg border border-blue-200">
-                <h3 className="font-semibold text-blue-900 mb-3">Información General</h3>
-                <div className="space-y-2">
+                <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                  <Hash className="w-4 h-4" />
+                  Información General
+                </h3>
+                <div className="space-y-3">
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Tipo de Equipo</label>
-                    <p className="text-lg font-semibold flex items-center gap-2">
-                      {getEquipmentIcon(equipment.tipo)}
-                      {equipment.tipo}
-                    </p>
+                    <label className="text-sm font-medium text-gray-600">ID Equipo</label>
+                    <p className="text-lg font-semibold">{equipment.id_equipo}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Modelo</label>
-                    <p className="text-base">{equipment.modelo}</p>
+                    <label className="text-sm font-medium text-gray-600">Llave Inventario</label>
+                    <p className="font-mono text-sm bg-white p-2 rounded border">{equipment.llave_inventario}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Serie</label>
-                    <p className="font-mono text-sm bg-white p-2 rounded border">{equipment.serie}</p>
+                    <label className="text-sm font-medium text-gray-600">Nombre PC</label>
+                    <p className="text-base">{equipment.nombre_pc}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Estado</label>
+                    <label className="text-sm font-medium text-gray-600">Categoría</label>
                     <div className="mt-1">
-                      <Badge
-                        variant={equipment.estado === "OPERATIVO" ? "default" : "secondary"}
-                        className={equipment.estado === "OPERATIVO" ? "bg-green-500" : "bg-orange-500"}
-                      >
-                        {equipment.estado}
+                      <Badge variant="outline" className="flex items-center gap-1 w-fit">
+                        {getEquipmentIcon(equipment.categoria)}
+                        {equipment.categoria}
                       </Badge>
                     </div>
                   </div>
@@ -115,79 +121,103 @@ export function LatsurEquipmentModal({ equipment, isOpen, onClose }: LatsurEquip
 
             <div className="space-y-4">
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
-                <h3 className="font-semibold text-green-900 mb-3">Información de Asignación</h3>
-                <div className="space-y-2">
+                <h3 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+                  <Tag className="w-4 h-4" />
+                  Identificación
+                </h3>
+                <div className="space-y-3">
                   <div>
                     <label className="text-sm font-medium text-gray-600">Marca</label>
                     <p className="text-base">{equipment.marca}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Ubicación</label>
-                    <p className="text-base">{equipment.ubicacion}</p>
+                    <label className="text-sm font-medium text-gray-600">Modelo</label>
+                    <p className="text-base">{equipment.modelo}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Fecha Instalación</label>
-                    <p className="text-base">{equipment.fechaInstalacion}</p>
+                    <label className="text-sm font-medium text-gray-600">Número de Serie</label>
+                    <p className="font-mono text-sm bg-white p-2 rounded border">{equipment.numero_serie}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Responsable</label>
-                    <p className="text-base">{equipment.responsable}</p>
+                    <label className="text-sm font-medium text-gray-600">Estado</label>
+                    <div className="mt-1">
+                      <Badge
+                        variant={equipment.activo ? "default" : "secondary"}
+                        className={equipment.activo ? "bg-green-500" : "bg-red-500"}
+                      >
+                        {equipment.activo ? "ACTIVO" : "INACTIVO"}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Technical Specifications */}
+          {/* Especificaciones Técnicas */}
           <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-lg border border-purple-200">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-purple-900">
               <Cpu className="w-5 h-5" />
               Especificaciones Técnicas
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(equipment.especificaciones).map(([key, value]) => (
-                <div key={key} className="bg-white p-3 rounded border">
-                  <label className="text-sm font-medium text-gray-600 capitalize">{key.replace("_", " ")}</label>
-                  <p className="text-sm font-semibold">{value}</p>
-                </div>
-              ))}
+              <div className="bg-white p-3 rounded border">
+                <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+                  <Cpu className="w-3 h-3" />
+                  Procesador
+                </label>
+                <p className="text-sm font-semibold">{equipment.procesador || "No especificado"}</p>
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+                  <MemoryStick className="w-3 h-3" />
+                  RAM
+                </label>
+                <p className="text-sm font-semibold">{equipment.ram || "No especificado"}</p>
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+                  <HardDrive className="w-3 h-3" />
+                  Almacenamiento
+                </label>
+                <p className="text-sm font-semibold">{equipment.almacenamiento || "No especificado"}</p>
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+                  <Settings className="w-3 h-3" />
+                  Sistema Operativo
+                </label>
+                <p className="text-sm font-semibold">{equipment.version_sistema_operativo || "No especificado"}</p>
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+                  <FileText className="w-3 h-3" />
+                  Office
+                </label>
+                <p className="text-sm font-semibold">{equipment.version_office || "No especificado"}</p>
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <label className="text-sm font-medium text-gray-600 flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  Fecha Ingreso
+                </label>
+                <p className="text-sm font-semibold">{formatDate(equipment.fecha_ingreso)}</p>
+              </div>
             </div>
           </div>
 
-          {/* Related Devices */}
-          <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-lg border border-orange-200">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-orange-900">
-              <Wifi className="w-5 h-5" />
-              Dispositivos Relacionados ({equipment.dispositivosRelacionados.length})
-            </h3>
-            {equipment.dispositivosRelacionados.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No hay dispositivos relacionados</p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {equipment.dispositivosRelacionados.map((device) => (
-                  <div key={device.id} className="bg-white p-4 rounded-lg border shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        {getEquipmentIcon(device.tipo)}
-                        <span className="font-semibold">{device.tipo}</span>
-                      </div>
-                      <Badge variant="outline" className="text-xs">
-                        {device.relacion}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      <p>
-                        <strong>Modelo:</strong> {device.modelo}
-                      </p>
-                      <p>
-                        <strong>Serie:</strong> <span className="font-mono">{device.serie}</span>
-                      </p>
-                    </div>
-                  </div>
-                ))}
+          {/* Observaciones */}
+          {equipment.observaciones && (
+            <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-lg border border-orange-200">
+              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-orange-900">
+                <FileText className="w-5 h-5" />
+                Observaciones
+              </h3>
+              <div className="bg-white p-4 rounded border">
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{equipment.observaciones}</p>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
