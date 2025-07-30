@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Settings, Users, HardDrive, Laptop, Key, FileText, Monitor, Wifi, Apple, Server } from "lucide-react"
+import { FileCode, Home, Settings, Users, HardDrive, Laptop, Computer, FileText, Monitor, Wifi, Apple, Server } from "lucide-react"
 
 import { usePathname } from "next/navigation"
 import {
@@ -59,7 +59,7 @@ const menuItems = [
   },
   {
     title: "Equipos Z8",
-    icon: Wifi,
+    icon: Computer,
     href: "/estaciones-z8",
     items: [],
   },
@@ -73,6 +73,12 @@ const menuItems = [
     title: "Datacenter",
     icon: Server,
     href: "/datacenter",
+    items: [],
+  },
+  {
+    title: "Software",
+    icon: FileCode,
+    href: "/",  
     items: [],
   }
 ]

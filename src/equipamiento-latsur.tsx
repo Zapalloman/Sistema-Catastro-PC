@@ -25,7 +25,7 @@ export default function EquipamientoLatsur() {
           <LatsurEquipmentTable />
         </div>
 
-       
+        {/* Information Panel */}
         
 
         {/* Information Panel *

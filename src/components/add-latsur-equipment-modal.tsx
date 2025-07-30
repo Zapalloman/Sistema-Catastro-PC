@@ -202,7 +202,7 @@ export function AddLatsurEquipmentModal({ open, onClose, onEquipmentAdded }: Add
           <div className="flex items-center gap-2">
             <span className="text-sm text-blue-700">Todos los equipos LATSUR se asignan automáticamente a:</span>
             <Badge variant="outline" className="bg-blue-100 text-blue-800 font-semibold">
-              EMCO (Instituto Geográfico Militar)
+              EMCO (Propietario de equipos)
             </Badge>
           </div>
         </div>
