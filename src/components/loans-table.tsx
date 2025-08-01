@@ -89,21 +89,23 @@ export function LoansTable({ deviceType }: LoansTableProps) {
       (loan.serie || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (loan.nroRecibo ? loan.nroRecibo.toString() : "").includes(searchTerm);
 
+    // ✅ FILTRAR SOLO PRÉSTAMOS REALMENTE ACTIVOS
+    const isActive = loan.raw?.estado === "1" || loan.raw?.estado === 1;
+    
     let matchesDeviceType = true;
     if (deviceType !== "TODOS") {
-      // Verificar si loan.raw.equipos existe y tiene equipos
       if (Array.isArray(loan.raw?.equipos)) {
         matchesDeviceType = loan.raw.equipos.some((eq) => {
-          // Verificar diferentes formas de acceder a la categoría
           const categoria = eq.categoria?.desc_tipo || eq.categoria?.nombre || eq.categoria;
           return categoria && categoria.toUpperCase() === deviceType.toUpperCase();
         });
       } else {
-        matchesDeviceType = false; // Si no tiene equipos, no coincide con ningún filtro específico
+        matchesDeviceType = false;
       }
     }
 
-    return matchesSearch && matchesDeviceType
+    // ✅ SOLO MOSTRAR PRÉSTAMOS ACTIVOS
+    return matchesSearch && matchesDeviceType && isActive;
   })
 
   // Paginación

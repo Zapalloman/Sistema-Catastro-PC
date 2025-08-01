@@ -96,9 +96,12 @@ export function AsignacionesModal({ open, onClose }: {
         setEquipos(data)
         console.log(`✅ Equipos ${tipo} cargados exitosamente:`, data.length)
         
-        // Debug: mostrar estructura del primer equipo
+        // Debug: mostrar estructura del primer equipo y sus propiedades
         if (data.length > 0) {
-          console.log('Estructura del primer equipo:', data[0])
+          console.log(`📋 Estructura completa de equipos ${tipo}:`, data)
+          console.log('🔍 Estructura del primer equipo:', data[0])
+          console.log('🔍 Propiedades disponibles:', Object.keys(data[0]))
+          console.log('🔍 Categoría del primer equipo:', data[0].categoria)
         }
       }
       
@@ -108,23 +111,66 @@ export function AsignacionesModal({ open, onClose }: {
       console.error(`❌ Error cargando equipos ${tipo}:`, error)
       setEquipos([])
       // Mostrar error al usuario
-      alert(`Error cargando equipos ${tipo}: ${error.message}`)
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+      alert(`Error cargando equipos ${tipo}: ${errorMessage}`)
     } finally {
       setCargandoEquipos(false)
     }
   }
 
+  // NUEVA: Función para cargar categorías según el tipo seleccionado
+  const cargarCategoriasPorTipo = async (tipo: 'IGM' | 'LATSUR' | 'MAC' | 'Z8') => {
+    try {
+      console.log(`=== FRONTEND: Cargando categorías tipo: ${tipo} ===`)
+      
+      const url = `http://localhost:3000/api/asignaciones/categorias/${tipo}`
+      console.log('URL categorías solicitada:', url)
+      
+      const response = await fetch(url)
+      console.log('Respuesta HTTP categorías:', response.status, response.statusText)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Error HTTP categorías:', errorText)
+        throw new Error(`HTTP ${response.status}: ${errorText}`)
+      }
+      
+      const result = await response.json()
+      console.log('Respuesta JSON categorías completa:', result)
+      
+      // Manejar tanto respuesta directa como respuesta con wrapper
+      const data = result.data || result
+      
+      if (!Array.isArray(data)) {
+        console.error('Las categorías recibidas no son un array:', data)
+        setCategoriasEquipos([])
+      } else {
+        setCategoriasEquipos(data)
+        console.log(`✅ Categorías ${tipo} cargadas exitosamente:`, data.length)
+        
+        // Debug: mostrar estructura de todas las categorías
+        console.log(`📋 Estructura completa de categorías ${tipo}:`, data)
+        if (data.length > 0) {
+          console.log('🔍 Estructura de la primera categoría:', data[0])
+          console.log('🔍 Propiedades disponibles:', Object.keys(data[0]))
+        }
+      }
+      
+      // Resetear filtro de categoría
+      setSelectedCategoriaEquipo("TODOS")
+      
+    } catch (error) {
+      console.error(`❌ Error cargando categorías ${tipo}:`, error)
+      setCategoriasEquipos([])
+      // No mostrar alert para categorías, usar fallback silencioso
+    }
+  }
+
   useEffect(() => {
     if (open) {
-      // Cargar equipos del tipo seleccionado inicialmente
+      // Cargar equipos Y categorías del tipo seleccionado inicialmente
       cargarEquiposPorTipo(tipoEquipoSeleccionado)
-
-      // Cargar categorías según el tipo (implementar si es necesario)
-      // Por ahora usar las existentes
-      fetch("http://localhost:3000/api/equipos/categorias")
-        .then(res => res.json())
-        .then(data => setCategoriasEquipos(Array.isArray(data) ? data : []))
-        .catch(err => console.error("Error fetching categorias:", err))
+      cargarCategoriasPorTipo(tipoEquipoSeleccionado)
 
       // Cargar ubicaciones
       fetch("http://localhost:3000/api/equipos/ubicaciones")
@@ -265,8 +311,23 @@ export function AsignacionesModal({ open, onClose }: {
                           eq.numero_serie?.toLowerCase().includes(searchEquipos.toLowerCase()) ||
                           eq.modelo?.toLowerCase().includes(searchEquipos.toLowerCase()))
     
-    const matchesCategory = selectedCategoriaEquipo === "TODOS" || 
-                           eq.categoria === selectedCategoriaEquipo
+    // Para MAC y Z8 no aplicar filtro de categoría (no tienen categorías)
+    if (tipoEquipoSeleccionado === 'MAC' || tipoEquipoSeleccionado === 'Z8') {
+      return matchesSearch
+    }
+    
+    // Para IGM y LATSUR aplicar filtro de categoría
+    const matchesCategory = selectedCategoriaEquipo === "TODOS" || eq.categoria === selectedCategoriaEquipo
+    
+    // Debug mejorado para todos los tipos
+    if (selectedCategoriaEquipo !== "TODOS") {
+      console.log(`🔍 Filtro ${tipoEquipoSeleccionado}:`)
+      console.log(`   - Equipo ID: ${eq.id_equipo}`)
+      console.log(`   - Equipo categoria: "${eq.categoria}"`)
+      console.log(`   - Filtro seleccionado: "${selectedCategoriaEquipo}"`)
+      console.log(`   - Match: ${matchesCategory}`)
+      console.log(`   - Estructura completa del equipo:`, eq)
+    }
     
     return matchesSearch && matchesCategory
   })
@@ -350,6 +411,11 @@ export function AsignacionesModal({ open, onClose }: {
                               onClick={() => {
                                 setTipoEquipoSeleccionado(tipo)
                                 cargarEquiposPorTipo(tipo)
+                                cargarCategoriasPorTipo(tipo)
+                                // Resetear filtro de categoría para MAC y Z8 (no tienen categorías)
+                                if (tipo === 'MAC' || tipo === 'Z8') {
+                                  setSelectedCategoriaEquipo("TODOS")
+                                }
                               }}
                               className={`text-xs h-8 ${
                                 tipoEquipoSeleccionado === tipo 
@@ -440,24 +506,34 @@ export function AsignacionesModal({ open, onClose }: {
                               className="pl-10 h-8 text-sm bg-white"
                             />
                           </div>
-                          <div className="w-48">
-                            <Select value={selectedCategoriaEquipo} onValueChange={setSelectedCategoriaEquipo}>
-                              <SelectTrigger className="h-8 text-sm bg-white">
-                                <SelectValue placeholder="Filtrar por tipo..." />
-                              </SelectTrigger>
-                              <SelectContent className="z-[10000]">
-                                <SelectItem value="TODOS">Todos los tipos</SelectItem>
-                                {categoriasEquipos
-                                  .filter((cat) => cat && cat.desc_tipo && cat.desc_tipo !== "OTRO")
-                                  .sort((a, b) => (a.desc_tipo || "").localeCompare(b.desc_tipo || ""))
-                                  .map((cat) => (
-                                    <SelectItem key={cat.id_tipo} value={cat.desc_tipo}>
-                                      {cat.desc_tipo}
-                                    </SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
+                          {/* Solo mostrar filtro de categoría para IGM y LATSUR */}
+                          {(tipoEquipoSeleccionado === 'IGM' || tipoEquipoSeleccionado === 'LATSUR') && (
+                            <div className="w-48">
+                              <Select value={selectedCategoriaEquipo} onValueChange={setSelectedCategoriaEquipo}>
+                                <SelectTrigger className="h-8 text-sm bg-white">
+                                  <SelectValue placeholder="Filtrar por tipo..." />
+                                </SelectTrigger>
+                                <SelectContent className="z-[10000]">
+                                  <SelectItem value="TODOS">Todos los tipos</SelectItem>
+                                  {categoriasEquipos
+                                    .filter((cat) => {
+                                      // Para IGM: filtrar por desc_tipo
+                                      if (tipoEquipoSeleccionado === 'IGM') {
+                                        return cat && cat.desc_tipo && cat.desc_tipo !== "OTRO"
+                                      }
+                                      // Para LATSUR: filtrar por desc_tipo (que viene mapeado desde nomcategoria)
+                                      return cat && cat.desc_tipo
+                                    })
+                                    .sort((a, b) => (a.desc_tipo || "").localeCompare(b.desc_tipo || ""))
+                                    .map((cat) => (
+                                      <SelectItem key={cat.id_tipo} value={cat.desc_tipo}>
+                                        {cat.desc_tipo}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
                         </div>
                       </CardHeader>
                       <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
@@ -614,7 +690,6 @@ export function AsignacionesModal({ open, onClose }: {
                               value={personaInterviene} 
                               onChange={setPersonaInterviene}
                               onUserSelected={setPersonaIntervieneData}
-                              placeholder="RUT de quien interviene..."
                             />
                           </div>
 
@@ -789,6 +864,3 @@ export function AsignacionesModal({ open, onClose }: {
     </div>
   )
 }
-
-// Al final del archivo, después de la función completa, agregar la exportación:
-export { AsignacionesModal }

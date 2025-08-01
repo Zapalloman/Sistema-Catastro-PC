@@ -33,14 +33,14 @@ const menuItems = [
     href: "/parametros-generales",
     items: [],
   },
-  {
+  /*{
     title: "Parametros de Equipos",
     icon: Monitor,
     href: "/parametros-equipos",
     items: [],
-  },
+  },*/
   {
-    title: "Prestamos",
+    title: "Prestamos externos",
     icon: Users,
     href: "/prestamos",
     items: [],
@@ -78,7 +78,7 @@ const menuItems = [
   {
     title: "Software",
     icon: FileCode,
-    href: "/",  
+    href: "/software",  
     items: [],
   }
 ]

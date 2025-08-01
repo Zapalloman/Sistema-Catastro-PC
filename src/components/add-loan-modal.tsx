@@ -131,12 +131,12 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          equipos: selectedEquipos,
           rut_revisor: rutRevisor,
           rut_entrega: rutEntrega,
           rut_responsable: rutResponsable,
-          equipos: selectedEquipos,
           cargo_prestamo: cargoPrestamo,
-          descripcion: motivo,
+          descripcion: motivo, // ✅ USAR DESCRIPCION EN LUGAR DE MOTIVO
           firma1_nombre: firma1.nombre,
           firma1_cargo_militar: firma1.cargoMilitar,
           firma1_cargo_departamento: firma1.cargoDepto,
@@ -157,7 +157,8 @@ export function AddLoanModal({ open, onClose, onLoanAdded }: AddLoanModalProps) 
 
       const prestamo = await response.json()
 
-      window.open(`http://localhost:3000/api/prestamos/${prestamo.id_prestamo}/documento`, "_blank")
+      // ✅ CORREGIR LA URL - USAR LA CORRECTA
+      window.open(`http://localhost:3000/api/prestamos/descargar-documento/${prestamo.id_prestamo}`, "_blank")
 
       handleClose()
       onLoanAdded && onLoanAdded()

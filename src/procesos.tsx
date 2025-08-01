@@ -4,7 +4,9 @@ import { useState } from "react"
 import { ProcessLayout } from "./components/process-layout"
 import { ProcessCard } from "./components/process-card"
 import { AsignacionesModal } from "./components/asignaciones-modal"
-import { UserPlus, RefreshCw, ArrowRightLeft, FileCheck, Settings } from "lucide-react"
+import BajasEquipoModal from './components/BajasEquipoModal'
+import DevolucionModal from './components/DevolucionModal'
+import { UserPlus, RefreshCw, ArrowRightLeft, FileCheck, Settings, Trash2 } from "lucide-react"
 
 // Process data
 const processData = [
@@ -40,6 +42,8 @@ const processData = [
 
 export default function Procesos() {
   const [showAsignaciones, setShowAsignaciones] = useState(false)
+  const [showBajas, setShowBajas] = useState(false)
+  const [showDevolucion, setShowDevolucion] = useState(false) // ✅ NUEVO
 
   const handleProcessClick = (processTitle: string) => {
     switch (processTitle) {
@@ -47,10 +51,10 @@ export default function Procesos() {
         setShowAsignaciones(true)
         break
       case "Bajas":
-        alert("Módulo de Bajas - Próximamente disponible")
+        setShowBajas(true)
         break
       case "Devolución Arriendo":
-        alert("Módulo de Devolución Arriendo - Próximamente disponible") 
+        setShowDevolucion(true) // ✅ NUEVO
         break
       case "Recibo":
         alert("Módulo de Recibos - Próximamente disponible")
@@ -86,7 +90,7 @@ export default function Procesos() {
           ))}
         </div>
 
-        {/* Métricas mejoradas */}
+        {/* Métricas mejoradas - MANTENER */}
         <div className="mt-12 bg-white rounded-lg shadow-sm border p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Resumen de Procesos</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -143,6 +147,18 @@ export default function Procesos() {
       <AsignacionesModal 
         open={showAsignaciones} 
         onClose={() => setShowAsignaciones(false)} 
+      />
+
+      {/* Modal de Bajas */}
+      <BajasEquipoModal 
+        open={showBajas} 
+        onClose={() => setShowBajas(false)} 
+      />
+
+      {/* ✅ NUEVO: Modal de Devolución */}
+      <DevolucionModal 
+        open={showDevolucion} 
+        onClose={() => setShowDevolucion(false)} 
       />
     </ProcessLayout>
   )
