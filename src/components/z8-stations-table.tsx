@@ -8,6 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Edit, Trash2, Search, Download, ChevronLeft, ChevronRight, Eye, Wifi, WifiOff, Plus } from "lucide-react"
 import { Z8StationModal } from "./z8-stations-modal"
+import { AddZ8EquipmentModal } from "./add-z8-equipment-modal"
+import { Z8StationDetailsModal } from "./z8-station-details-modal"
 
 interface Z8Equipment {
   id_equipo: number;
@@ -46,30 +48,44 @@ export function Z8StationsTable() {
   const [activeFilter, setActiveFilter] = useState("TODOS")
   const [selectedStation, setSelectedStation] = useState<Z8Equipment | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
   // Cargar equipos Z8
-  useEffect(() => {
-    const loadEquipos = async () => {
-      try {
-        setLoading(true)
-        let url = "http://localhost:3000/api/equipos-z8"
-        
-        if (activeFilter !== "TODOS") {
+  const loadEquipos = async () => {
+    try {
+      setLoading(true)
+      
+      let url = "http://localhost:3000/api/equipos-z8"
+      
+      if (activeFilter !== "TODOS") {
+        if (activeFilter === "ASIGNADO" || activeFilter === "DISPONIBLE") {
+          // Para filtros de estado, usar el endpoint principal y filtrar
+          const response = await fetch(url)
+          const allData = await response.json()
+          const filteredData = Array.isArray(allData) 
+            ? allData.filter(eq => eq.estado_asignacion === activeFilter)
+            : []
+          setEquipos(filteredData)
+          console.log(`📊 ${filteredData.length} equipos Z8 ${activeFilter} cargados`)
+          return
+        } else {
           url += `/categoria/${activeFilter}`
         }
-        
-        const response = await fetch(url)
-        const data = await response.json()
-        setEquipos(Array.isArray(data) ? data : [])
-        console.log(`📊 ${data.length} equipos Z8 cargados`)
-      } catch (error) {
-        console.error("Error al cargar equipos Z8:", error)
-        setError("No se pudieron cargar los equipos Z8")
-      } finally {
-        setLoading(false)
       }
+      
+      const response = await fetch(url)
+      const data = await response.json()
+      setEquipos(Array.isArray(data) ? data : [])
+      console.log(`📊 ${data.length} equipos Z8 cargados`)
+    } catch (error) {
+      console.error("Error al cargar equipos Z8:", error)
+      setError("No se pudieron cargar los equipos Z8")
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     loadEquipos()
   }, [activeFilter])
 
@@ -88,26 +104,17 @@ export function Z8StationsTable() {
     loadCategorias()
   }, [])
 
-  // Filtros de categoría
-  const categoryFilters = [
-    {
-      value: "TODOS",
-      label: "Todas las Estaciones",
-      icon: "🖥️",
-      count: equipos.length
-    },
-    ...categorias.map(categoria => ({
-      value: categoria.categoria,
-      label: categoria.categoria,
-      icon: "🖥️",
-      count: categoria.cantidad
-    }))
+  // ✅ FILTROS CON DISEÑO DE MAC - Adaptados para Z8
+  const statusFilters = [
+    { value: "TODOS", label: "Todas las Estaciones", icon: Wifi, count: equipos.length },
+    { value: "ASIGNADO", label: "Asignadas", icon: Wifi, count: equipos.filter(eq => eq.estado_asignacion === "ASIGNADO").length },
+    { value: "DISPONIBLE", label: "Disponibles", icon: WifiOff, count: equipos.filter(eq => eq.estado_asignacion === "DISPONIBLE").length },
   ]
 
-  // Filtrar equipos por búsqueda
+  // Filtrar equipos por búsqueda y filtro activo
   const filteredEquipos = equipos.filter((equipo) => {
     const searchLower = searchTerm.toLowerCase()
-    return (
+    const matchesSearch = (
       (equipo.nombre_pc || "").toLowerCase().includes(searchLower) ||
       (equipo.numero_serie || "").toLowerCase().includes(searchLower) ||
       (equipo.modelo || "").toLowerCase().includes(searchLower) ||
@@ -115,6 +122,10 @@ export function Z8StationsTable() {
       (equipo.usuario_asignado_nombre || "").toLowerCase().includes(searchLower) ||
       (equipo.marca || "").toLowerCase().includes(searchLower)
     )
+
+    const matchesFilter = activeFilter === "TODOS" || equipo.estado_asignacion === activeFilter
+
+    return matchesSearch && matchesFilter
   })
 
   // Paginación
@@ -144,7 +155,12 @@ export function Z8StationsTable() {
 
   const handleAddStation = () => {
     console.log("Add new Z8 station")
-    // TODO: Implement add station functionality
+    setIsAddModalOpen(true)
+  }
+
+  const handleEquipmentAdded = () => {
+    // Recargar la lista de equipos Z8
+    loadEquipos()
   }
 
   const getStatusIcon = (estado: string) => {
@@ -186,34 +202,37 @@ export function Z8StationsTable() {
 
   return (
     <div className="space-y-6">
-      {/* Header con filtros de categoría */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-        {categoryFilters.map((filter) => (
-          <Button
-            key={filter.value}
-            variant={activeFilter === filter.value ? "default" : "outline"}
-            className={`flex flex-col items-center gap-2 h-auto p-4 ${
-              activeFilter === filter.value
-                ? "bg-blue-500 hover:bg-blue-600 text-white"
-                : "hover:bg-gray-50"
-            }`}
-            onClick={() => {
-              setActiveFilter(filter.value)
-              setCurrentPage(1)
-            }}
-          >
-            <span className="text-lg">{filter.icon}</span>
-            <div className="text-center">
-              <div className="text-xs font-medium">{filter.label}</div>
-              <div className="text-xs opacity-70">{filter.count}</div>
-            </div>
-          </Button>
-        ))}
+      {/* ✅ FILTROS CON DISEÑO DE MAC - Copiado exactamente */}
+      <div className="bg-gradient-to-r from-purple-700 to-indigo-700 rounded-lg p-6 text-white">
+        <h3 className="text-lg font-semibold mb-4">Filtrar por Estado</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {statusFilters.map((filter) => (
+            <Button
+              key={filter.value}
+              variant="outline"
+              className={`flex items-center gap-2 justify-start p-3 h-auto transition-all duration-200 ${
+                activeFilter === filter.value
+                  ? "bg-white text-purple-700 border-white hover:bg-gray-100 shadow-md"
+                  : "bg-purple-600/20 border-white/40 text-white hover:bg-white/10 hover:border-white/60 backdrop-blur-sm"
+              }`}
+              onClick={() => {
+                setActiveFilter(filter.value)
+                setCurrentPage(1)
+              }}
+            >
+              <filter.icon className="w-4 h-4" />
+              <div className="text-left">
+                <div className="text-sm font-medium">{filter.label}</div>
+                <div className="text-xs opacity-75">{filter.count} estaciones</div>
+              </div>
+            </Button>
+          ))}
+        </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center justify-between">
-        <Button onClick={handleAddStation} className="bg-blue-600 hover:bg-blue-700">
+      {/* ✅ BOTONES DE ACCIÓN CON DISEÑO DE MAC */}
+      <div className="flex items-center gap-4">
+        <Button onClick={handleAddStation} className="bg-purple-700 hover:bg-purple-800">
           <Plus className="w-4 h-4 mr-2" />
           Agregar Estación Z8
         </Button>
@@ -260,22 +279,24 @@ export function Z8StationsTable() {
       <div className="flex items-center justify-between text-sm">
         <span className="text-gray-600">
           Mostrando {filteredEquipos.length} estación{filteredEquipos.length !== 1 ? "es" : ""}
-          {activeFilter !== "TODOS" && (
-            <span className="ml-1">
-              ({categoryFilters.find(c => c.value === activeFilter)?.label})
-            </span>
-          )}
+          {activeFilter !== "TODOS" && ` con estado ${activeFilter}`}
         </span>
         <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
           Estaciones Z8
         </Badge>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+      {/* ✅ TABLA CON DISEÑO DE MAC - Header con gradiente */}
+      <div className="border rounded-lg overflow-hidden shadow-lg">
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4">
+          <h3 className="font-semibold flex items-center gap-2">
+            <Wifi className="w-5 h-5" />
+            Estaciones Z8 - Instituto Geográfico Militar
+          </h3>
+        </div>
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50">
+            <TableRow className="bg-gradient-to-r from-purple-50 to-indigo-50">
               <TableHead className="font-semibold text-gray-700">Serie</TableHead>
               <TableHead className="font-semibold text-gray-700">IP</TableHead>
               <TableHead className="font-semibold text-gray-700">Estado</TableHead>
@@ -378,30 +399,21 @@ export function Z8StationsTable() {
             Anterior
           </Button>
 
-          {(() => {
-            const pageWindow = 5
-            let startPage = Math.max(1, currentPage - Math.floor(pageWindow / 2))
-            let endPage = Math.min(totalPages, startPage + pageWindow - 1)
-            
-            if (endPage - startPage < pageWindow - 1) {
-              startPage = Math.max(1, endPage - pageWindow + 1)
-            }
-
-            return Array.from({ length: endPage - startPage + 1 }, (_, i) => {
-              const pageNum = startPage + i
-              return (
-                <Button
-                  key={pageNum}
-                  variant={currentPage === pageNum ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={currentPage === pageNum ? "bg-blue-500" : ""}
-                >
-                  {pageNum}
-                </Button>
-              )
-            })
-          })()}
+          {/* ✅ PAGINACIÓN SIMPLE COMO EN MAC */}
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            const pageNum = i + 1
+            return (
+              <Button
+                key={pageNum}
+                variant={currentPage === pageNum ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentPage(pageNum)}
+                className={currentPage === pageNum ? "bg-gradient-to-r from-purple-500 to-indigo-500" : ""}
+              >
+                {pageNum}
+              </Button>
+            )
+          })}
 
           <Button
             variant="outline"
@@ -415,9 +427,16 @@ export function Z8StationsTable() {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Modal para agregar estación */}
+      <AddZ8EquipmentModal
+        open={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onEquipmentAdded={handleEquipmentAdded}
+      />
+
+      {/* Modal de detalles */}
       {selectedStation && (
-        <Z8StationModal
+        <Z8StationDetailsModal
           station={selectedStation}
           isOpen={isModalOpen}
           onClose={() => {
