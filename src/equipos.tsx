@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Monitor, Filter, Trash2, AlertTriangle, Eye } from "lucide-react"
 import { EquipmentTable } from "@/components/equipment-table"
 import { AddEquipmentModal } from "@/components/add-equipment-modal"
+import { PDFEquipmentGenerator } from "@/components/pdf-equipment-generator"
 import { ProcessLayout } from "./components/process-layout" // CORREGIDO: Cambiar import
 
 function groupCount(arr, keyFn) {
@@ -208,9 +209,9 @@ export default function Equipos() {
         <div className="flex items-center gap-3 mb-8">
           <Monitor className="w-8 h-8 text-blue-600" />
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Equipos</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Equipamiento IGM</h1>
             <p className="text-gray-600 mt-1">
-              Gestiona y visualiza todos los equipos de cómputo del Instituto Geográfico Militar. Filtra por propietario
+              Gestiona y visualiza todo el equipamiento del Instituto Geográfico Militar. Filtra por propietario
               para ver información detallada de cada equipo.
             </p>
           </div>
@@ -249,6 +250,7 @@ export default function Equipos() {
               <Plus className="w-4 h-4 mr-2" />
               Agregar Equipo
             </Button>
+            <PDFEquipmentGenerator className="mt-6" />
           </div>
         </div>
 

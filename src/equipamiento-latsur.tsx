@@ -2,6 +2,7 @@
 
 import { ProcessLayout } from "./components/process-layout"
 import { LatsurEquipmentTable } from "./components/latsur-equipment-table"
+import { PDFEquipmentGenerator } from "./components/pdf-equipment-generator"
 import { HardDrive, Activity, Users, Zap } from "lucide-react"
 
 export default function EquipamientoLatsur() {
@@ -11,13 +12,14 @@ export default function EquipamientoLatsur() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <HardDrive className="w-8 h-8 text-cyan-600" />
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-bold text-gray-900">Equipamiento LATSUR</h1>
             <p className="text-gray-600 mt-1">
               Gestiona y visualiza todos los equipos especializados  LATSUR. Explora las relaciones entre
               dispositivos y supervisa el estado operativo de cada equipo.
             </p>
           </div>
+          <PDFEquipmentGenerator />
         </div>
 
         {/* LATSUR Equipment Table */}

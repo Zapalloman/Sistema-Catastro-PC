@@ -47,6 +47,9 @@ export function AsignacionesModal({ open, onClose }: {
   // NUEVO: Estados para tipo de equipo
   const [tipoEquipoSeleccionado, setTipoEquipoSeleccionado] = useState<'IGM' | 'LATSUR' | 'MAC' | 'Z8'>('IGM')
   const [cargandoEquipos, setCargandoEquipos] = useState(false)
+  
+  // ✅ NUEVO: Estado para tipo de documento a generar
+  const [tipoDocumento, setTipoDocumento] = useState<'word' | 'duales'>('word')
 
   // Estados existentes...
   const [loading, setLoading] = useState(false)
@@ -233,6 +236,39 @@ export function AsignacionesModal({ open, onClose }: {
     }
   };
 
+  // ✅ NUEVA FUNCIÓN: Descargar ZIP con Word y PDF
+  const descargarDocumentosDuales = (response: any) => {
+    try {
+      // Crear blob del archivo ZIP
+      const blob = new Blob([response], {
+        type: 'application/zip'
+      });
+      
+      // Crear enlace de descarga
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Asignacion_${tipoEquipoSeleccionado}_${selectedUser}_${new Date().getTime()}_documentos.zip`;
+      link.style.display = 'none';
+      
+      // Descargar
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Limpiar recursos
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 2000);
+      
+      console.log('✅ Documentos duales (Word + PDF) descargados exitosamente');
+      
+    } catch (error) {
+      console.error('Error descargando documentos duales:', error);
+      alert('Error al descargar los documentos');
+    }
+  };
+
   // ACTUALIZADO: Función de asignación con apertura automática mejorada
   const handleAsignar = async () => {
     if (!selectedUser || selectedEquipos.length === 0) {
@@ -264,19 +300,28 @@ export function AsignacionesModal({ open, onClose }: {
 
       console.log("Enviando datos de asignación:", datosAsignacion)
 
-      // ✅ VOLVER AL ENDPOINT ORIGINAL QUE FUNCIONA
-      const response = await fetch("http://localhost:3000/api/asignaciones/generar-documento", {
+      // ✅ ELEGIR ENDPOINT SEGÚN TIPO DE DOCUMENTO
+      const endpoint = tipoDocumento === 'duales' 
+        ? "http://localhost:3000/api/asignaciones/generar-documentos-duales"
+        : "http://localhost:3000/api/asignaciones/generar-documento"
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(datosAsignacion),
       })
 
       if (response.ok) {
-        // ✅ SIMPLIFICADO: Solo descargar Word
         const buffer = await response.arrayBuffer()
-        descargarDocumentoWord(buffer)
         
-        alert(`✅ Asignación de dispositivos ${tipoEquipoSeleccionado} creada exitosamente.\n\n📄 Documento Word descargado`)
+        // ✅ DESCARGAR SEGÚN TIPO SELECCIONADO
+        if (tipoDocumento === 'duales') {
+          descargarDocumentosDuales(buffer)
+          alert(`✅ Asignación de dispositivos ${tipoEquipoSeleccionado} creada exitosamente.\n\n📄 Documentos Word y PDF descargados en ZIP`)
+        } else {
+          descargarDocumentoWord(buffer)
+          alert(`✅ Asignación de dispositivos ${tipoEquipoSeleccionado} creada exitosamente.\n\n📄 Documento Word descargado`)
+        }
         
         // Recargar datos y limpiar formulario
         fetch("http://localhost:3000/api/asignaciones")
@@ -747,6 +792,37 @@ export function AsignacionesModal({ open, onClose }: {
                               placeholder="Observaciones o notas adicionales para el documento..."
                               style={{ height: '80px' }}
                             />
+                          </div>
+
+                          {/* ✅ NUEVO: Selector de Tipo de Documento */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Tipo de Documento a Generar
+                            </label>
+                            <Select value={tipoDocumento} onValueChange={(value: 'word' | 'duales') => setTipoDocumento(value)}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="word">
+                                  <div className="flex items-center gap-2">
+                                    <FileText className="w-4 h-4 text-blue-600" />
+                                    Solo Word (.docx)
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="duales">
+                                  <div className="flex items-center gap-2">
+                                    <FileText className="w-4 h-4 text-red-600" />
+                                    Word + PDF (ZIP)
+                                  </div>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {tipoDocumento === 'word' 
+                                ? 'Se generará solo el documento Word tradicional' 
+                                : 'Se generarán ambos documentos en un archivo ZIP'}
+                            </p>
                           </div>
 
                           {/* ✅ ACTUALIZAR el botón del formulario */}

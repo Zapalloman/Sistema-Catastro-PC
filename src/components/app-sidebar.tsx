@@ -47,7 +47,7 @@ const menuItems = [
     items: [],
   },
   {
-    title: "Equipos IGM",
+    title: "Equipamiento IGM",
     icon: Laptop,
     href: "/equipos",
     items: [],
