@@ -8,6 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+// ✅ CORREGIR IMPORTS DE DIALOG
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog"
 import { RutAutocomplete } from "@/components/rut-autocomplete"
 import { 
   Users, 
@@ -17,7 +24,7 @@ import {
   Monitor, 
   User, 
   Search,
-  X,           // <- ESTE IMPORT ES CRUCIAL
+  X,           
   Building,
   Calendar,
   MapPin,
@@ -45,6 +52,8 @@ export function AsignacionesModal({ open, onClose }: {
   const [loading, setLoading] = useState(false)
   const [searchEquipos, setSearchEquipos] = useState("")
   const [selectedCategoriaEquipo, setSelectedCategoriaEquipo] = useState("TODOS")
+  
+  // NUEVA: Estados para categorías dinámicas
   const [categoriasEquipos, setCategoriasEquipos] = useState<any[]>([])
   
   // Estados del documento...
@@ -53,8 +62,6 @@ export function AsignacionesModal({ open, onClose }: {
   const [nDePt, setNDePt] = useState("")
   const [ubicacionTipo, setUbicacionTipo] = useState("")
   const [ubicacionEspecifica, setUbicacionEspecifica] = useState("")
-  const [personaInterviene, setPersonaInterviene] = useState("")
-  const [personaIntervieneData, setPersonaIntervieneData] = useState<any>(null)
   const [distribucion, setDistribucion] = useState("2. Ejs. 1 Hja")
   const [nota, setNota] = useState("")
 
@@ -193,14 +200,99 @@ export function AsignacionesModal({ open, onClose }: {
     }
   }, [open, tipoEquipoSeleccionado])
 
-  // ACTUALIZADO: Función de asignación con tipo de equipo
+  // ✅ VERSIÓN SIMPLE Y EFECTIVA
+  const abrirArchivoAutomaticamente = (blob: Blob, fileName: string) => {
+    const url = window.URL.createObjectURL(blob)
+    
+    // Crear enlace de descarga
+    const link = document.createElement('a')
+    link.href = url
+    link.download = fileName
+    link.style.display = 'none'
+    document.body.appendChild(link)
+    
+    // Descargar
+    link.click()
+    
+    // Mostrar mensaje al usuario con opción de abrir
+    setTimeout(() => {
+      const userChoice = confirm(
+        `Archivo "${fileName}" descargado exitosamente.\n\n¿Desea abrirlo ahora?`
+      )
+      
+      if (userChoice) {
+        // Abrir en nueva pestaña
+        const openWindow = window.open(url, '_blank')
+        if (!openWindow) {
+          alert('Por favor, permita ventanas emergentes para abrir el archivo automáticamente.')
+        }
+      }
+      
+      // Limpiar recursos
+      setTimeout(() => {
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      }, 2000)
+    }, 1000)
+  }
+
+  // ✅ NUEVA FUNCIÓN: Manejar respuesta doble
+  const manejarDocumentoDoble = (response: any) => {
+    try {
+      // 1. Descargar el archivo Word
+      const wordBlob = new Blob([
+        Uint8Array.from(atob(response.word.data), c => c.charCodeAt(0))
+      ], { type: response.word.mimetype });
+      
+      const wordUrl = window.URL.createObjectURL(wordBlob);
+      const downloadLink = document.createElement('a');
+      downloadLink.href = wordUrl;
+      downloadLink.download = response.word.filename;
+      downloadLink.style.display = 'none';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      
+      // 2. Mostrar el PDF en nueva pestaña
+      const pdfBlob = new Blob([
+        Uint8Array.from(atob(response.pdf.data), c => c.charCodeAt(0))
+      ], { type: response.pdf.mimetype });
+      
+      const pdfUrl = window.URL.createObjectURL(pdfBlob);
+      const pdfWindow = window.open('', '_blank');
+      
+      if (pdfWindow) {
+        pdfWindow.location.href = pdfUrl;
+      } else {
+        // Si el popup fue bloqueado, crear enlace manual
+        const pdfLink = document.createElement('a');
+        pdfLink.href = pdfUrl;
+        pdfLink.target = '_blank';
+        pdfLink.click();
+      }
+      
+      // Limpiar recursos después de un tiempo
+      setTimeout(() => {
+        window.URL.revokeObjectURL(wordUrl);
+        window.URL.revokeObjectURL(pdfUrl);
+      }, 10000);
+      
+      console.log('✅ Word descargado y PDF mostrado exitosamente');
+      
+    } catch (error) {
+      console.error('Error procesando documentos:', error);
+      alert('Error al procesar los documentos generados');
+    }
+  };
+
+  // ACTUALIZADO: Función de asignación con apertura automática mejorada
   const handleAsignar = async () => {
     if (!selectedUser || selectedEquipos.length === 0) {
       alert("Seleccione un usuario y al menos un equipo")
       return
     }
 
-    if (!grado || !seccion || !nDePt || !ubicacionTipo || !ubicacionEspecifica || !personaInterviene) {
+    if (!grado || !seccion || !nDePt || !ubicacionTipo || !ubicacionEspecifica) {
       alert("Por favor complete todos los campos obligatorios para el documento")
       return
     }
@@ -211,42 +303,35 @@ export function AsignacionesModal({ open, onClose }: {
       const datosAsignacion = {
         usuario_rut: selectedUser,
         equipos_ids: selectedEquipos,
-        tipo_equipo: tipoEquipoSeleccionado, // NUEVO: Incluir tipo de equipo
+        tipo_equipo: tipoEquipoSeleccionado,
         grado: grado,
         seccion: seccion,
         n_de_pt: nDePt,
         ubicacion_tipo: ubicacionTipo,
         ubicacion_especifica: ubicacionEspecifica,
-        persona_interviene_rut: personaInterviene,
         distribucion: distribucion,
         nota: nota,
         usuario_datos: selectedUserData,
-        persona_interviene_datos: personaIntervieneData
       }
 
-      console.log("Enviando datos de asignación multi-tipo:", datosAsignacion)
+      console.log("Enviando datos de asignación multi-formato:", datosAsignacion)
 
-      const response = await fetch("http://localhost:3000/api/asignaciones/generar-documento", {
+      // ✅ USAR NUEVO ENDPOINT QUE GENERA AMBOS FORMATOS
+      const response = await fetch("http://localhost:3000/api/asignaciones/generar-documento-doble", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(datosAsignacion),
       })
 
       if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.style.display = 'none'
-        a.href = url
-        a.download = `Asignacion_${tipoEquipoSeleccionado}_${selectedUser}_${new Date().getTime()}.docx`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-
-        alert(`Asignación de equipos ${tipoEquipoSeleccionado} creada exitosamente`)
+        const documentosResponse = await response.json()
         
-        // Recargar datos
+        // ✅ MANEJAR AMBOS DOCUMENTOS
+        manejarDocumentoDoble(documentosResponse)
+
+        alert(`✅ Asignación de dispositivos ${tipoEquipoSeleccionado} creada exitosamente.\n\n📄 Documento Word descargado\n🔍 PDF abierto en nueva pestaña`)
+        
+        // Recargar datos y limpiar formulario (igual que antes)
         fetch("http://localhost:3000/api/asignaciones")
           .then(res => res.json())
           .then(data => setAsignacionesActivas(Array.isArray(data) ? data : []))
@@ -264,14 +349,12 @@ export function AsignacionesModal({ open, onClose }: {
         setNDePt("")
         setUbicacionTipo("")
         setUbicacionEspecifica("")
-        setPersonaInterviene("")
-        setPersonaIntervieneData(null)
         setDistribucion("2. Ejs. 1 Hja")
         setNota("")
         
         setActiveTab("activas")
       } else {
-        throw new Error('Error al generar documento')
+        throw new Error('Error al generar documentos')
       }
     } catch (error) {
       console.error("Error:", error)
@@ -332,24 +415,35 @@ export function AsignacionesModal({ open, onClose }: {
     return matchesSearch && matchesCategory
   })
 
-  if (!open) return null
-
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-2">
-      <div 
-        className="bg-white rounded-lg shadow-2xl flex flex-col w-full h-full max-w-none overflow-hidden"
-        style={{ width: '98vw', height: '96vh' }}
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent 
+        className="p-0 overflow-hidden border-0"
+        style={{
+          maxWidth: '98vw',
+          width: '98vw', 
+          height: '98vh',
+          maxHeight: '98vh'
+        }}
       >
-        {/* HEADER */}
-        <div className="w-full shrink-0 border-b bg-gradient-to-r from-blue-600 to-blue-800 text-white px-4 py-3 rounded-t-lg">
+        {/* ✅ AGREGAR DialogHeader y DialogTitle para accesibilidad */}
+        <DialogHeader className="sr-only">
+          <DialogTitle>Sistema de Asignaciones Multi-Equipos IGM</DialogTitle>
+        </DialogHeader>
+
+        {/* HEADER VISUAL */}
+        <div 
+          className="w-full shrink-0 border-b bg-gradient-to-r from-blue-600 to-blue-800 text-white"
+          style={{ padding: '24px' }}
+        >
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
-              <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
-                <Users className="w-5 h-5" />
+              <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                <Users className="w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-lg font-bold">Sistema de Asignaciones Multi-Equipos IGM</h1>
-                <p className="text-blue-100 text-xs font-normal mt-0.5">
+                <h1 className="text-xl font-bold">Sistema de Asignaciones Multi-Equipos IGM</h1>
+                <p className="text-blue-100 text-sm font-normal mt-1">
                   Gestión integral de asignaciones para equipos IGM, LATSUR, MAC y Z8
                 </p>
               </div>
@@ -359,51 +453,49 @@ export function AsignacionesModal({ open, onClose }: {
               onClick={onClose}
               className="text-white hover:bg-white/20 p-2 h-auto"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </Button>
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col w-full">
+        <div className="flex-1 flex flex-col overflow-hidden" style={{ height: 'calc(98vh - 120px)' }}>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden h-full">
             {/* TABS NAVIGATION */}
-            <div className="w-full shrink-0 border-b bg-gray-50">
-              <div className="px-4 py-2">
-                <TabsList className="grid w-full grid-cols-3 bg-white shadow-sm border">
-                  <TabsTrigger value="asignar" className="flex items-center gap-1.5 text-xs font-medium py-1.5">
-                    <FileText className="w-3.5 h-3.5" />
-                    Nueva Asignación
-                  </TabsTrigger>
-                  <TabsTrigger value="activas" className="flex items-center gap-1.5 text-xs font-medium py-1.5">
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    Activas ({asignacionesActivas.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="historial" className="flex items-center gap-1.5 text-xs font-medium py-1.5">
-                    <Clock className="w-3.5 h-3.5" />
-                    Historial ({historialAsignaciones.length})
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+            <div className="w-full shrink-0 border-b bg-gray-50" style={{ padding: '16px 24px' }}>
+              <TabsList className="grid w-full grid-cols-3 bg-white shadow-sm border h-12">
+                <TabsTrigger value="asignar" className="flex items-center gap-2 text-sm font-medium">
+                  <FileText className="w-4 h-4" />
+                  Nueva Asignación
+                </TabsTrigger>
+                <TabsTrigger value="activas" className="flex items-center gap-2 text-sm font-medium">
+                  <CheckCircle className="w-4 h-4" />
+                  Activas ({asignacionesActivas.length})
+                </TabsTrigger>
+                <TabsTrigger value="historial" className="flex items-center gap-2 text-sm font-medium">
+                  <Clock className="w-4 h-4" />
+                  Historial ({historialAsignaciones.length})
+                </TabsTrigger>
+              </TabsList>
             </div>
 
             {/* TAB: Nueva Asignación */}
             <TabsContent value="asignar" className="flex-1 overflow-hidden m-0 w-full">
-              <div className="h-full w-full p-3">
-                <div className="grid grid-cols-12 gap-3 h-full w-full">
+              <div className="h-full w-full" style={{ padding: '24px' }}>
+                <div className="h-full w-full" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
                   
                   {/* COLUMNA IZQUIERDA: Tipo de Equipos, Usuario y Equipos */}
-                  <div className="col-span-8 space-y-3 h-full flex flex-col">
+                  <div className="h-full flex flex-col" style={{ gap: '16px' }}>
                     
                     {/* NUEVO: Selector de Tipo de Equipo */}
                     <Card className="shadow-lg border-0 shrink-0">
-                      <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-lg py-2">
-                        <CardTitle className="flex items-center gap-2 text-purple-900 text-base">
-                          <Monitor className="w-4 h-4" />
+                      <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-lg" style={{ padding: '16px' }}>
+                        <CardTitle className="flex items-center gap-2 text-purple-900 text-lg">
+                          <Monitor className="w-5 h-5" />
                           Tipo de Equipos a Asignar
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="p-3">
-                        <div className="grid grid-cols-4 gap-2">
+                      <CardContent style={{ padding: '16px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
                           {(['IGM', 'LATSUR', 'MAC', 'Z8'] as const).map((tipo) => (
                             <Button
                               key={tipo}
@@ -412,45 +504,45 @@ export function AsignacionesModal({ open, onClose }: {
                                 setTipoEquipoSeleccionado(tipo)
                                 cargarEquiposPorTipo(tipo)
                                 cargarCategoriasPorTipo(tipo)
-                                // Resetear filtro de categoría para MAC y Z8 (no tienen categorías)
                                 if (tipo === 'MAC' || tipo === 'Z8') {
                                   setSelectedCategoriaEquipo("TODOS")
                                 }
                               }}
-                              className={`text-xs h-8 ${
+                              className={`text-sm ${
                                 tipoEquipoSeleccionado === tipo 
                                   ? 'bg-purple-600 hover:bg-purple-700' 
                                   : 'hover:bg-purple-50'
                               }`}
+                              style={{ height: '40px' }}
                               disabled={cargandoEquipos}
                             >
                               {cargandoEquipos && tipoEquipoSeleccionado === tipo ? (
-                                <div className="animate-spin w-3 h-3 border border-white border-t-transparent rounded-full mr-1" />
+                                <div className="animate-spin w-4 h-4 border border-white border-t-transparent rounded-full mr-2" />
                               ) : null}
                               Equipos {tipo}
                             </Button>
                           ))}
                         </div>
-                        <div className="mt-2 text-xs text-gray-600">
-                          <Badge variant="secondary" className="text-xs">
+                        <div style={{ marginTop: '12px' }} className="text-sm text-gray-600">
+                          <Badge variant="secondary" className="text-sm">
                             {equipos.length} equipos disponibles de tipo {tipoEquipoSeleccionado}
                           </Badge>
                         </div>
                       </CardContent>
                     </Card>
 
-                    {/* Card de Usuario - EXISTENTE */}
+                    {/* Card de Usuario */}
                     <Card className="shadow-lg border-0 shrink-0">
-                      <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-t-lg py-2">
-                        <CardTitle className="flex items-center gap-2 text-indigo-900 text-base">
-                          <User className="w-4 h-4" />
+                      <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-t-lg" style={{ padding: '16px' }}>
+                        <CardTitle className="flex items-center gap-2 text-indigo-900 text-lg">
+                          <User className="w-5 h-5" />
                           Selección de Usuario Destinatario
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="p-3">
-                        <div className="grid grid-cols-3 gap-3">
-                          <div className="col-span-2">
-                            <label className="block text-xs font-semibold mb-1.5 text-gray-700">Usuario Destinatario:</label>
+                      <CardContent style={{ padding: '16px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
+                          <div>
+                            <label className="block text-sm font-semibold mb-2 text-gray-700">Usuario Destinatario:</label>
                             <RutAutocomplete 
                               value={selectedUser} 
                               onChange={setSelectedUser}
@@ -464,8 +556,8 @@ export function AsignacionesModal({ open, onClose }: {
                             />
                             {/* Mostrar datos del usuario seleccionado */}
                             {selectedUserData && (
-                              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
-                                <div className="text-xs">
+                              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                <div className="text-sm">
                                   <div><strong>Nombre:</strong> {selectedUserData.nombres} {selectedUserData.apaterno} {selectedUserData.amaterno}</div>
                                   <div><strong>Grado:</strong> {selectedUserData.grado || 'No especificado'}</div>
                                   <div><strong>Cargo:</strong> {selectedUserData.cargo || 'No especificado'}</div>
@@ -474,8 +566,8 @@ export function AsignacionesModal({ open, onClose }: {
                               </div>
                             )}
                           </div>
-                          <div className="col-span-1 flex items-end">
-                            <Badge variant="secondary" className="py-2 px-3 bg-emerald-100 text-emerald-800 text-sm">
+                          <div className="flex items-end">
+                            <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 text-sm" style={{ padding: '12px 16px' }}>
                               {selectedEquipos.length} equipo(s) seleccionado(s)
                             </Badge>
                           </div>
@@ -483,45 +575,43 @@ export function AsignacionesModal({ open, onClose }: {
                       </CardContent>
                     </Card>
 
-                    {/* Card de Equipos - ACTUALIZADO */}
+                    {/* Card de Equipos */}
                     <Card className="shadow-xl border-0 flex-1 flex flex-col overflow-hidden">
-                      <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-t-lg shrink-0 py-2">
+                      <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-t-lg shrink-0" style={{ padding: '16px' }}>
                         <div className="flex items-center justify-between">
-                          <CardTitle className="flex items-center gap-3 text-emerald-900 text-base">
-                            <Monitor className="w-4 h-4" />
+                          <CardTitle className="flex items-center gap-3 text-emerald-900 text-lg">
+                            <Monitor className="w-5 h-5" />
                             Equipos {tipoEquipoSeleccionado} Disponibles
                           </CardTitle>
-                          <Badge variant="secondary" className="py-1 px-3 bg-emerald-100 text-emerald-800 text-sm">
+                          <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 text-sm" style={{ padding: '8px 16px' }}>
                             {selectedEquipos.length} de {filteredEquipos.length} seleccionados
                           </Badge>
                         </div>
                         {/* Buscador y filtros */}
-                        <div className="mt-2 flex gap-3">
-                          <div className="relative flex-1 max-w-md">
+                        <div style={{ marginTop: '12px', display: 'flex', gap: '16px' }}>
+                          <div className="relative flex-1" style={{ maxWidth: '400px' }}>
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <Input
                               placeholder={`Buscar equipos ${tipoEquipoSeleccionado}...`}
                               value={searchEquipos}
                               onChange={(e) => setSearchEquipos(e.target.value)}
-                              className="pl-10 h-8 text-sm bg-white"
+                              className="pl-10 bg-white"
+                              style={{ height: '40px' }}
                             />
                           </div>
-                          {/* Solo mostrar filtro de categoría para IGM y LATSUR */}
                           {(tipoEquipoSeleccionado === 'IGM' || tipoEquipoSeleccionado === 'LATSUR') && (
-                            <div className="w-48">
+                            <div style={{ width: '250px' }}>
                               <Select value={selectedCategoriaEquipo} onValueChange={setSelectedCategoriaEquipo}>
-                                <SelectTrigger className="h-8 text-sm bg-white">
+                                <SelectTrigger className="bg-white" style={{ height: '40px' }}>
                                   <SelectValue placeholder="Filtrar por tipo..." />
                                 </SelectTrigger>
                                 <SelectContent className="z-[10000]">
                                   <SelectItem value="TODOS">Todos los tipos</SelectItem>
                                   {categoriasEquipos
                                     .filter((cat) => {
-                                      // Para IGM: filtrar por desc_tipo
                                       if (tipoEquipoSeleccionado === 'IGM') {
                                         return cat && cat.desc_tipo && cat.desc_tipo !== "OTRO"
                                       }
-                                      // Para LATSUR: filtrar por desc_tipo (que viene mapeado desde nomcategoria)
                                       return cat && cat.desc_tipo
                                     })
                                     .sort((a, b) => (a.desc_tipo || "").localeCompare(b.desc_tipo || ""))
@@ -539,9 +629,9 @@ export function AsignacionesModal({ open, onClose }: {
                       <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
                         {cargandoEquipos ? (
                           <div className="flex-1 flex items-center justify-center">
-                            <div className="flex items-center gap-2 text-gray-600">
-                              <div className="animate-spin w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full" />
-                              Cargando equipos {tipoEquipoSeleccionado}...
+                            <div className="flex items-center gap-3 text-gray-600">
+                              <div className="animate-spin w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full" />
+                              <span className="text-lg">Cargando equipos {tipoEquipoSeleccionado}...</span>
                             </div>
                           </div>
                         ) : (
@@ -549,7 +639,7 @@ export function AsignacionesModal({ open, onClose }: {
                             <Table>
                               <TableHeader className="sticky top-0 bg-gray-100 z-10">
                                 <TableRow>
-                                  <TableHead className="w-12 text-center text-xs">
+                                  <TableHead className="w-16 text-center text-sm">
                                     <input
                                       type="checkbox"
                                       checked={selectedEquipos.length === filteredEquipos.length && filteredEquipos.length > 0}
@@ -563,11 +653,11 @@ export function AsignacionesModal({ open, onClose }: {
                                       className="w-4 h-4"
                                     />
                                   </TableHead>
-                                  <TableHead className="font-semibold text-xs">Nombre PC</TableHead>
-                                  <TableHead className="font-semibold text-xs">Serie</TableHead>
-                                  <TableHead className="font-semibold text-xs">Modelo</TableHead>
-                                  <TableHead className="font-semibold text-xs">Categoría</TableHead>
-                                  <TableHead className="font-semibold text-xs">Estado</TableHead>
+                                  <TableHead className="font-semibold text-sm">Nombre PC</TableHead>
+                                  <TableHead className="font-semibold text-sm">Serie</TableHead>
+                                  <TableHead className="font-semibold text-sm">Modelo</TableHead>
+                                  <TableHead className="font-semibold text-sm">Categoría</TableHead>
+                                  <TableHead className="font-semibold text-sm">Estado</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -587,16 +677,16 @@ export function AsignacionesModal({ open, onClose }: {
                                         className="w-4 h-4"
                                       />
                                     </TableCell>
-                                    <TableCell className="font-medium text-xs">{eq.nombre_pc || "-"}</TableCell>
-                                    <TableCell className="font-mono text-xs">{eq.numero_serie || "-"}</TableCell>
-                                    <TableCell className="text-xs">{eq.modelo || "-"}</TableCell>
+                                    <TableCell className="font-medium text-sm">{eq.nombre_pc || "-"}</TableCell>
+                                    <TableCell className="font-mono text-sm">{eq.numero_serie || "-"}</TableCell>
+                                    <TableCell className="text-sm">{eq.modelo || "-"}</TableCell>
                                     <TableCell>
-                                      <Badge variant="outline" className="text-xs">
+                                      <Badge variant="outline" className="text-sm">
                                         {eq.categoria || "-"}
                                       </Badge>
                                     </TableCell>
                                     <TableCell>
-                                      <Badge className="bg-green-500 hover:bg-green-600 text-xs">
+                                      <Badge className="bg-green-500 hover:bg-green-600 text-sm">
                                         DISPONIBLE
                                       </Badge>
                                     </TableCell>
@@ -610,117 +700,117 @@ export function AsignacionesModal({ open, onClose }: {
                     </Card>
                   </div>
 
-                  {/* COLUMNA DERECHA: Datos del Documento - EXISTENTE */}
-                  <div className="col-span-4 h-full">
-                    <Card className="shadow-xl border-0 h-full flex flex-col">
-                      <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-t-lg py-2 shrink-0">
-                        <CardTitle className="flex items-center gap-3 text-amber-900 text-base">
-                          <FileText className="w-4 h-4" />
-                          Datos para Documento de Asignación
+                  {/* COLUMNA DERECHA: Formulario del Documento */}
+                  <div className="h-full flex flex-col">
+                    
+                    {/* Card de Formulario del Documento */}
+                    <Card className="shadow-lg border-0 flex-1 flex flex-col">
+                      <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-t-lg shrink-0" style={{ padding: '16px' }}>
+                        <CardTitle className="flex items-center gap-2 text-orange-900 text-lg">
+                          <FileText className="w-5 h-5" />
+                          Datos del Documento de Asignación
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="p-3 flex-1 overflow-auto">
-                        <div className="space-y-3">
-                          <div>
-                            <label className="block text-xs font-semibold mb-1 text-gray-700">Grado *</label>
-                            <Input
-                              value={grado}
-                              onChange={(e) => setGrado(e.target.value)}
-                              placeholder="ej: Subteniente"
-                              className="h-8 text-xs"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-semibold mb-1 text-gray-700">Sección *</label>
-                            <Input
-                              value={seccion}
-                              onChange={(e) => setSeccion(e.target.value)}
-                              placeholder="ej: Cartografía"
-                              className="h-8 text-xs"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-semibold mb-1 text-gray-700">N° de PT *</label>
-                            <Input
-                              value={nDePt}
-                              onChange={(e) => setNDePt(e.target.value)}
-                              placeholder="ej: 2"
-                              className="h-8 text-xs"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-semibold mb-1 text-gray-700">Ubicación *</label>
-                            <Select value={ubicacionTipo} onValueChange={setUbicacionTipo}>
-                              <SelectTrigger className="h-8 text-xs">
-                                <SelectValue placeholder="Seleccione ubicación" />
-                              </SelectTrigger>
-                              <SelectContent className="z-[10000]">
-                                <SelectItem value="TORRE">Torre</SelectItem>
-                                <SelectItem value="TALLERES">Talleres</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {ubicacionTipo && (
+                      <CardContent className="flex-1 overflow-auto" style={{ padding: '16px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                          
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                             <div>
-                              <label className="block text-xs font-semibold mb-1 text-gray-700">
-                                {ubicacionTipo === "TORRE" ? "Piso" : "Área"} *
-                              </label>
-                              <Select value={ubicacionEspecifica} onValueChange={setUbicacionEspecifica}>
-                                <SelectTrigger className="h-8 text-xs">
-                                  <SelectValue placeholder={`Seleccione ${ubicacionTipo === "TORRE" ? "piso" : "área"}`} />
+                              <label className="block text-sm font-semibold mb-2 text-gray-700">Grado *</label>
+                              <Input
+                                value={grado}
+                                onChange={(e) => setGrado(e.target.value)}
+                                placeholder="ej: Subteniente"
+                                style={{ height: '40px' }}
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-semibold mb-2 text-gray-700">Sección *</label>
+                              <Input
+                                value={seccion}
+                                onChange={(e) => setSeccion(e.target.value)}
+                                placeholder="ej: Cartografía"
+                                style={{ height: '40px' }}
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-semibold mb-2 text-gray-700">N° de PT *</label>
+                              <Input
+                                value={nDePt}
+                                onChange={(e) => setNDePt(e.target.value)}
+                                placeholder="ej: 2"
+                                style={{ height: '40px' }}
+                              />                              
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                            <div>
+                              <label className="block text-sm font-semibold mb-2 text-gray-700">Tipo de Ubicación *</label>
+                              <Select value={ubicacionTipo} onValueChange={setUbicacionTipo}>
+                                <SelectTrigger style={{ height: '40px' }}>
+                                  <SelectValue placeholder="Seleccione tipo" />
                                 </SelectTrigger>
                                 <SelectContent className="z-[10000]">
-                                  {getUbicacionesDisponibles().map(ub => (
-                                    <SelectItem key={ub.cod_ti_ubicacion} value={ub.des_ti_ubicacion}>
-                                      {ub.des_ti_ubicacion}
-                                    </SelectItem>
-                                  ))}
+                                  <SelectItem value="TORRE">Torre</SelectItem>
+                                  <SelectItem value="TALLERES">Talleres</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
-                          )}
 
-                          <div>
-                            <label className="block text-xs font-semibold mb-1 text-gray-700">Persona que Interviene *</label>
-                            <RutAutocomplete 
-                              value={personaInterviene} 
-                              onChange={setPersonaInterviene}
-                              onUserSelected={setPersonaIntervieneData}
-                            />
+                            {ubicacionTipo && (
+                              <div>
+                                <label className="block text-sm font-semibold mb-2 text-gray-700">
+                                  {ubicacionTipo === "TORRE" ? "Piso" : "Área"} *
+                                </label>
+                                <Select value={ubicacionEspecifica} onValueChange={setUbicacionEspecifica}>
+                                  <SelectTrigger style={{ height: '40px' }}>
+                                    <SelectValue placeholder={`Seleccione ${ubicacionTipo === "TORRE" ? "piso" : "área"}`} />
+                                  </SelectTrigger>
+                                  <SelectContent className="z-[10000]">
+                                    {getUbicacionesDisponibles().map(ub => (
+                                      <SelectItem key={ub.cod_ti_ubicacion} value={ub.des_ti_ubicacion}>
+                                        {ub.des_ti_ubicacion}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
                           </div>
 
                           <div>
-                            <label className="block text-xs font-semibold mb-1 text-gray-700">Distribución</label>
+                            <label className="block text-sm font-semibold mb-2 text-gray-700">Distribución</label>
                             <Input
                               value={distribucion}
                               onChange={(e) => setDistribucion(e.target.value)}
                               placeholder="Distribución del documento..."
+                              style={{ height: '40px' }}
                             />
                           </div>
 
                           <div>
-                            <label className="block text-xs font-semibold mb-1 text-gray-700">Nota Adicional</label>
+                            <label className="block text-sm font-semibold mb-2 text-gray-700">Nota Adicional</label>
                             <textarea
-                              className="w-full p-2 border rounded-lg resize-none h-16 text-xs"
+                              className="w-full p-3 border rounded-lg resize-none text-sm"
                               value={nota}
                               onChange={(e) => setNota(e.target.value)}
                               placeholder="Observaciones o notas adicionales para el documento..."
+                              style={{ height: '80px' }}
                             />
                           </div>
 
                           <Button 
                             onClick={handleAsignar} 
                             disabled={!selectedUser || selectedEquipos.length === 0 || loading}
-                            className="w-full h-10 text-sm bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-xl"
-                            size="sm"
+                            className="w-full text-sm bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-xl"
+                            style={{ height: '48px' }}
                           >
                             {loading ? (
                               <div className="flex items-center gap-2">
-                                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
                                 Generando...
                               </div>
                             ) : (
@@ -735,13 +825,13 @@ export function AsignacionesModal({ open, onClose }: {
               </div>
             </TabsContent>
 
-            {/* TAB: Asignaciones Activas - EXISTENTE */}
+            {/* TAB: Asignaciones Activas */}
             <TabsContent value="activas" className="flex-1 overflow-hidden m-0 w-full">
-              <div className="h-full p-3 w-full">
+              <div className="h-full w-full" style={{ padding: '24px' }}>
                 <Card className="h-full shadow-lg border-0 w-full">
-                  <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-lg py-2">
-                    <CardTitle className="flex items-center gap-2 text-green-900 text-base">
-                      <CheckCircle className="w-4 h-4" />
+                  <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-lg" style={{ padding: '16px' }}>
+                    <CardTitle className="flex items-center gap-2 text-green-900 text-lg">
+                      <CheckCircle className="w-5 h-5" />
                       Asignaciones Activas ({asignacionesActivas.length})
                     </CardTitle>
                   </CardHeader>
@@ -750,36 +840,36 @@ export function AsignacionesModal({ open, onClose }: {
                       <Table>
                         <TableHeader className="sticky top-0 bg-gray-100 z-10">
                           <TableRow>
-                            <TableHead className="font-semibold text-xs">Usuario</TableHead>
-                            <TableHead className="font-semibold text-xs">Equipo</TableHead>
-                            <TableHead className="font-semibold text-xs">Modelo</TableHead>
-                            <TableHead className="font-semibold text-xs">Serie</TableHead>
-                            <TableHead className="font-semibold text-xs">Fecha Asignación</TableHead>
-                            <TableHead className="font-semibold text-xs">Estado</TableHead>
-                            <TableHead className="font-semibold text-xs">Acciones</TableHead>
+                            <TableHead className="font-semibold text-sm">Usuario</TableHead>
+                            <TableHead className="font-semibold text-sm">Equipo</TableHead>
+                            <TableHead className="font-semibold text-sm">Modelo</TableHead>
+                            <TableHead className="font-semibold text-sm">Serie</TableHead>
+                            <TableHead className="font-semibold text-sm">Fecha Asignación</TableHead>
+                            <TableHead className="font-semibold text-sm">Estado</TableHead>
+                            <TableHead className="font-semibold text-sm">Acciones</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {asignacionesActivas.map((asignacion) => (
                             <TableRow key={asignacion.id_asignacion} className="hover:bg-gray-50">
-                              <TableCell className="font-medium text-xs">
+                              <TableCell className="font-medium text-sm">
                                 {asignacion.usuario_nombre || asignacion.rut_usuario}
                               </TableCell>
-                              <TableCell className="text-xs">{asignacion.equipo_nombre || "-"}</TableCell>
-                              <TableCell className="text-xs">{asignacion.equipo_modelo || "-"}</TableCell>
-                              <TableCell className="font-mono text-xs">{asignacion.equipo_serie || "-"}</TableCell>
-                              <TableCell className="text-xs">{new Date(asignacion.fecha_asignacion).toLocaleDateString('es-CL')}</TableCell>
+                              <TableCell className="text-sm">{asignacion.equipo_nombre || "-"}</TableCell>
+                              <TableCell className="text-sm">{asignacion.equipo_modelo || "-"}</TableCell>
+                              <TableCell className="font-mono text-sm">{asignacion.equipo_serie || "-"}</TableCell>
+                              <TableCell className="text-sm">{new Date(asignacion.fecha_asignacion).toLocaleDateString('es-CL')}</TableCell>
                               <TableCell>
-                                <Badge className="bg-green-500 hover:bg-green-600 text-xs">ACTIVA</Badge>
+                                <Badge className="bg-green-500 hover:bg-green-600 text-sm">ACTIVA</Badge>
                               </TableCell>
                               <TableCell>
                                 <Button
                                   size="sm"
                                   variant="destructive"
                                   onClick={() => handleEliminarAsignacion(asignacion.id_asignacion)}
-                                  className="h-6 w-8 p-0"
+                                  style={{ height: '32px', width: '32px', padding: '0' }}
                                 >
-                                  <Trash2 className="w-3 h-3" />
+                                  <Trash2 className="w-4 h-4" />
                                 </Button>
                               </TableCell>
                             </TableRow>
@@ -792,13 +882,13 @@ export function AsignacionesModal({ open, onClose }: {
               </div>
             </TabsContent>
 
-            {/* TAB: Historial - EXISTENTE */}
+            {/* TAB: Historial */}
             <TabsContent value="historial" className="flex-1 overflow-hidden m-0 w-full">
-              <div className="h-full p-3 w-full">
+              <div className="h-full w-full" style={{ padding: '24px' }}>
                 <Card className="h-full shadow-lg border-0 w-full">
-                  <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-lg py-2">
-                    <CardTitle className="flex items-center gap-2 text-purple-900 text-base">
-                      <Clock className="w-4 h-4" />
+                  <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-lg" style={{ padding: '16px' }}>
+                    <CardTitle className="flex items-center gap-2 text-purple-900 text-lg">
+                      <Clock className="w-5 h-5" />
                       Historial de Asignaciones ({historialAsignaciones.length})
                     </CardTitle>
                   </CardHeader>
@@ -807,27 +897,27 @@ export function AsignacionesModal({ open, onClose }: {
                       <Table>
                         <TableHeader className="sticky top-0 bg-gray-100 z-10">
                           <TableRow>
-                            <TableHead className="font-semibold text-xs">Usuario</TableHead>
-                            <TableHead className="font-semibold text-xs">Equipo</TableHead>
-                            <TableHead className="font-semibold text-xs">Modelo</TableHead>
-                            <TableHead className="font-semibold text-xs">Serie</TableHead>
-                            <TableHead className="font-semibold text-xs">Fecha Asignación</TableHead>
-                            <TableHead className="font-semibold text-xs">Fecha Liberación</TableHead>
-                            <TableHead className="font-semibold text-xs">Duración</TableHead>
-                            <TableHead className="font-semibold text-xs">Estado</TableHead>
+                            <TableHead className="font-semibold text-sm">Usuario</TableHead>
+                            <TableHead className="font-semibold text-sm">Equipo</TableHead>
+                            <TableHead className="font-semibold text-sm">Modelo</TableHead>
+                            <TableHead className="font-semibold text-sm">Serie</TableHead>
+                            <TableHead className="font-semibold text-sm">Fecha Asignación</TableHead>
+                            <TableHead className="font-semibold text-sm">Fecha Liberación</TableHead>
+                            <TableHead className="font-semibold text-sm">Duración</TableHead>
+                            <TableHead className="font-semibold text-sm">Estado</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {historialAsignaciones.map((registro) => (
                             <TableRow key={registro.id_asignacion} className="hover:bg-gray-50">
-                              <TableCell className="font-medium text-xs">
+                              <TableCell className="font-medium text-sm">
                                 {registro.usuario_nombre || registro.rut_usuario}
                               </TableCell>
-                              <TableCell className="text-xs">{registro.equipo_nombre || "-"}</TableCell>
-                              <TableCell className="text-xs">{registro.equipo_modelo || "-"}</TableCell>
-                              <TableCell className="font-mono text-xs">{registro.equipo_serie || "-"}</TableCell>
-                              <TableCell className="text-xs">{new Date(registro.fecha_asignacion).toLocaleDateString('es-CL')}</TableCell>
-                              <TableCell className="text-xs">
+                              <TableCell className="text-sm">{registro.equipo_nombre || "-"}</TableCell>
+                              <TableCell className="text-sm">{registro.equipo_modelo || "-"}</TableCell>
+                              <TableCell className="font-mono text-sm">{registro.equipo_serie || "-"}</TableCell>
+                              <TableCell className="text-sm">{new Date(registro.fecha_asignacion).toLocaleDateString('es-CL')}</TableCell>
+                              <TableCell className="text-sm">
                                 {registro.fecha_liberacion ? (
                                   <span className="text-red-600">
                                     {new Date(registro.fecha_liberacion).toLocaleDateString('es-CL')}
@@ -837,14 +927,14 @@ export function AsignacionesModal({ open, onClose }: {
                                 )}
                               </TableCell>
                               <TableCell>
-                                <Badge variant="outline" className="text-xs">
+                                <Badge variant="outline" className="text-sm">
                                   {registro.duracion_dias || 0} días
                                 </Badge>
                               </TableCell>
                               <TableCell>
                                 <Badge 
                                   variant={registro.activa ? "default" : "secondary"} 
-                                  className={`text-xs ${registro.activa ? "bg-green-500" : "bg-gray-500"}`}
+                                  className={`text-sm ${registro.activa ? "bg-green-500" : "bg-gray-500"}`}
                                 >
                                   {registro.activa ? "ACTIVA" : "FINALIZADA"}
                                 </Badge>
@@ -860,7 +950,7 @@ export function AsignacionesModal({ open, onClose }: {
             </TabsContent>
           </Tabs>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

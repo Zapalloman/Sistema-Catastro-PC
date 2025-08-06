@@ -15,9 +15,16 @@ interface EquipmentTableProps {
   selectedPropietario: string
   refresh: boolean
   onCountChange?: (count: number) => void
+  onEliminarEquipo?: (equipo: any) => void // ✅ NUEVA PROP
 }
 
-export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountChange }: EquipmentTableProps) {
+export function EquipmentTable({ 
+  equipos, 
+  selectedPropietario, 
+  refresh, 
+  onCountChange,
+  onEliminarEquipo // ✅ NUEVA PROP
+}: EquipmentTableProps) {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -281,6 +288,18 @@ export function EquipmentTable({ equipos, selectedPropietario, refresh, onCountC
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
+                      {/* Botón eliminar */}
+                      {onEliminarEquipo && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="bg-red-500 hover:bg-red-600 text-white border-red-500"
+                          onClick={() => onEliminarEquipo(equipment)}
+                          title="Eliminar equipo"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

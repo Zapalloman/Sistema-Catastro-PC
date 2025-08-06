@@ -23,7 +23,7 @@ import { MacStationModal } from "./mac-stations-modal"
 
 // Sample MAC stations data
 const sampleMacStations = [
-  {
+  /*{
     id: "MAC-001",
     serialNumber: "MAC-IGM-001-2024",
     macAddress: "A4:83:E7:12:34:56",
@@ -132,6 +132,7 @@ const sampleMacStations = [
     assignedDate: "2024-04-28",
     networkType: "WiFi 6E",
   },
+  */
 ]
 
 const statusFilters = [
