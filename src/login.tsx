@@ -23,7 +23,14 @@ export default function Component() {
       })
       const data = await res.json()
       if (data.success) {
-        // Puedes guardar datos del usuario aquí si lo necesitas
+        // Guardar datos del usuario en localStorage
+        const userData = {
+          usuario: data.usuario,
+          nombre: `${data.pers_nombres || ''} ${data.pers_apaterno || ''} ${data.pers_amaterno || ''}`.trim(),
+          rut: data.pers_rut,
+          departamento: data.departamento
+        };
+        localStorage.setItem('userData', JSON.stringify(userData));
         router.push("/dashboard")
       } else {
         setError(data.mensaje || "Usuario o clave incorrectos")

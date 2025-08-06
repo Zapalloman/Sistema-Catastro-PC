@@ -200,88 +200,36 @@ export function AsignacionesModal({ open, onClose }: {
     }
   }, [open, tipoEquipoSeleccionado])
 
-  // ✅ VERSIÓN SIMPLE Y EFECTIVA
-  const abrirArchivoAutomaticamente = (blob: Blob, fileName: string) => {
-    const url = window.URL.createObjectURL(blob)
-    
-    // Crear enlace de descarga
-    const link = document.createElement('a')
-    link.href = url
-    link.download = fileName
-    link.style.display = 'none'
-    document.body.appendChild(link)
-    
-    // Descargar
-    link.click()
-    
-    // Mostrar mensaje al usuario con opción de abrir
-    setTimeout(() => {
-      const userChoice = confirm(
-        `Archivo "${fileName}" descargado exitosamente.\n\n¿Desea abrirlo ahora?`
-      )
+  // ✅ FUNCIÓN SIMPLIFICADA: Solo descargar Word
+  const descargarDocumentoWord = (response: any) => {
+    try {
+      // Crear blob del archivo Word
+      const blob = new Blob([response], {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      });
       
-      if (userChoice) {
-        // Abrir en nueva pestaña
-        const openWindow = window.open(url, '_blank')
-        if (!openWindow) {
-          alert('Por favor, permita ventanas emergentes para abrir el archivo automáticamente.')
-        }
-      }
+      // Crear enlace de descarga
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Asignacion_${tipoEquipoSeleccionado}_${selectedUser}_${new Date().getTime()}.docx`;
+      link.style.display = 'none';
+      
+      // Descargar
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       
       // Limpiar recursos
       setTimeout(() => {
-        document.body.removeChild(link)
-        window.URL.revokeObjectURL(url)
-      }, 2000)
-    }, 1000)
-  }
-
-  // ✅ NUEVA FUNCIÓN: Manejar respuesta doble
-  const manejarDocumentoDoble = (response: any) => {
-    try {
-      // 1. Descargar el archivo Word
-      const wordBlob = new Blob([
-        Uint8Array.from(atob(response.word.data), c => c.charCodeAt(0))
-      ], { type: response.word.mimetype });
+        window.URL.revokeObjectURL(url);
+      }, 2000);
       
-      const wordUrl = window.URL.createObjectURL(wordBlob);
-      const downloadLink = document.createElement('a');
-      downloadLink.href = wordUrl;
-      downloadLink.download = response.word.filename;
-      downloadLink.style.display = 'none';
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-      
-      // 2. Mostrar el PDF en nueva pestaña
-      const pdfBlob = new Blob([
-        Uint8Array.from(atob(response.pdf.data), c => c.charCodeAt(0))
-      ], { type: response.pdf.mimetype });
-      
-      const pdfUrl = window.URL.createObjectURL(pdfBlob);
-      const pdfWindow = window.open('', '_blank');
-      
-      if (pdfWindow) {
-        pdfWindow.location.href = pdfUrl;
-      } else {
-        // Si el popup fue bloqueado, crear enlace manual
-        const pdfLink = document.createElement('a');
-        pdfLink.href = pdfUrl;
-        pdfLink.target = '_blank';
-        pdfLink.click();
-      }
-      
-      // Limpiar recursos después de un tiempo
-      setTimeout(() => {
-        window.URL.revokeObjectURL(wordUrl);
-        window.URL.revokeObjectURL(pdfUrl);
-      }, 10000);
-      
-      console.log('✅ Word descargado y PDF mostrado exitosamente');
+      console.log('✅ Documento Word descargado exitosamente');
       
     } catch (error) {
-      console.error('Error procesando documentos:', error);
-      alert('Error al procesar los documentos generados');
+      console.error('Error descargando documento:', error);
+      alert('Error al descargar el documento');
     }
   };
 
@@ -314,24 +262,23 @@ export function AsignacionesModal({ open, onClose }: {
         usuario_datos: selectedUserData,
       }
 
-      console.log("Enviando datos de asignación multi-formato:", datosAsignacion)
+      console.log("Enviando datos de asignación:", datosAsignacion)
 
-      // ✅ USAR NUEVO ENDPOINT QUE GENERA AMBOS FORMATOS
-      const response = await fetch("http://localhost:3000/api/asignaciones/generar-documento-doble", {
+      // ✅ VOLVER AL ENDPOINT ORIGINAL QUE FUNCIONA
+      const response = await fetch("http://localhost:3000/api/asignaciones/generar-documento", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(datosAsignacion),
       })
 
       if (response.ok) {
-        const documentosResponse = await response.json()
+        // ✅ SIMPLIFICADO: Solo descargar Word
+        const buffer = await response.arrayBuffer()
+        descargarDocumentoWord(buffer)
         
-        // ✅ MANEJAR AMBOS DOCUMENTOS
-        manejarDocumentoDoble(documentosResponse)
-
-        alert(`✅ Asignación de dispositivos ${tipoEquipoSeleccionado} creada exitosamente.\n\n📄 Documento Word descargado\n🔍 PDF abierto en nueva pestaña`)
+        alert(`✅ Asignación de dispositivos ${tipoEquipoSeleccionado} creada exitosamente.\n\n📄 Documento Word descargado`)
         
-        // Recargar datos y limpiar formulario (igual que antes)
+        // Recargar datos y limpiar formulario
         fetch("http://localhost:3000/api/asignaciones")
           .then(res => res.json())
           .then(data => setAsignacionesActivas(Array.isArray(data) ? data : []))
@@ -354,7 +301,7 @@ export function AsignacionesModal({ open, onClose }: {
         
         setActiveTab("activas")
       } else {
-        throw new Error('Error al generar documentos')
+        throw new Error('Error al generar documento')
       }
     } catch (error) {
       console.error("Error:", error)
@@ -802,6 +749,7 @@ export function AsignacionesModal({ open, onClose }: {
                             />
                           </div>
 
+                          {/* ✅ ACTUALIZAR el botón del formulario */}
                           <Button 
                             onClick={handleAsignar} 
                             disabled={!selectedUser || selectedEquipos.length === 0 || loading}
@@ -811,10 +759,16 @@ export function AsignacionesModal({ open, onClose }: {
                             {loading ? (
                               <div className="flex items-center gap-2">
                                 <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
-                                Generando...
+                                Generando documento...
                               </div>
                             ) : (
-                              `Asignar ${selectedEquipos.length} Equipo(s) ${tipoEquipoSeleccionado} y Generar Documento`
+                              <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4" />
+                                {`Asignar ${selectedEquipos.length} Dispositivo(s) ${tipoEquipoSeleccionado}`}
+                                <span className="text-xs opacity-90 ml-2">
+                                  (📄 Word)
+                                </span>
+                              </div>
                             )}
                           </Button>
                         </div>

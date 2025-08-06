@@ -9,7 +9,8 @@ import {
   CheckCircle,
   Clock,
   Archive,
-  Eye
+  Eye,
+  Calendar
 } from 'lucide-react';
 
 interface Equipo {
@@ -17,11 +18,12 @@ interface Equipo {
   nombre_pc: string;
   modelo: string;
   numero_serie: string;
-  llave_inventario?: string; // ✅ AGREGAR
+  llave_inventario?: string;
   marca: string;
   tipo: string;
   ubicacion: string;
   observaciones?: string;
+  fecha_baja?: string; // ✅ AGREGAR fecha_baja
   estado: 'ASIGNADO' | 'DISPONIBLE' | 'DADO DE BAJA';
   estado_asignacion?: 'ASIGNADO' | 'DISPONIBLE';
 }
@@ -431,6 +433,10 @@ const BajasEquipoModal: React.FC<BajasEquipoModalProps> = ({ open, onClose }) =>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Ubicación
                           </th>
+                          {/* ✅ NUEVA COLUMNA: Fecha de Baja */}
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Fecha de Baja
+                          </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Estado
                           </th>
@@ -472,6 +478,27 @@ const BajasEquipoModal: React.FC<BajasEquipoModalProps> = ({ open, onClose }) =>
                             </td>
                             <td className="px-6 py-4">
                               <div className="text-sm text-gray-900">{equipo.ubicacion || '-'}</div>
+                            </td>
+                            {/* ✅ NUEVA CELDA: Fecha de Baja */}
+                            <td className="px-6 py-4">
+                              <div className="text-sm text-gray-900">
+                                {equipo.fecha_baja ? (
+                                  <div className="flex items-center">
+                                    <Calendar className="w-4 h-4 text-red-500 mr-2" />
+                                    <span className="font-medium text-red-600">
+                                      {new Date(equipo.fecha_baja).toLocaleDateString('es-CL', {
+                                        year: 'numeric',
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400">Sin fecha</span>
+                                )}
+                              </div>
                             </td>
                             <td className="px-6 py-4">
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -657,6 +684,26 @@ const BajasEquipoModal: React.FC<BajasEquipoModalProps> = ({ open, onClose }) =>
                     </span>
                   </div>
                 </div>
+              </div>
+
+              {/* ✅ AGREGAR: Fecha de Baja */}
+              <div className="mb-6">
+                <label className="text-sm font-medium text-red-600 flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  Fecha de Baja
+                </label>
+                <p className="text-sm font-medium text-red-700 bg-red-50 px-2 py-1 rounded">
+                  {selectedEquipoDadoDeBaja.fecha_baja ? 
+                    new Date(selectedEquipoDadoDeBaja.fecha_baja).toLocaleDateString('es-CL', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    }) : 
+                    'Sin fecha registrada'
+                  }
+                </p>
               </div>
 
               {selectedEquipoDadoDeBaja.observaciones && (

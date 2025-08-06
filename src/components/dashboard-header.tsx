@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { LogOut, User } from "lucide-react"
+import { useState, useEffect } from "react"
 
 interface DashboardHeaderProps {
   title: string
@@ -9,10 +10,27 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
+  const [userName, setUserName] = useState("Administrador SIA CIMI")
+
+  useEffect(() => {
+    // Obtener nombre del usuario desde localStorage
+    const userData = localStorage.getItem('userData')
+    if (userData) {
+      try {
+        const user = JSON.parse(userData)
+        if (user.nombre && user.nombre.trim()) {
+          setUserName(user.nombre)
+        }
+      } catch (error) {
+        console.error('Error parsing user data:', error)
+      }
+    }
+  }, [])
+
   const handleLogout = () => {
-    // TODO: Implement logout functionality
+    // Limpiar localStorage al hacer logout
+    localStorage.removeItem('userData')
     console.log("Logging out...")
-    // Redirect to login page
     window.location.href = "/"
   }
 
@@ -25,7 +43,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
             <User className="w-5 h-5 text-white" />
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-900">Administrador SIA CIMI</div>
+            <div className="text-sm font-medium text-gray-900">{userName}</div>
             <div className="text-xs text-gray-500">Instituto Geográfico Militar</div>
           </div>
         </div>

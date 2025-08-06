@@ -3,6 +3,7 @@
 import { FileCode, Home, Settings, Users, HardDrive, Laptop, Computer, FileText, Monitor, Wifi, Apple, Server } from "lucide-react"
 
 import { usePathname } from "next/navigation"
+import { useState, useEffect } from "react"
 import {
   Sidebar,
   SidebarContent,
@@ -85,6 +86,22 @@ const menuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const [userName, setUserName] = useState("Administrador SIA CIMI")
+
+  useEffect(() => {
+    // Obtener nombre del usuario desde localStorage
+    const userData = localStorage.getItem('userData')
+    if (userData) {
+      try {
+        const user = JSON.parse(userData)
+        if (user.nombre && user.nombre.trim()) {
+          setUserName(user.nombre)
+        }
+      } catch (error) {
+        console.error('Error parsing user data:', error)
+      }
+    }
+  }, [])
 
   return (
     <Sidebar className="border-r bg-white text-black">
@@ -94,7 +111,7 @@ export function AppSidebar() {
             <Users className="w-4 h-4 text-white" />
           </div>
           <div>
-            <div className="text-sm font-medium">Administrador SIA CIMI</div>
+            <div className="text-sm font-medium">{userName}</div>
           </div>
         </div>
       </SidebarHeader>
