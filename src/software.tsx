@@ -21,6 +21,7 @@ import { ProcessLayout } from "./components/process-layout";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AsignarSoftwareModal from "./components/AsignarSoftwareModal";
+import { PDFSoftwareGenerator } from "./components/pdf-software-generator";
 
 interface Equipo {
   id: number;
@@ -252,6 +253,7 @@ export default function SoftwareEquipos() {
               <div className="bg-blue-50 px-4 py-2 rounded-lg">
                 <span className="text-blue-800 font-medium">{equiposFiltrados.length} equipos</span>
               </div>
+              <PDFSoftwareGenerator className="min-w-[140px]" />
               <Button 
                 onClick={() => {
                   cargarEquipos();
