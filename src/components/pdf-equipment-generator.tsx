@@ -123,20 +123,6 @@ export function PDFEquipmentGenerator({ className }: PDFEquipmentGeneratorProps)
       color: rgb(0, 0, 0)
     })
 
-    y -= 30
-    const fechaGeneracion = new Date().toLocaleDateString('es-CL', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-    
-    currentPage.drawText(`Fecha de generación: ${fechaGeneracion}`, {
-      x: marginX,
-      y: y,
-      size: fontSize,
-      font
-    })
-
     y -= 40
 
     // Definir encabezados y anchos de columna (ajustados para formato horizontal)
@@ -192,10 +178,29 @@ export function PDFEquipmentGenerator({ className }: PDFEquipmentGeneratorProps)
 
     // Pie de página
     const totalPages = pdfDoc.getPageCount()
+    const fechaGeneracion = new Date().toLocaleDateString('es-CL', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+    
     for (let i = 0; i < totalPages; i++) {
       const page = pdfDoc.getPages()[i]
+      
+      // Número de página (izquierda)
       page.drawText(`Página ${i + 1} de ${totalPages} - Instituto Geográfico Militar`, {
         x: 50,
+        y: 30,
+        size: 8,
+        font,
+        color: rgb(0.5, 0.5, 0.5)
+      })
+      
+      // Fecha de generación (derecha)
+      const fechaText = `Fecha de generación: ${fechaGeneracion}`
+      const fechaWidth = font.widthOfTextAtSize(fechaText, 8)
+      page.drawText(fechaText, {
+        x: 841.89 - 50 - fechaWidth, // Posicionado en la esquina inferior derecha
         y: 30,
         size: 8,
         font,

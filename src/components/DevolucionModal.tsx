@@ -119,6 +119,31 @@ const DevolucionModal: React.FC<DevolucionModalProps> = ({ open, onClose }) => {
       
       console.log('✅ Resultado de la devolución:', resultado);
       
+      // ✅ DESCARGAR AUTOMÁTICAMENTE EL DOCUMENTO DE DEVOLUCIÓN
+      try {
+        console.log('📥 Descargando documento de devolución automáticamente...');
+        
+        // ✅ ESPERAR UN MOMENTO PARA QUE EL DOCUMENTO SE GENERE CORRECTAMENTE
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const downloadUrl = `http://localhost:3000/api/prestamos/descargar-devolucion/${selectedPrestamo.id_prestamo}`;
+        console.log('📥 URL de descarga:', downloadUrl);
+        
+        // ✅ CREAR LINK TEMPORAL PARA FORZAR DESCARGA
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `devolucion_${selectedPrestamo.id_prestamo}_${new Date().getTime()}.docx`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log('✅ Descarga de documento iniciada');
+      } catch (downloadError) {
+        console.error('⚠️ Error al iniciar descarga automática:', downloadError);
+        alert('Préstamo devuelto exitosamente, pero no se pudo descargar el documento automáticamente. Puede descargarlo manualmente desde la lista de préstamos.');
+      }
+      
       setShowConfirmModal(false);
       setSelectedPrestamo(null);
       setMotivoDevolucion('');

@@ -242,10 +242,20 @@ export function LoansTable({ deviceType }: LoansTableProps) {
                         variant="outline"
                         className="bg-green-500 hover:bg-green-600 text-white border-green-500"
                         onClick={() => {
-                          const url = `http://localhost:3000/api/prestamos/${loan.nroRecibo}/documento`;
-                          window.open(url, '_blank');
+                          // ✅ DETECTAR SI ES PRÉSTAMO DEVUELTO Y USAR ENDPOINT CORRECTO
+                          const isDevuelto = loan.estadoRecibo === "FINALIZADO";
+                          
+                          if (isDevuelto) {
+                            // Para préstamos devueltos, usar endpoint de devolución
+                            const url = `http://localhost:3000/api/prestamos/descargar-devolucion/${loan.nroRecibo}`;
+                            window.open(url, '_blank');
+                          } else {
+                            // Para préstamos activos, usar endpoint normal de salvoconducto
+                            const url = `http://localhost:3000/api/prestamos/${loan.nroRecibo}/documento`;
+                            window.open(url, '_blank');
+                          }
                         }}
-                        title="Descargar documento"
+                        title={`Descargar documento ${loan.estadoRecibo === "FINALIZADO" ? 'de devolución' : 'de préstamo'}`}
                       >
                         <Download className="w-4 h-4" />
                       </Button>
