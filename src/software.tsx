@@ -21,6 +21,7 @@ import { ProcessLayout } from "./components/process-layout";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AsignarSoftwareModal from "./components/AsignarSoftwareModal";
+import AgregarSoftwareModal from "./components/AgregarSoftwareModal";
 import { PDFSoftwareGenerator } from "./components/pdf-software-generator";
 
 interface Equipo {
@@ -58,6 +59,7 @@ export default function SoftwareEquipos() {
   const [filtroTipo, setFiltroTipo] = useState<string>('todos');
   const [showAsignModal, setShowAsignModal] = useState(false);
   const [showAsignarMultipleModal, setShowAsignarMultipleModal] = useState(false);
+  const [showAgregarSoftwareModal, setShowAgregarSoftwareModal] = useState(false);
 
   // Iconos por tipo de equipo
   const getIconoTipo = (tipo: string) => {
@@ -253,6 +255,13 @@ export default function SoftwareEquipos() {
               <div className="bg-blue-50 px-4 py-2 rounded-lg">
                 <span className="text-blue-800 font-medium">{equiposFiltrados.length} equipos</span>
               </div>
+              <Button 
+                onClick={() => setShowAgregarSoftwareModal(true)}
+                className="bg-green-600 hover:bg-green-700 text-white min-w-[140px]"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Agregar Software
+              </Button>
               <PDFSoftwareGenerator className="min-w-[140px]" />
               <Button 
                 onClick={() => {
@@ -474,6 +483,15 @@ export default function SoftwareEquipos() {
             }}
           />
         )}
+
+        {/* Modal para agregar software */}
+        <AgregarSoftwareModal
+          isOpen={showAgregarSoftwareModal}
+          onClose={() => setShowAgregarSoftwareModal(false)}
+          onSoftwareAgregado={() => {
+            cargarTodoElSoftware(); // Recargar la lista de software
+          }}
+        />
       </div>
     </ProcessLayout>
   );
