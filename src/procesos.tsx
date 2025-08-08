@@ -90,33 +90,6 @@ export default function Procesos() {
           ))}
         </div>
 
-        {/* Métricas mejoradas - MANTENER */}
-        <div className="mt-12 bg-white rounded-lg shadow-sm border p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Resumen de Procesos</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-3xl font-bold text-blue-600 mb-2">12</div>
-              <div className="text-sm text-blue-700 font-medium">Asignaciones Activas</div>
-              <div className="text-xs text-blue-600 mt-1">+3 esta semana</div>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-3xl font-bold text-green-600 mb-2">3</div>
-              <div className="text-sm text-green-700 font-medium">Bajas Pendientes</div>
-              <div className="text-xs text-green-600 mt-1">-1 desde ayer</div>
-            </div>
-            <div className="text-center p-4 bg-orange-50 rounded-lg">
-              <div className="text-3xl font-bold text-orange-600 mb-2">2</div>
-              <div className="text-sm text-orange-700 font-medium">Devoluciones Arriendo</div>
-              <div className="text-xs text-orange-600 mt-1">En proceso</div>
-            </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-3xl font-bold text-purple-600 mb-2">8</div>
-              <div className="text-sm text-purple-700 font-medium">Recibos del Mes</div>
-              <div className="text-xs text-purple-600 mt-1">Meta: 10</div>
-            </div>
-          </div>
-        </div>
-
         {/* Información del sistema */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Información del Sistema</h2>

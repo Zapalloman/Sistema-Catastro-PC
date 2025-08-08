@@ -9,100 +9,114 @@ import { Wifi, Apple, Server, Monitor, HardDrive, Users } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export default function Dashboard() {
-  // Estado para el total de equipos
+  // Estados para datos reales de las APIs
   const [totalEquipos, setTotalEquipos] = useState(0)
-  const [quickStatsEquipos, setQuickStatsEquipos] = useState<{label: string, value: number}[]>([])
+  const [totalZ8, setTotalZ8] = useState(0)
+  const [asignadosZ8, setAsignadosZ8] = useState(0)
+  const [totalMac, setTotalMac] = useState(0)
+  const [asignadosMac, setAsignadosMac] = useState(0)
+  const [totalDatacenter, setTotalDatacenter] = useState(0)
+  const [totalLatsur, setTotalLatsur] = useState(0)
+  const [prestamosActivos, setPrestamosActivos] = useState(0)
 
   useEffect(() => {
+    // Fetch equipos de cómputo
     fetch("http://localhost:3000/api/equipos")
       .then(res => res.json())
       .then(data => {
         setTotalEquipos(data.length)
-        // Agrupa por propietario
-        const counts: Record<string, number> = {}
-        data.forEach((eq: any) => {
-          const propietario = eq.propietario || "Sin propietario"
-          counts[propietario] = (counts[propietario] || 0) + 1
-        })
-        // Ordena y toma los 3 principales
-        const quickStats = Object.entries(counts)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 3)
-          .map(([label, value]) => ({ label, value }))
-        setQuickStatsEquipos(quickStats)
+      })
+      .catch(() => setTotalEquipos(0))
+
+    // Fetch Z8 equipos
+    fetch("http://localhost:3000/api/equipos-z8")
+      .then(res => res.json())
+      .then(data => {
+        setTotalZ8(data.length)
+        // Contar los asignados (que tienen usuario asignado)
+        const asignados = data.filter((eq: any) => eq.rut_usuario).length
+        setAsignadosZ8(asignados)
       })
       .catch(() => {
-        setTotalEquipos(0)
-        setQuickStatsEquipos([])
+        setTotalZ8(0)
+        setAsignadosZ8(0)
       })
+
+    // Fetch MAC equipos
+    fetch("http://localhost:3000/api/equipos-mac")
+      .then(res => res.json())
+      .then(data => {
+        setTotalMac(data.length)
+        // Contar los asignados
+        const asignados = data.filter((eq: any) => eq.rut_usuario).length
+        setAsignadosMac(asignados)
+      })
+      .catch(() => {
+        setTotalMac(0)
+        setAsignadosMac(0)
+      })
+
+    // Fetch Datacenter equipos
+    fetch("http://localhost:3000/api/equipos-datacenter")
+      .then(res => res.json())
+      .then(data => {
+        setTotalDatacenter(data.length)
+      })
+      .catch(() => setTotalDatacenter(0))
+
+    // Fetch LATSUR equipos
+    fetch("http://localhost:3000/api/equipos-latsur")
+      .then(res => res.json())
+      .then(data => {
+        setTotalLatsur(data.length)
+      })
+      .catch(() => setTotalLatsur(0))
+
+    // Fetch préstamos activos
+    fetch("http://localhost:3000/api/prestamos")
+      .then(res => res.json())
+      .then(data => {
+        // Filtrar solo los préstamos activos (no devueltos)
+        const activos = data.filter((prestamo: any) => !prestamo.fecha_devolucion).length
+        setPrestamosActivos(activos)
+      })
+      .catch(() => setPrestamosActivos(0))
   }, [])
 
-  // TODO: Replace with real API calls to fetch data from backend
-
-  // Z8 Stations Data - Focus on essential operational information
+  // Datos simplificados según las especificaciones
   const z8StationsData = {
-    total: 4,
-    quickStats: [
-      { label: "Activas", value: 3, trend: "stable" as const },
-      { label: "Inactivas", value: 1, trend: "stable" as const },
-      { label: "Usuarios Asignados", value: 4, trend: "stable" as const },
-      { label: "Departamentos", value: 3, trend: "stable" as const },
-    ],
+    total: totalZ8,
+    quickStats: [],
     alerts: [],
   }
 
-  // MAC Stations Data - Focus on device status and connectivity
   const macStationsData = {
-    total: 5,
-    quickStats: [
-      { label: "Conectadas", value: 4, trend: "stable" as const },
-      { label: "Desconectadas", value: 1, trend: "stable" as const },
-      { label: "WiFi 6E", value: 3, trend: "stable" as const },
-      { label: "Ethernet", value: 1, trend: "stable" as const },
-    ],
+    total: totalMac,
+    quickStats: [],
     alerts: [],
   }
 
-  // Datacenter Assets Data - Focus on critical infrastructure
   const datacenterData = {
-    total: 6,
-    quickStats: [
-      { label: "Servidores", value: 2, trend: "stable" as const },
-      { label: "Sistemas A.C.", value: 1, trend: "stable" as const },
-      { label: "Firewalls", value: 1, trend: "stable" as const },
-      { label: "UPS Activos", value: 1, trend: "stable" as const },
-    ],
+    total: totalDatacenter,
+    quickStats: [],
     alerts: [],
   }
 
-  // Equipment Overview Data - Solo el total real
   const equipmentOverviewData = {
     total: totalEquipos,
     quickStats: [],
     alerts: [],
   }
 
-  // LATSUR Equipment Data - Focus on specialized equipment
   const latsurData = {
-    total: 5,
-    quickStats: [
-      { label: "Workstations", value: 2, trend: "stable" as const },
-      { label: "Dispositivos 3D", value: 2, trend: "stable" as const },
-      { label: "Impresoras", value: 1, trend: "stable" as const },
-      { label: "Responsables", value: 3, trend: "stable" as const },
-    ],
+    total: totalLatsur,
+    quickStats: [],
     alerts: [],
   }
 
-  // Loans Data - Focus on loan management
   const loansData = {
-    total: 5,
-    quickStats: [
-      { label: "Pendrives Activos", value: 5, trend: "stable" as const },
-      { label: "Disponibles", value: 18, trend: "up" as const },
-      { label: "Departamentos", value: 4, trend: "stable" as const },
-      { label: "Pendientes", value: 0, trend: "stable" as const },
-    ],
+    total: prestamosActivos,
+    quickStats: [],
     alerts: [],
   }
 
@@ -126,15 +140,15 @@ export default function Dashboard() {
                   subtitle="Estaciones especializadas para geodesia"
                   icon={<Wifi className="w-6 h-6 text-purple-600" />}
                   primaryStat={{
-                    label: "Total de Estaciones",
+                    label: "Total de Equipos",
                     value: z8StationsData.total,
-                    unit: "estaciones",
+                    unit: "equipos",
                   }}
                   quickStats={z8StationsData.quickStats}
                   alerts={z8StationsData.alerts}
                   progressData={{
-                    label: "Estaciones Activas",
-                    value: 3,
+                    label: "Equipos Asignados",
+                    value: asignadosZ8,
                     max: z8StationsData.total,
                     color: "purple",
                   }}
@@ -151,15 +165,15 @@ export default function Dashboard() {
                   subtitle="Dispositivos Apple para diseño gráfico"
                   icon={<Apple className="w-6 h-6 text-gray-700" />}
                   primaryStat={{
-                    label: "Total de Dispositivos",
+                    label: "Total de Estaciones",
                     value: macStationsData.total,
-                    unit: "dispositivos",
+                    unit: "estaciones",
                   }}
                   quickStats={macStationsData.quickStats}
                   alerts={macStationsData.alerts}
                   progressData={{
-                    label: "Dispositivos Conectados",
-                    value: 4,
+                    label: "Estaciones Asignadas",
+                    value: asignadosMac,
                     max: macStationsData.total,
                     color: "gray",
                   }}
@@ -176,21 +190,21 @@ export default function Dashboard() {
                   subtitle="Infraestructura crítica del centro de datos"
                   icon={<Server className="w-6 h-6 text-slate-700" />}
                   primaryStat={{
-                    label: "Total de Activos",
+                    label: "Total de Equipos",
                     value: datacenterData.total,
-                    unit: "activos",
+                    unit: "equipos",
                   }}
                   quickStats={datacenterData.quickStats}
                   alerts={datacenterData.alerts}
                   progressData={{
-                    label: "Activos Operativos",
-                    value: 6,
+                    label: "Equipos Registrados",
+                    value: datacenterData.total,
                     max: datacenterData.total,
                     color: "slate",
                   }}
                   navigationUrl="/datacenter"
                   addNewUrl="/datacenter"
-                  addNewLabel="Nuevo Activo"
+                  addNewLabel="Nuevo Equipo"
                   gradientColors="from-slate-500 to-gray-600"
                   iconColor="text-slate-700"
                 />
@@ -205,10 +219,10 @@ export default function Dashboard() {
                     value: equipmentOverviewData.total,
                     unit: "equipos",
                   }}
-                  quickStats={quickStatsEquipos}
+                  quickStats={equipmentOverviewData.quickStats}
                   alerts={equipmentOverviewData.alerts}
                   progressData={{
-                    label: "Equipos Activos",
+                    label: "Equipos Registrados",
                     value: equipmentOverviewData.total,
                     max: equipmentOverviewData.total,
                     color: "blue",
@@ -226,21 +240,21 @@ export default function Dashboard() {
                   subtitle="Laboratorio de tecnologías avanzadas"
                   icon={<HardDrive className="w-6 h-6 text-cyan-600" />}
                   primaryStat={{
-                    label: "Total de Equipos",
+                    label: "Total de Dispositivos",
                     value: latsurData.total,
-                    unit: "equipos",
+                    unit: "dispositivos",
                   }}
                   quickStats={latsurData.quickStats}
                   alerts={latsurData.alerts}
                   progressData={{
-                    label: "Equipos Operativos",
-                    value: 5,
+                    label: "Dispositivos Registrados",
+                    value: latsurData.total,
                     max: latsurData.total,
                     color: "cyan",
                   }}
                   navigationUrl="/equipamiento-latsur"
                   addNewUrl="/equipamiento-latsur"
-                  addNewLabel="Nuevo Equipo"
+                  addNewLabel="Nuevo Dispositivo"
                   gradientColors="from-cyan-500 to-blue-600"
                   iconColor="text-cyan-600"
                 />
@@ -258,9 +272,9 @@ export default function Dashboard() {
                   quickStats={loansData.quickStats}
                   alerts={loansData.alerts}
                   progressData={{
-                    label: "Dispositivos Prestados",
+                    label: "Préstamos Vigentes",
                     value: loansData.total,
-                    max: loansData.total + 18, // 18 available
+                    max: loansData.total || 1,
                     color: "green",
                   }}
                   navigationUrl="/prestamos"
