@@ -12,6 +12,7 @@ import {
   Eye,
   Calendar
 } from 'lucide-react';
+import { PDFBajasGenerator } from './pdf-bajas-generator';
 
 interface Equipo {
   id_equipo: number;
@@ -132,15 +133,23 @@ const BajasEquipoModal: React.FC<BajasEquipoModalProps> = ({ open, onClose }) =>
 
     setProcesando(true);
     try {
+      console.log('🔄 Enviando solicitud de baja:');
+      console.log(`  - Equipo ID: ${selectedEquipo.id_equipo}`);
+      console.log(`  - Motivo: "${motivo.trim()}"`);
+      
+      const dataToSend = {
+        motivo: motivo.trim(),
+        observaciones: `Baja realizada el ${new Date().toLocaleDateString()}`
+      };
+      
+      console.log('📤 Datos enviados:', dataToSend);
+      
       const response = await fetch(`http://localhost:3000/api/equipos/dar-baja/${selectedEquipo.id_equipo}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          motivo: motivo.trim(),
-          observaciones: `Baja realizada el ${new Date().toLocaleDateString()}`
-        }),
+        body: JSON.stringify(dataToSend),
       });
 
       if (!response.ok) {
@@ -401,6 +410,8 @@ const BajasEquipoModal: React.FC<BajasEquipoModalProps> = ({ open, onClose }) =>
                     <div className="text-gray-600 font-semibold text-lg">{equiposDadosDeBajaFiltrados.length}</div>
                     <div className="text-gray-500 text-sm">Total Dados de Baja</div>
                   </div>
+                  {/* ✅ BOTÓN GENERADOR PDF DE BAJAS */}
+                  <PDFBajasGenerator className="h-[52px]" />
                 </div>
               </div>
 

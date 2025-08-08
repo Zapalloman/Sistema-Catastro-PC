@@ -410,12 +410,12 @@ export function AsignacionesModal({ open, onClose }: {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent 
-        className="p-0 overflow-hidden border-0"
+        className="p-0 border-0 overflow-auto"
         style={{
-          maxWidth: '98vw',
-          width: '98vw', 
-          height: '98vh',
-          maxHeight: '98vh'
+          maxWidth: '95vw',
+          width: '95vw', 
+          height: '88vh',
+          maxHeight: '88vh'
         }}
       >
         {/* ✅ AGREGAR DialogHeader y DialogTitle para accesibilidad */}
@@ -423,19 +423,19 @@ export function AsignacionesModal({ open, onClose }: {
           <DialogTitle>Sistema de Asignaciones Multi-Equipos IGM</DialogTitle>
         </DialogHeader>
 
-        {/* HEADER VISUAL */}
+        {/* HEADER VISUAL - Más compacto */}
         <div 
           className="w-full shrink-0 border-b bg-gradient-to-r from-blue-600 to-blue-800 text-white"
-          style={{ padding: '24px' }}
+          style={{ padding: '16px 20px' }}
         >
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                <Users className="w-6 h-6" />
+                <Users className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">Sistema de Asignaciones Multi-Equipos IGM</h1>
-                <p className="text-blue-100 text-sm font-normal mt-1">
+                <h1 className="text-lg font-bold">Sistema de Asignaciones Multi-Equipos IGM</h1>
+                <p className="text-blue-100 text-xs font-normal mt-1">
                   Gestión integral de asignaciones para equipos IGM, LATSUR, MAC y Z8
                 </p>
               </div>
@@ -445,53 +445,54 @@ export function AsignacionesModal({ open, onClose }: {
               onClick={onClose}
               className="text-white hover:bg-white/20 p-2 h-auto"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </Button>
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col overflow-hidden" style={{ height: 'calc(98vh - 120px)' }}>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden h-full">
-            {/* TABS NAVIGATION */}
-            <div className="w-full shrink-0 border-b bg-gray-50" style={{ padding: '16px 24px' }}>
-              <TabsList className="grid w-full grid-cols-3 bg-white shadow-sm border h-12">
-                <TabsTrigger value="asignar" className="flex items-center gap-2 text-sm font-medium">
-                  <FileText className="w-4 h-4" />
+        <div className="flex-1 flex flex-col" style={{ minHeight: 'calc(88vh - 90px)' }}>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col h-full">
+            {/* TABS NAVIGATION - Más compacto */}
+            <div className="w-full shrink-0 border-b bg-gray-50" style={{ padding: '12px 20px' }}>
+              <TabsList className="grid w-full grid-cols-3 bg-white shadow-sm border h-10">
+                <TabsTrigger value="asignar" className="flex items-center gap-2 text-xs font-medium">
+                  <FileText className="w-3 h-3" />
                   Nueva Asignación
                 </TabsTrigger>
-                <TabsTrigger value="activas" className="flex items-center gap-2 text-sm font-medium">
-                  <CheckCircle className="w-4 h-4" />
+                <TabsTrigger value="activas" className="flex items-center gap-2 text-xs font-medium">
+                  <CheckCircle className="w-3 h-3" />
                   Activas ({asignacionesActivas.length})
                 </TabsTrigger>
-                <TabsTrigger value="historial" className="flex items-center gap-2 text-sm font-medium">
-                  <Clock className="w-4 h-4" />
+                <TabsTrigger value="historial" className="flex items-center gap-2 text-xs font-medium">
+                  <Clock className="w-3 h-3" />
                   Historial ({historialAsignaciones.length})
                 </TabsTrigger>
               </TabsList>
             </div>
 
             {/* TAB: Nueva Asignación */}
-            <TabsContent value="asignar" className="flex-1 overflow-hidden m-0 w-full">
-              <div className="h-full w-full" style={{ padding: '24px' }}>
-                <div className="h-full w-full" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+            <TabsContent value="asignar" className="flex-1 m-0 w-full">
+              <div className="h-full w-full" style={{ padding: '16px 20px' }}>
+                <div className="h-full w-full" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
                   
                   {/* COLUMNA IZQUIERDA: Tipo de Equipos, Usuario y Equipos */}
-                  <div className="h-full flex flex-col" style={{ gap: '16px' }}>
+                  <div className="h-full flex flex-col" style={{ gap: '12px' }}>
                     
-                    {/* NUEVO: Selector de Tipo de Equipo */}
-                    <Card className="shadow-lg border-0 shrink-0">
-                      <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-lg" style={{ padding: '16px' }}>
-                        <CardTitle className="flex items-center gap-2 text-purple-900 text-lg">
-                          <Monitor className="w-5 h-5" />
+                    {/* NUEVO: Selector de Tipo de Equipo - Más compacto */}
+                    <Card className="shadow-md border-0 shrink-0">
+                      <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-lg" style={{ padding: '12px' }}>
+                        <CardTitle className="flex items-center gap-2 text-purple-900 text-sm">
+                          <Monitor className="w-4 h-4" />
                           Tipo de Equipos a Asignar
                         </CardTitle>
                       </CardHeader>
-                      <CardContent style={{ padding: '16px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                      <CardContent style={{ padding: '12px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                           {(['IGM', 'LATSUR', 'MAC', 'Z8'] as const).map((tipo) => (
                             <Button
                               key={tipo}
                               variant={tipoEquipoSeleccionado === tipo ? "default" : "outline"}
+                              size="sm"
                               onClick={() => {
                                 setTipoEquipoSeleccionado(tipo)
                                 cargarEquiposPorTipo(tipo)
@@ -500,56 +501,41 @@ export function AsignacionesModal({ open, onClose }: {
                                   setSelectedCategoriaEquipo("TODOS")
                                 }
                               }}
-                              className={`text-sm ${
+                              className={`transition-all ${
                                 tipoEquipoSeleccionado === tipo 
-                                  ? 'bg-purple-600 hover:bg-purple-700' 
+                                  ? 'bg-purple-600 text-white shadow-md' 
                                   : 'hover:bg-purple-50'
                               }`}
-                              style={{ height: '40px' }}
-                              disabled={cargandoEquipos}
                             >
-                              {cargandoEquipos && tipoEquipoSeleccionado === tipo ? (
-                                <div className="animate-spin w-4 h-4 border border-white border-t-transparent rounded-full mr-2" />
-                              ) : null}
-                              Equipos {tipo}
+                              {tipo}
                             </Button>
                           ))}
-                        </div>
-                        <div style={{ marginTop: '12px' }} className="text-sm text-gray-600">
-                          <Badge variant="secondary" className="text-sm">
-                            {equipos.length} equipos disponibles de tipo {tipoEquipoSeleccionado}
-                          </Badge>
                         </div>
                       </CardContent>
                     </Card>
 
-                    {/* Card de Usuario */}
-                    <Card className="shadow-lg border-0 shrink-0">
-                      <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-t-lg" style={{ padding: '16px' }}>
-                        <CardTitle className="flex items-center gap-2 text-indigo-900 text-lg">
-                          <User className="w-5 h-5" />
-                          Selección de Usuario Destinatario
+                    {/* Card de Usuario - Más compacto */}
+                    <Card className="shadow-md border-0 shrink-0">
+                      <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-t-lg" style={{ padding: '12px' }}>
+                        <CardTitle className="flex items-center gap-2 text-blue-900 text-sm">
+                          <User className="w-4 h-4" />
+                          Usuario Destinatario
                         </CardTitle>
                       </CardHeader>
-                      <CardContent style={{ padding: '16px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
-                          <div>
-                            <label className="block text-sm font-semibold mb-2 text-gray-700">Usuario Destinatario:</label>
-                            <RutAutocomplete 
-                              value={selectedUser} 
+                      <CardContent style={{ padding: '12px' }}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <RutAutocomplete
+                              value={selectedUser || ''}
                               onChange={setSelectedUser}
-                              onUserSelected={(user) => {
-                                setSelectedUserData(user)
-                                // Auto-completar campos si están vacíos
-                                if (user.grado && !grado) {
-                                  setGrado(user.grado)
-                                }
+                              onUserSelected={(rutData: any) => {
+                                setSelectedUser(rutData.rut)
+                                setSelectedUserData(rutData)
                               }}
                             />
-                            {/* Mostrar datos del usuario seleccionado */}
                             {selectedUserData && (
-                              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                                <div className="text-sm">
+                              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                                <div className="text-xs">
                                   <div><strong>Nombre:</strong> {selectedUserData.nombres} {selectedUserData.apaterno} {selectedUserData.amaterno}</div>
                                   <div><strong>Grado:</strong> {selectedUserData.grado || 'No especificado'}</div>
                                   <div><strong>Cargo:</strong> {selectedUserData.cargo || 'No especificado'}</div>
@@ -558,43 +544,43 @@ export function AsignacionesModal({ open, onClose }: {
                               </div>
                             )}
                           </div>
-                          <div className="flex items-end">
-                            <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 text-sm" style={{ padding: '12px 16px' }}>
-                              {selectedEquipos.length} equipo(s) seleccionado(s)
+                          <div className="flex items-end ml-3">
+                            <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 text-xs" style={{ padding: '8px 12px' }}>
+                              {selectedEquipos.length} equipo(s)
                             </Badge>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    {/* Card de Equipos */}
-                    <Card className="shadow-xl border-0 flex-1 flex flex-col overflow-hidden">
-                      <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-t-lg shrink-0" style={{ padding: '16px' }}>
+                    {/* Card de Equipos - Con scroll optimizado y altura fija */}
+                    <Card className="shadow-lg border-0 flex-1 flex flex-col" style={{ minHeight: '400px' }}>
+                      <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-t-lg shrink-0" style={{ padding: '10px' }}>
                         <div className="flex items-center justify-between">
-                          <CardTitle className="flex items-center gap-3 text-emerald-900 text-lg">
-                            <Monitor className="w-5 h-5" />
+                          <CardTitle className="flex items-center gap-2 text-emerald-900 text-sm">
+                            <Monitor className="w-4 h-4" />
                             Equipos {tipoEquipoSeleccionado} Disponibles
                           </CardTitle>
-                          <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 text-sm" style={{ padding: '8px 16px' }}>
+                          <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 text-xs" style={{ padding: '4px 10px' }}>
                             {selectedEquipos.length} de {filteredEquipos.length} seleccionados
                           </Badge>
                         </div>
-                        {/* Buscador y filtros */}
-                        <div style={{ marginTop: '12px', display: 'flex', gap: '16px' }}>
-                          <div className="relative flex-1" style={{ maxWidth: '400px' }}>
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        {/* Buscador y filtros - Más compactos */}
+                        <div style={{ marginTop: '6px', display: 'flex', gap: '10px' }}>
+                          <div className="relative flex-1" style={{ maxWidth: '280px' }}>
+                            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3" />
                             <Input
                               placeholder={`Buscar equipos ${tipoEquipoSeleccionado}...`}
                               value={searchEquipos}
                               onChange={(e) => setSearchEquipos(e.target.value)}
-                              className="pl-10 bg-white"
-                              style={{ height: '40px' }}
+                              className="pl-7 bg-white text-xs"
+                              style={{ height: '28px', fontSize: '11px' }}
                             />
                           </div>
                           {(tipoEquipoSeleccionado === 'IGM' || tipoEquipoSeleccionado === 'LATSUR') && (
-                            <div style={{ width: '250px' }}>
+                            <div style={{ width: '180px' }}>
                               <Select value={selectedCategoriaEquipo} onValueChange={setSelectedCategoriaEquipo}>
-                                <SelectTrigger className="bg-white" style={{ height: '40px' }}>
+                                <SelectTrigger className="bg-white text-xs" style={{ height: '28px', fontSize: '11px' }}>
                                   <SelectValue placeholder="Filtrar por tipo..." />
                                 </SelectTrigger>
                                 <SelectContent className="z-[10000]">
@@ -609,7 +595,7 @@ export function AsignacionesModal({ open, onClose }: {
                                     .sort((a, b) => (a.desc_tipo || "").localeCompare(b.desc_tipo || ""))
                                     .map((cat) => (
                                       <SelectItem key={cat.id_tipo} value={cat.desc_tipo}>
-                                        {cat.desc_tipo}
+                                        {cat.desc_tipo} ({cat.cantidad})
                                       </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -618,20 +604,21 @@ export function AsignacionesModal({ open, onClose }: {
                           )}
                         </div>
                       </CardHeader>
-                      <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
+                      <CardContent className="p-0 flex-1 flex flex-col">
                         {cargandoEquipos ? (
                           <div className="flex-1 flex items-center justify-center">
                             <div className="flex items-center gap-3 text-gray-600">
-                              <div className="animate-spin w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full" />
-                              <span className="text-lg">Cargando equipos {tipoEquipoSeleccionado}...</span>
+                              <div className="animate-spin w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full" />
+                              <span className="text-sm">Cargando equipos {tipoEquipoSeleccionado}...</span>
                             </div>
                           </div>
                         ) : (
-                          <div className="flex-1 overflow-auto">
-                            <Table>
-                              <TableHeader className="sticky top-0 bg-gray-100 z-10">
-                                <TableRow>
-                                  <TableHead className="w-16 text-center text-sm">
+                          <div className="flex-1 border rounded-lg bg-white shadow-sm">
+                            <div className="overflow-visible">
+                              <Table>
+                                <TableHeader className="sticky top-0 bg-gray-50 z-10 border-b shadow-sm">
+                                  <TableRow>
+                                  <TableHead className="w-8 text-center text-xs py-2">
                                     <input
                                       type="checkbox"
                                       checked={selectedEquipos.length === filteredEquipos.length && filteredEquipos.length > 0}
@@ -642,20 +629,20 @@ export function AsignacionesModal({ open, onClose }: {
                                           setSelectedEquipos([])
                                         }
                                       }}
-                                      className="w-4 h-4"
+                                      className="w-3 h-3"
                                     />
                                   </TableHead>
-                                  <TableHead className="font-semibold text-sm">Nombre PC</TableHead>
-                                  <TableHead className="font-semibold text-sm">Serie</TableHead>
-                                  <TableHead className="font-semibold text-sm">Modelo</TableHead>
-                                  <TableHead className="font-semibold text-sm">Categoría</TableHead>
-                                  <TableHead className="font-semibold text-sm">Estado</TableHead>
+                                  <TableHead className="font-semibold text-xs py-2">Nombre PC</TableHead>
+                                  <TableHead className="font-semibold text-xs py-2">Serie</TableHead>
+                                  <TableHead className="font-semibold text-xs py-2">Modelo</TableHead>
+                                  <TableHead className="font-semibold text-xs py-2">Categoría</TableHead>
+                                  <TableHead className="font-semibold text-xs py-2">Estado</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {filteredEquipos.map(eq => (
+                                {filteredEquipos.length > 0 ? filteredEquipos.map(eq => (
                                   <TableRow key={eq.id_equipo} className="hover:bg-gray-50 transition-colors">
-                                    <TableCell className="text-center">
+                                    <TableCell className="text-center py-2">
                                       <input
                                         type="checkbox"
                                         checked={selectedEquipos.includes(eq.id_equipo)}
@@ -666,33 +653,46 @@ export function AsignacionesModal({ open, onClose }: {
                                             setSelectedEquipos(selectedEquipos.filter(id => id !== eq.id_equipo))
                                           }
                                         }}
-                                        className="w-4 h-4"
+                                        className="w-3 h-3"
                                       />
                                     </TableCell>
-                                    <TableCell className="font-medium text-sm">{eq.nombre_pc || "-"}</TableCell>
-                                    <TableCell className="font-mono text-sm">{eq.numero_serie || "-"}</TableCell>
-                                    <TableCell className="text-sm">{eq.modelo || "-"}</TableCell>
-                                    <TableCell>
-                                      <Badge variant="outline" className="text-sm">
+                                    <TableCell className="font-medium text-xs py-2">{eq.nombre_pc || "-"}</TableCell>
+                                    <TableCell className="font-mono text-xs py-2">{eq.numero_serie || "-"}</TableCell>
+                                    <TableCell className="text-xs py-2">{eq.modelo || "-"}</TableCell>
+                                    <TableCell className="py-2">
+                                      <Badge variant="outline" className="text-xs px-2 py-1">
                                         {eq.categoria || "-"}
                                       </Badge>
                                     </TableCell>
-                                    <TableCell>
-                                      <Badge className="bg-green-500 hover:bg-green-600 text-sm">
+                                    <TableCell className="py-2">
+                                      <Badge className="bg-green-500 hover:bg-green-600 text-xs px-2 py-1">
                                         DISPONIBLE
                                       </Badge>
                                     </TableCell>
                                   </TableRow>
-                                ))}
+                                )) : (
+                                  <TableRow>
+                                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                                      <div className="flex flex-col items-center gap-2">
+                                        <Monitor className="w-8 h-8 text-gray-300" />
+                                        <span className="text-sm">No hay equipos disponibles</span>
+                                        {searchEquipos && (
+                                          <span className="text-xs">Intenta ajustar tu búsqueda</span>
+                                        )}
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                )}
                               </TableBody>
                             </Table>
+                            </div>
                           </div>
                         )}
                       </CardContent>
                     </Card>
                   </div>
 
-                  {/* COLUMNA DERECHA: Formulario del Documento */}
+                  {/* COLUMNA DERECHA: Formulario del Documento - Más compacto */}
                   <div className="h-full flex flex-col">
                     
                     {/* Card de Formulario del Documento */}
@@ -703,7 +703,7 @@ export function AsignacionesModal({ open, onClose }: {
                           Datos del Documento de Asignación
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="flex-1 overflow-auto" style={{ padding: '16px' }}>
+                      <CardContent style={{ padding: '16px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                           
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
@@ -800,7 +800,7 @@ export function AsignacionesModal({ open, onClose }: {
                               Tipo de Documento a Generar
                             </label>
                             <Select value={tipoDocumento} onValueChange={(value: 'word' | 'duales') => setTipoDocumento(value)}>
-                              <SelectTrigger>
+                              <SelectTrigger style={{ height: '40px' }}>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -856,7 +856,7 @@ export function AsignacionesModal({ open, onClose }: {
             </TabsContent>
 
             {/* TAB: Asignaciones Activas */}
-            <TabsContent value="activas" className="flex-1 overflow-hidden m-0 w-full">
+            <TabsContent value="activas" className="flex-1 m-0 w-full">
               <div className="h-full w-full" style={{ padding: '24px' }}>
                 <Card className="h-full shadow-lg border-0 w-full">
                   <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-lg" style={{ padding: '16px' }}>
@@ -913,7 +913,7 @@ export function AsignacionesModal({ open, onClose }: {
             </TabsContent>
 
             {/* TAB: Historial */}
-            <TabsContent value="historial" className="flex-1 overflow-hidden m-0 w-full">
+            <TabsContent value="historial" className="flex-1 m-0 w-full">
               <div className="h-full w-full" style={{ padding: '24px' }}>
                 <Card className="h-full shadow-lg border-0 w-full">
                   <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-lg" style={{ padding: '16px' }}>
